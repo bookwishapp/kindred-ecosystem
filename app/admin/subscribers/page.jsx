@@ -1,5 +1,7 @@
 import db from '../../../lib/db';
 
+export const dynamic = 'force-dynamic';
+
 async function getSubscribers() {
   const result = await db.query(
     `SELECT id, email, first_name, last_name, status, source, subscribed_at

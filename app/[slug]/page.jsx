@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import db from '../../lib/db';
 
+export const dynamic = 'force-dynamic';
+
 async function getPost(slug) {
   const result = await db.query(
     `SELECT id, title, content, published_at
