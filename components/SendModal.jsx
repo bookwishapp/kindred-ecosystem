@@ -10,26 +10,34 @@ export default function SendModal({ post, onClose, onSuccess }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('SendModal mounted for post:', post.id, post.title);
     fetchSubscriberCount();
   }, []);
 
   const fetchSubscriberCount = async () => {
     try {
       const response = await fetch('/api/admin/subscribers/count');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch subscriber count');
+      }
       const data = await response.json();
-      setSubscriberCount(data.count);
+      setSubscriberCount(data.count || 0);
     } catch (err) {
-      setError('Failed to fetch subscriber count');
+      console.error('Error fetching subscriber count:', err);
+      setError(err.message || 'Failed to fetch subscriber count');
     } finally {
       setLoading(false);
     }
   };
 
   const handleSend = async () => {
+    console.log('Starting newsletter send for post:', post.id);
     setSending(true);
     setError('');
 
     try {
+      console.log('Sending newsletter with subject:', subject);
       const response = await fetch('/api/admin/sends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -44,8 +52,11 @@ export default function SendModal({ post, onClose, onSuccess }) {
         throw new Error(data.error || 'Failed to send newsletter');
       }
 
+      const result = await response.json();
+      console.log('Newsletter send initiated:', result);
       onSuccess();
     } catch (err) {
+      console.error('Error sending newsletter:', err);
       setError(err.message);
       setSending(false);
     }
