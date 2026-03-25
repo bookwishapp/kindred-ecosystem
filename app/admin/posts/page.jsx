@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 async function getPosts() {
   const result = await db.query(
-    `SELECT id, title, slug, status, is_page, published_at, created_at
+    `SELECT id, title, slug, status, is_page, published_at, scheduled_at, created_at
      FROM posts
      ORDER BY created_at DESC`
   );
@@ -56,7 +56,11 @@ export default async function PostsPage() {
                 <td>{post.is_page ? 'Page' : 'Post'}</td>
                 <td>{post.status}</td>
                 <td>
-                  {new Date(post.published_at || post.created_at).toLocaleDateString()}
+                  {new Date(
+                    post.status === 'scheduled'
+                      ? post.scheduled_at
+                      : (post.published_at || post.created_at)
+                  ).toLocaleDateString()}
                 </td>
                 <td>
                   <div className="flex gap-2">
