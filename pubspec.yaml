@@ -1,0 +1,9 @@
+name: kindred_ecosystem
+description: Kindred ecosystem monorepo
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dev_dependencies:
+  melos: ^7.5.0

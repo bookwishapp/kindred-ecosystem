@@ -1,0 +1,13 @@
+name: kindred_ecosystem
+
+packages:
+  - apps/*
+  - packages/*
+
+scripts:
+  build:
+    run: melos exec -- flutter build
+  test:
+    run: melos exec -- flutter test
+  analyze:
+    run: melos exec -- flutter analyze
