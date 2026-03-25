@@ -1,8 +1,8 @@
 name: kindred_ecosystem
 
 packages:
-  - apps/*
-  - packages/*
+  - apps/**
+  - packages/**
 
 scripts:
   build:
