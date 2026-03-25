@@ -1,0 +1,25 @@
+{
+  "name": "terryheath-com",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "migrate": "node migrate.js",
+    "import:subscribers": "node scripts/import-subscribers.js",
+    "import:subscribers:batch": "node scripts/import-subscribers-batch.js",
+    "import:posts": "node scripts/import-posts.js"
+  },
+  "dependencies": {
+    "next": "^14.2.35",
+    "react": "^18",
+    "react-dom": "^18",
+    "pg": "^8.12.0",
+    "nodemailer": "^6.9.13",
+    "@tiptap/react": "^2.4.0",
+    "@tiptap/starter-kit": "^2.4.0",
+    "@tiptap/extension-link": "^2.4.0",
+    "cookie": "^0.6.0"
+  }
+}
