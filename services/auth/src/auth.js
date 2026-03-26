@@ -10,7 +10,7 @@ const { sendMagicLink } = require('./email');
 
 // POST /auth/request - Send magic link
 async function requestMagicLink(req, res) {
-  const { email } = req.body;
+  const { email, redirect_uri: redirectUri, app_name: appName } = req.body;
 
   if (!email || !email.includes('@')) {
     return res.status(400).json({ error: 'Valid email required' });
@@ -44,7 +44,7 @@ async function requestMagicLink(req, res) {
     );
 
     // Send email
-    await sendMagicLink(email, token);
+    await sendMagicLink(email, token, redirectUri, appName);
 
     res.json({ message: 'Magic link sent' });
   } catch (error) {
