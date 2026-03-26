@@ -31,6 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # iOS-style icons
+  cupertino_icons: ^1.0.6
+
   # Shared packages
   ui_kit:
     path: ../../packages/ui_kit
@@ -45,15 +48,20 @@ dependencies:
 
   # Storage
   flutter_secure_storage: ^9.2.2
+  sqflite: ^2.3.0
+  path: ^1.8.0
 
   # Images
   cached_network_image: ^3.3.1
+  image_picker: ^1.0.0
 
   # Utilities
   share_plus: ^7.2.1
   url_launcher: ^6.2.4
   intl: ^0.19.0
   uuid: ^4.5.1
+  uni_links: ^0.5.1
+  dio: ^5.0.0
 
 dev_dependencies:
   flutter_test:
@@ -72,9 +80,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/kindred_logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

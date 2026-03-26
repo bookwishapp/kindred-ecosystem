@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ui_kit/ui_kit.dart';
 import '../models/kin_person.dart';
@@ -60,6 +61,62 @@ class _AvatarRingState extends State<AvatarRing>
     super.dispose();
   }
 
+  Widget _buildImage(String photoUrl) {
+    // Check if it's a local file path
+    if (photoUrl.startsWith('/') || photoUrl.startsWith('file://')) {
+      final file = File(photoUrl.replaceFirst('file://', ''));
+      return Image.file(
+        file,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback to network image in case of error
+          return Image.network(
+            photoUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              // If both fail, show placeholder
+              return Container(
+                color: AppTheme.colors.surface,
+                child: Center(
+                  child: Text(
+                    widget.person.name.isNotEmpty
+                        ? widget.person.name[0].toUpperCase()
+                        : '',
+                    style: AppTheme.text.headingLarge.copyWith(
+                      color: AppTheme.colors.secondaryText,
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    } else {
+      // It's a network URL
+      return Image.network(
+        photoUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // If network load fails, show placeholder
+          return Container(
+            color: AppTheme.colors.surface,
+            child: Center(
+              child: Text(
+                widget.person.name.isNotEmpty
+                    ? widget.person.name[0].toUpperCase()
+                    : '',
+                style: AppTheme.text.headingLarge.copyWith(
+                  color: AppTheme.colors.secondaryText,
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalSize = widget.size + 12; // Ring + gap on each side
@@ -91,10 +148,7 @@ class _AvatarRingState extends State<AvatarRing>
                     ),
                     child: widget.person.photoUrl != null
                         ? ClipOval(
-                            child: Image.network(
-                              widget.person.photoUrl!,
-                              fit: BoxFit.cover,
-                            ),
+                            child: _buildImage(widget.person.photoUrl!),
                           )
                         : Center(
                             child: Text(

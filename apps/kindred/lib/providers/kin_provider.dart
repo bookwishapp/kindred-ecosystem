@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 import '../models/kin_person.dart';
 import '../services/kindred_api.dart';
+import '../services/local_db.dart';
 
 class KinProvider extends ChangeNotifier {
   final KindredApi _api;
@@ -38,7 +40,27 @@ class KinProvider extends ChangeNotifier {
 
     try {
       final kinList = await _api.getKin();
-      _kin = kinList;
+
+      // Load private dates for each kin person and populate allDates
+      final kinWithDates = await Future.wait(kinList.map((person) async {
+        final privateDates = await LocalDb.instance.getPrivateDates(person.id);
+
+        // Combine birthday with private dates
+        final allDates = <DateTime>[];
+        if (person.birthday != null) {
+          allDates.add(person.birthday!);
+        }
+
+        // Add private dates
+        for (final dateMap in privateDates) {
+          final dateStr = dateMap['date'] as String;
+          allDates.add(DateTime.parse(dateStr));
+        }
+
+        return person.copyWith(allDates: allDates);
+      }));
+
+      _kin = kinWithDates;
 
       // Update natural positions based on current ring intensities
       _updateNaturalPositions(_kin);
@@ -58,9 +80,94 @@ class KinProvider extends ChangeNotifier {
       _error = e.toString();
       _isLoading = false;
 
-      // Fall back to empty list on error
-      _kin = [];
+      // Fall back to mock data for testing until auth is implemented
+      final now = DateTime.now();
+      _kin = [
+        KinPerson(
+          id: 'mock-1',
+          name: 'Terry',
+          photoUrl: 'https://i.pravatar.cc/150?img=1',
+          type: KinPersonType.linked,
+          linkedProfileId: 'profile-1',
+          birthday: DateTime(now.year, now.month, now.day + 2), // 2 days away
+          allDates: [DateTime(now.year, now.month, now.day + 2)],
+        ),
+        KinPerson(
+          id: 'mock-2',
+          name: 'Someone',
+          photoUrl: 'https://i.pravatar.cc/150?img=2',
+          type: KinPersonType.local,
+          birthday: DateTime(now.year, now.month, now.day + 7), // 1 week
+          allDates: [DateTime(now.year, now.month, now.day + 7)],
+        ),
+        KinPerson(
+          id: 'mock-3',
+          name: 'Another',
+          photoUrl: 'https://i.pravatar.cc/150?img=3',
+          type: KinPersonType.local,
+          birthday: DateTime(now.year, now.month + 1, now.day), // 1 month
+          allDates: [DateTime(now.year, now.month + 1, now.day)],
+        ),
+        KinPerson(
+          id: 'mock-4',
+          name: 'Held',
+          photoUrl: 'https://i.pravatar.cc/150?img=4',
+          type: KinPersonType.local,
+          positionOverride: 0.15, // Manually positioned high
+          birthday: DateTime(now.year, now.month + 3, now.day), // 3 months
+          allDates: [DateTime(now.year, now.month + 3, now.day)],
+        ),
+        KinPerson(
+          id: 'mock-5',
+          name: 'Far',
+          photoUrl: 'https://i.pravatar.cc/150?img=5',
+          type: KinPersonType.local,
+          birthday: DateTime(now.year + 1, now.month, now.day), // Next year
+          allDates: [DateTime(now.year + 1, now.month, now.day)],
+        ),
+      ];
+
+      // Update natural positions for mock data
+      _updateNaturalPositions(_kin);
+
+      // Apply any cached position overrides (keeps drag positions between reloads)
+      _kin = _kin.map((person) {
+        final override = _positionOverrides[person.id];
+        if (override != null) {
+          return person.copyWith(positionOverride: override);
+        }
+        return person.copyWith(clearPositionOverride: person.id == 'mock-4' ? false : true);
+      }).toList();
+
       notifyListeners();
+    }
+
+    // Merge in any local-only kin from database
+    try {
+      final localKinData = await LocalDb.instance.getLocalKin();
+      final existingIds = _kin.map((k) => k.id).toSet();
+
+      for (final data in localKinData) {
+        if (!existingIds.contains(data['id'])) {
+          final localPerson = KinPerson(
+            id: data['id'],
+            name: data['name'],
+            photoUrl: data['photo_url'],
+            type: KinPersonType.local,
+            birthday: data['birthday'] != null
+                ? DateTime.parse(data['birthday'])
+                : null,
+            allDates: data['birthday'] != null
+                ? [DateTime.parse(data['birthday'])]
+                : [],
+          );
+          _kin.add(localPerson);
+        }
+      }
+      _updateNaturalPositions(_kin);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to load local kin: $e');
     }
   }
 
@@ -233,9 +340,37 @@ class KinProvider extends ChangeNotifier {
       );
       await loadKin(); // Reload the list
     } catch (e) {
-      _error = e.toString();
+      // If API fails (e.g., not authenticated), save locally only
+      debugPrint('API failed, adding to local state only: $e');
+
+      // Create a new local-only kin person with generated ID
+      final newPerson = KinPerson(
+        id: const Uuid().v4(), // Generate local ID
+        name: name,
+        photoUrl: photoUrl,
+        type: KinPersonType.local,
+        birthday: birthday,
+        allDates: birthday != null ? [birthday] : [],
+      );
+
+      // Add to local list
+      _kin = [..._kin, newPerson];
+
+      // Update natural positions for the new list
+      _updateNaturalPositions(_kin);
+
+      // Save to local database
+      await LocalDb.instance.saveLocalKin({
+        'id': newPerson.id,
+        'name': newPerson.name,
+        'photo_url': newPerson.photoUrl,
+        'birthday': newPerson.birthday?.toIso8601String(),
+        'position_override': null,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
       notifyListeners();
-      rethrow;
+      // Don't rethrow - silently handle the error
     }
   }
 

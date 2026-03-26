@@ -45,5 +45,20 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kindred</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.terryheath.kindred</string>
+		</dict>
+	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Kindred needs access to your photo library to add photos of your kin.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Kindred needs access to your camera to take photos of your kin.</string>
 </dict>
 </plist>

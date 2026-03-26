@@ -5,29 +5,80 @@ import 'package:core/core.dart';
 import 'router.dart';
 import 'providers/kin_provider.dart';
 import 'services/kindred_api.dart';
+import 'services/auth_service.dart';
+import 'services/profile_service.dart';
+import 'services/deep_link_service.dart';
 import 'widgets/app_shell.dart';
 
-class KindredApp extends StatelessWidget {
+class KindredApp extends StatefulWidget {
   const KindredApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<KindredApp> createState() => _KindredAppState();
+}
+
+class _KindredAppState extends State<KindredApp> {
+  late final SecureStorageService secureStorage;
+  late final AuthService authService;
+  late final ProfileService profileService;
+  late final KindredApi kindredApi;
+  late final DeepLinkService deepLinkService;
+
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+
     // Create services
-    final secureStorage = SecureStorageService();
-    final kindredApi = KindredApiFactory.create(
+    secureStorage = SecureStorageService();
+    authService = AuthService(storage: secureStorage);
+
+    // Create API with token provider from AuthService
+    kindredApi = KindredApiFactory.create(
       storage: secureStorage,
+      tokenProvider: () async => authService.token,
       onUnauthorized: () {
-        // Handle unauthorized - could navigate to login
-        // For now, just log it
-        debugPrint('User unauthorized - should redirect to login');
+        // Clear auth state and navigate to login if needed
+        authService.logout();
+        debugPrint('User unauthorized - cleared auth state');
       },
     );
 
+    profileService = ProfileService(api: kindredApi);
+
+    // Create deep link service
+    deepLinkService = DeepLinkService(
+      authService: authService,
+      contextProvider: () => navigatorKey.currentContext,
+    );
+
+    // Initialize services
+    _initializeServices();
+  }
+
+  Future<void> _initializeServices() async {
+    await authService.initialize();
+    await deepLinkService.initialize();
+  }
+
+  @override
+  void dispose() {
+    deepLinkService.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Provide the API service
-        Provider<KindredApi>.value(value: kindredApi),
+        // Provide core services
         Provider<SecureStorageService>.value(value: secureStorage),
+        Provider<KindredApi>.value(value: kindredApi),
+
+        // Provide auth and profile services
+        ChangeNotifierProvider<AuthService>.value(value: authService),
+        ChangeNotifierProvider<ProfileService>.value(value: profileService),
 
         // Create KinProvider with the API
         ChangeNotifierProvider(

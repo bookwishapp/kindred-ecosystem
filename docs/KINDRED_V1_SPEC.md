@@ -11,7 +11,7 @@ Kindred helps you take care of the people in your life — not by reminding you,
 - The main/home screen = **Kindred** (the app is named after this screen)
 - The avatar grid = **Your Kin**
 - Adding someone from their shared profile = **Keep**
-- Creating your own profile = **Show Up**
+- Creating your own profile = **Rise Up**
 - Inviting a local person to create a profile = **Invite to Show Up**
 - People in your grid = **your kin**
 - The app never uses: follow, track, remind, due, overdue, alert, notification, feed, social
@@ -205,8 +205,8 @@ Kin sheet full content: notes, private dates, private wishlist links. Local sqfl
 ### ⬜ Session 3c — Encrypted backup
 Encrypt private data before sending to server. Key derived from JWT. Restore on new device after login.
 
-### ⬜ Session 4 — Auth + Show Up
-Magic link flow wired to auth.terryheath.com. JWT storage in Flutter Secure Storage. Show Up screen (your profile). Deep link sharing. Keep flow (add from shared profile).
+### ⬜ Session 4 — Auth + Rise Up + Overlay Navigation
+Magic link flow wired to auth.terryheath.com. JWT storage in Flutter Secure Storage. Rise Up sheet (your editable profile as bottom sheet). Navbar redesigned — all surfaces are bottom sheets, Kindred grid always base layer. Settings dropdown. Onboarding copy. Deep link sharing.
 
 ### ⬜ Session 5 — Add Kin screen
 Full Add Kin flow: manual entry (name, photo, dates). Full screen push from + button.
@@ -225,14 +225,26 @@ Full Add Kin flow: manual entry (name, photo, dates). Full screen push from + bu
 
 ## Navigation Pattern
 
-Kindred uses one consistent navigation pattern:
+The Kindred grid is ALWAYS the base layer. It is never replaced or pushed off screen. Every surface is a bottom sheet overlay.
 
-- **Bottom tabs:** Kin (grid), + (add), You (profile) — always visible
-- **Bottom sheet:** Kin person page — opens over the grid, grid visible behind it, tap outside to dismiss, drag handle to expand to 85% max
-- **Full screen push:** Add Kin, any focused input screen — back arrow to return
-- **Top-level tabs:** Never push on top of each other
+### Navbar (persistent)
+- **Kin (left):** `CupertinoIcons.person_2` — dismisses all open sheets, returns to grid. Does not navigate anywhere.
+- **+ (center):** Dark rounded button — opens Add Kin as bottom sheet
+- **Your avatar (right):** Shows initials before Rising Up, photo after. Tapping opens settings dropdown overlay.
 
-The Kindred grid is always the base layer. You never fully leave it.
+### All overlays (bottom sheets)
+- **Kin sheet** — person page, opens over grid
+- **Add Kin sheet** — add a person manually
+- **Rise Up sheet** — your own editable profile
+- **Settings dropdown** — small overlay from avatar, contains: Rise Up, email updates toggle, support link, sign out
+
+### Settings dropdown contains
+- Rise Up (opens Rise Up sheet)
+- Email updates toggle
+- Support link (mailto:terry@terryheath.com)
+- Sign out (only if authenticated)
+
+The Kin icon always releases whatever is open and returns to the grid.
 
 ---
 

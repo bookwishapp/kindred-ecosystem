@@ -65,9 +65,22 @@ class ApiClient {
       );
       return response.data;
     } on DioException catch (e) {
+      String errorMessage = 'Network error';
+
+      if (e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map && responseData['message'] != null) {
+          errorMessage = responseData['message'].toString();
+        } else if (responseData is String) {
+          errorMessage = responseData;
+        }
+      } else if (e.message != null) {
+        errorMessage = e.message!;
+      }
+
       throw ApiException(
         statusCode: e.response?.statusCode,
-        message: e.response?.data?['message'] ?? e.message ?? 'Network error',
+        message: errorMessage,
       );
     }
   }
@@ -88,9 +101,22 @@ class ApiClient {
       );
       return response.data;
     } on DioException catch (e) {
+      String errorMessage = 'Network error';
+
+      if (e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map && responseData['message'] != null) {
+          errorMessage = responseData['message'].toString();
+        } else if (responseData is String) {
+          errorMessage = responseData;
+        }
+      } else if (e.message != null) {
+        errorMessage = e.message!;
+      }
+
       throw ApiException(
         statusCode: e.response?.statusCode,
-        message: e.response?.data?['message'] ?? e.message ?? 'Network error',
+        message: errorMessage,
       );
     }
   }
@@ -111,9 +137,22 @@ class ApiClient {
       );
       return response.data;
     } on DioException catch (e) {
+      String errorMessage = 'Network error';
+
+      if (e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map && responseData['message'] != null) {
+          errorMessage = responseData['message'].toString();
+        } else if (responseData is String) {
+          errorMessage = responseData;
+        }
+      } else if (e.message != null) {
+        errorMessage = e.message!;
+      }
+
       throw ApiException(
         statusCode: e.response?.statusCode,
-        message: e.response?.data?['message'] ?? e.message ?? 'Network error',
+        message: errorMessage,
       );
     }
   }
@@ -134,9 +173,22 @@ class ApiClient {
       );
       return response.data;
     } on DioException catch (e) {
+      String errorMessage = 'Network error';
+
+      if (e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map && responseData['message'] != null) {
+          errorMessage = responseData['message'].toString();
+        } else if (responseData is String) {
+          errorMessage = responseData;
+        }
+      } else if (e.message != null) {
+        errorMessage = e.message!;
+      }
+
       throw ApiException(
         statusCode: e.response?.statusCode,
-        message: e.response?.data?['message'] ?? e.message ?? 'Network error',
+        message: errorMessage,
       );
     }
   }

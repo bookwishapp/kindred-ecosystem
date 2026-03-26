@@ -9,10 +9,11 @@ class KindredApi {
   KindredApi({
     required String baseUrl,
     required SecureStorageService storage,
+    Future<String?> Function()? tokenProvider,
     VoidCallback? onUnauthorized,
   }) : _apiClient = ApiClient(
           baseUrl: baseUrl,
-          tokenProvider: storage.getAuthToken,
+          tokenProvider: tokenProvider ?? storage.getAuthToken,
           onUnauthorized: onUnauthorized,
         );
 
@@ -161,27 +162,24 @@ class KindredApi {
 
 /// Factory for creating KindredApi instances
 class KindredApiFactory {
-  static const String defaultBaseUrl = 'http://localhost:3001';
+  static const String defaultBaseUrl = 'https://kindred.terryheath.com';
 
   static KindredApi create({
     String? baseUrl,
     SecureStorageService? storage,
+    Future<String?> Function()? tokenProvider,
     VoidCallback? onUnauthorized,
   }) {
     return KindredApi(
       baseUrl: baseUrl ?? _getBaseUrl(),
       storage: storage ?? SecureStorageService(),
+      tokenProvider: tokenProvider,
       onUnauthorized: onUnauthorized,
     );
   }
 
   static String _getBaseUrl() {
-    // In production, this would come from environment config
-    // For now, use localhost for development
-    if (kDebugMode) {
-      return defaultBaseUrl;
-    }
-    // Production URL would go here
+    // Use Railway URL for both debug and production
     return defaultBaseUrl;
   }
 }

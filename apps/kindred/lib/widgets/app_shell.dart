@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:ui_kit/ui_kit.dart';
+import '../screens/add_kin/add_kin_sheet.dart';
+import '../screens/show_up/show_up_sheet.dart';
 
 /// Notifier to track bottom sheet visibility
 class BottomSheetVisibilityNotifier extends ChangeNotifier {
@@ -30,14 +30,33 @@ class AppShell extends StatelessWidget {
     required this.child,
   });
 
-  void _showAddKinSheet(BuildContext context) {
-    final notifier = context.read<BottomSheetVisibilityNotifier>();
-    notifier.showBottomSheet();
+  void _dismissAllSheets(BuildContext context) {
+    // Dismiss any open bottom sheets
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
 
-    // For now, navigate to the Add Kin screen
-    // In the future, this could be a bottom sheet with multiple options
-    context.push('/add-kin');
-    notifier.hideBottomSheet();
+  void _showAddKinSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black26,
+      builder: (_) => const AddKinSheet(),
+    );
+  }
+
+  void _showShowUpSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black26,
+      builder: (_) => const ShowUpSheet(),
+    );
   }
 
   @override
@@ -49,8 +68,6 @@ class AppShell extends StatelessWidget {
   }
 
   Widget _buildBottomNav(BuildContext context) {
-    final currentRoute = GoRouterState.of(context).uri.path;
-
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.colors.backgroundPrimary,
@@ -69,13 +86,13 @@ class AppShell extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Kindred tab (home/grid)
+              // Kin - dismisses sheets
               Expanded(
                 child: _NavItem(
-                  icon: CupertinoIcons.person_2_fill,
+                  icon: CupertinoIcons.person_2,
                   label: 'Kin',
-                  isSelected: currentRoute == '/' || currentRoute.startsWith('/kin'),
-                  onTap: () => context.go('/'),
+                  isSelected: true, // Always selected when on Kindred screen
+                  onTap: () => _dismissAllSheets(context),
                 ),
               ),
               // Add button
@@ -88,20 +105,20 @@ class AppShell extends StatelessWidget {
                 ),
                 child: IconButton(
                   icon: Icon(
-                    CupertinoIcons.add,
+                    CupertinoIcons.plus,
                     color: AppTheme.colors.fabIcon,
                     size: 28,
                   ),
                   onPressed: () => _showAddKinSheet(context),
                 ),
               ),
-              // Show Up tab (your profile)
+              // You - opens Show Up sheet
               Expanded(
                 child: _NavItem(
-                  icon: CupertinoIcons.person_fill,
+                  icon: CupertinoIcons.person,
                   label: 'You',
-                  isSelected: currentRoute.startsWith('/show-up'),
-                  onTap: () => context.go('/show-up'),
+                  isSelected: false,
+                  onTap: () => _showShowUpSheet(context),
                 ),
               ),
             ],

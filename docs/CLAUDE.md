@@ -113,7 +113,7 @@ Kindred is a care app. It is NOT a task manager, CRM, or social network.
 - **Kindred** — the avatar grid screen. The main/home screen. The app is named after this screen.
 - **Kin** — an individual person page (opened via bottom sheet from Kindred)
 - **Your Kin** — collective term for all the people in your grid
-- **Show Up** — your own profile screen
+- **Rise Up** — your own profile (bottom sheet, editable)
 - **Keep** — the action of adding someone from their shared profile
 
 These names appear in code (route names, widget names, file names) and in UI copy. Do not rename them.
@@ -126,7 +126,7 @@ Claude MUST NOT use:
 
 Claude MUST use:
 - Keep (adding someone to your Kin)
-- Show Up (creating your profile)
+- Rise Up (creating your shareable profile)
 - Kindred (the avatar grid / home screen)
 - Kin (an individual person and their bottom sheet page)
 - Your Kin (everyone in your grid)

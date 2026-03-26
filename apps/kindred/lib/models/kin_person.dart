@@ -6,6 +6,7 @@ class KinPerson {
   final String? linkedProfileId;
   final double? positionOverride; // 0.0 = top, 1.0 = bottom. null = date-driven
   final DateTime? birthday;
+  final List<DateTime> allDates; // birthday + private dates combined
 
   const KinPerson({
     required this.id,
@@ -15,6 +16,7 @@ class KinPerson {
     this.linkedProfileId,
     this.positionOverride,
     this.birthday,
+    this.allDates = const [],
   });
 
   // Factory constructor to create from JSON
@@ -53,6 +55,7 @@ class KinPerson {
       linkedProfileId: json['linked_profile_id'],
       positionOverride: json['position_override']?.toDouble(),
       birthday: birthday,
+      allDates: birthday != null ? [birthday] : [], // Initialize with birthday if present
     );
   }
 
@@ -66,6 +69,7 @@ class KinPerson {
     double? positionOverride,
     bool clearPositionOverride = false,
     DateTime? birthday,
+    List<DateTime>? allDates,
   }) {
     return KinPerson(
       id: id ?? this.id,
@@ -75,25 +79,33 @@ class KinPerson {
       linkedProfileId: linkedProfileId ?? this.linkedProfileId,
       positionOverride: clearPositionOverride ? null : (positionOverride ?? this.positionOverride),
       birthday: birthday ?? this.birthday,
+      allDates: allDates ?? this.allDates,
     );
   }
 
-  // Returns days until next occurrence of birthday (or any date)
+  // Returns days until next occurrence of any date (birthday or private dates)
   // Accounts for annual recurrence
-  int? get daysUntilBirthday {
-    if (birthday == null) return null;
+  int? get daysUntilNextDate {
+    if (allDates.isEmpty) return null;
     final now = DateTime.now();
-    var next = DateTime(now.year, birthday!.month, birthday!.day);
-    if (next.isBefore(now)) {
-      next = DateTime(now.year + 1, birthday!.month, birthday!.day);
+    final today = DateTime(now.year, now.month, now.day);
+
+    int? closest;
+    for (final date in allDates) {
+      var next = DateTime(now.year, date.month, date.day);
+      if (next.isBefore(today)) {
+        next = DateTime(now.year + 1, date.month, date.day);
+      }
+      final days = next.difference(today).inDays;
+      if (closest == null || days < closest) closest = days;
     }
-    return next.difference(DateTime(now.year, now.month, now.day)).inDays;
+    return closest;
   }
 
   // Ring intensity 0.0–1.0 based on proximity
   // 0 = no ring (>60 days), 1.0 = fully glowing (≤3 days)
   double get ringIntensity {
-    final days = daysUntilBirthday;
+    final days = daysUntilNextDate;
     if (days == null) return 0.0;
     if (days <= 3) return 1.0;
     if (days <= 7) return 0.85;
