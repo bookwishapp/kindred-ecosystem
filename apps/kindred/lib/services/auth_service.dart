@@ -52,10 +52,13 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('Requesting magic link for: $email to $authBaseUrl/auth/request');
       await _dio.post('/auth/request', data: {
         'email': email,
         'redirect_uri': 'kindred://auth/verify',
+        'app_name': 'Kindred',
       });
+      debugPrint('Magic link request completed');
 
       _magicLinkSent = true;
       _isLoading = false;
@@ -66,6 +69,10 @@ class AuthService extends ChangeNotifier {
       _magicLinkSent = false;
       notifyListeners();
       debugPrint('Magic link request failed: $_error');
+      debugPrint('Status code: ${e.response?.statusCode}');
+      debugPrint('Response data: ${e.response?.data}');
+      debugPrint('Error type: ${e.type}');
+      debugPrint('Error message: ${e.message}');
     }
   }
 
