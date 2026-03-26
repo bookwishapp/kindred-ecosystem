@@ -43,12 +43,22 @@ export default function SupportPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.content}>
-        <h1 className={styles.title}>Support Small Things</h1>
-        <p className={styles.description}>
-          Writing takes time. Your support keeps it going.
-        </p>
+    <>
+      <header className="site-header">
+        <h1 className="site-title">Small Things</h1>
+        <p className="site-author">Terry Heath</p>
+        <nav className="site-nav">
+          <Link href="/">Letters</Link>
+          <Link href="/about">About</Link>
+        </nav>
+      </header>
+
+      <div className={styles.container}>
+        <div className={styles.content}>
+          <h1 className={styles.title}>Support Small Things</h1>
+          <p className={styles.description}>
+            Writing takes time. Your support keeps it going.
+          </p>
 
         <form onSubmit={handleSupport} className={styles.form}>
           {/* Payment Mode Toggle */}
@@ -141,5 +151,6 @@ export default function SupportPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
