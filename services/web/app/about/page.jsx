@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import db from '../../lib/db';
+import HomeActions from '../components/HomeActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,25 +22,32 @@ export default async function AboutPage() {
   }
 
   return (
-    <div className="container">
-      <header className="header">
-        <div className="header-content">
-          <h1>
-            <Link href="/">Terry Heath</Link>
-          </h1>
-          <nav>
-            <Link href="/about">About</Link>
-          </nav>
-        </div>
+    <>
+      <header className="site-header">
+        <h1 className="site-title">Small Things</h1>
+        <p className="site-author">Terry Heath</p>
+        <nav className="site-nav">
+          <Link href="/">Letters</Link>
+          <Link href="/about">About</Link>
+        </nav>
       </header>
 
-      <article>
-        <h1 className="post-title">{page.title}</h1>
-        <div
-          className="post-content"
-          dangerouslySetInnerHTML={{ __html: page.content }}
-        />
+      <HomeActions />
+
+      <article className="post-container">
+        <div className="post-content">
+          <h1 style={{
+            fontFamily: 'Poppins, sans-serif',
+            fontWeight: 400,
+            fontSize: '32px',
+            marginBottom: '32px',
+            textAlign: 'center'
+          }}>
+            {page.title}
+          </h1>
+          <div dangerouslySetInnerHTML={{ __html: page.content }} />
+        </div>
       </article>
-    </div>
+    </>
   );
 }

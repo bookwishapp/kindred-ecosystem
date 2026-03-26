@@ -1,5 +1,6 @@
 import db from '../lib/db';
 import Link from 'next/link';
+import HomeActions from './components/HomeActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,43 +18,43 @@ export default async function HomePage() {
   const posts = await getPosts();
 
   return (
-    <div className="container">
-      <header className="header">
-        <div className="header-content">
-          <h1>
-            <Link href="/">Terry Heath</Link>
-          </h1>
-          <nav>
-            <Link href="/about">About</Link>
-          </nav>
-        </div>
+    <>
+      <header className="site-header">
+        <h1 className="site-title">Small Things</h1>
+        <p className="site-author">Terry Heath</p>
+        <nav className="site-nav">
+          <Link href="/">Letters</Link>
+          <Link href="/about">About</Link>
+        </nav>
       </header>
 
-      <main>
-        {posts.length === 0 ? (
-          <p className="text-center">No posts yet.</p>
-        ) : (
-          <ul className="post-list">
-            {posts.map((post) => (
-              <li key={post.id} className="post-item">
-                <h2>
+      <HomeActions />
+
+      <main className="post-container">
+        <div className="post-list">
+          {posts.length === 0 ? (
+            <p className="no-posts">No posts yet.</p>
+          ) : (
+            posts.map((post) => (
+              <article key={post.id} className="post-item">
+                <h2 className="post-title">
                   <Link href={`/${post.slug}`}>{post.title}</Link>
                 </h2>
-                <div className="post-meta">
+                <time className="post-date">
                   {new Date(post.published_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                   })}
-                </div>
+                </time>
                 {post.excerpt && (
                   <p className="post-excerpt">{post.excerpt}</p>
                 )}
-              </li>
-            ))}
-          </ul>
-        )}
+              </article>
+            ))
+          )}
+        </div>
       </main>
-    </div>
+    </>
   );
 }

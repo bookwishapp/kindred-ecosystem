@@ -101,7 +101,8 @@ function getEmailTemplate(content, unsubscribeUrl) {
             You're receiving this because you subscribed or were a customer at Sinclair Inlet Book Co.
         </p>
         <p>
-            <a href="${unsubscribeUrl}">Unsubscribe</a>
+            <a href="${unsubscribeUrl}">Unsubscribe</a> ·
+            <a href="https://terryheath.com/support">Support Small Things</a>
         </p>
     </div>
 </body>
