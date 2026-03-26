@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ui_kit/ui_kit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../kin/kin_sheet.dart';
 import '../show_up/show_up_sheet.dart';
 import '../../providers/kin_provider.dart';
@@ -325,14 +326,12 @@ class _KindredScreenState extends State<KindredScreen> {
               centerTitle: false,
               backgroundColor: AppTheme.colors.warmWhite,
               elevation: 0,
-              title: ColorFiltered(
+              title: SvgPicture.asset(
+                'assets/kind.svg',
+                height: 28,
                 colorFilter: const ColorFilter.mode(
                   Color(0xFF141C1A),
                   BlendMode.srcIn,
-                ),
-                child: Image.asset(
-                  'assets/kindred_logo.png',
-                  height: 28,
                 ),
               ),
               actions: [

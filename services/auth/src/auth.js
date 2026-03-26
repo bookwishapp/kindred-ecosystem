@@ -127,6 +127,12 @@ async function verifyMagicLink(req, res) {
       maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     });
 
+    // Check for Flutter deep link redirect
+    const redirectUri = req.query.redirect_uri;
+    if (redirectUri && redirectUri.startsWith('kindred://')) {
+      return res.redirect(`${redirectUri}?access_token=${accessToken}`);
+    }
+
     res.json({
       access_token: accessToken,
       user: {
