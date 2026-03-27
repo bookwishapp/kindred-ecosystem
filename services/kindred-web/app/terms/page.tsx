@@ -6,6 +6,10 @@ export const metadata: Metadata = {
 }
 
 export default function TermsPage() {
+  const currentDate = new Date()
+  const currentMonth = currentDate.toLocaleString('default', { month: 'long' })
+  const currentYear = currentDate.getFullYear()
+
   return (
     <div className="legal-container">
       <div className="legal-content">
@@ -54,7 +58,7 @@ export default function TermsPage() {
         </section>
 
         <div className="legal-footer">
-          <p className="legal-date">Last updated: March 2025</p>
+          <p className="legal-date">Last updated: {currentMonth} {currentYear}</p>
         </div>
       </div>
 

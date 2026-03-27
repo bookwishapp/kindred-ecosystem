@@ -166,6 +166,44 @@ a {
   font-weight: 500;
 }
 
+/* Main page footer */
+.main-footer {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-link {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: var(--foreground);
+}
+
+.footer-separator {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.footer-brand {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 @media (max-width: 640px) {
   .profile-card {
     padding: 2rem;

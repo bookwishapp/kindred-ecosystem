@@ -220,7 +220,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing.space4),
           child: Text(
-            'This is what you share. What matters to you.\nThe days you keep.',
+            'This is where you share what matters to you.',
             style: AppTheme.text.body.copyWith(
               color: AppTheme.colors.secondaryText,
             ),

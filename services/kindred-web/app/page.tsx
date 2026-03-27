@@ -14,7 +14,14 @@ export default function Home() {
           Download on App Store
         </a>
       </div>
-      <div className="kindred-logo">Kindred</div>
+      <footer className="main-footer">
+        <div className="footer-links">
+          <a href="/terms" className="footer-link">Terms</a>
+          <span className="footer-separator">·</span>
+          <a href="/privacy" className="footer-link">Privacy</a>
+        </div>
+        <div className="footer-brand">Kindred</div>
+      </footer>
     </div>
   )
 }

@@ -614,8 +614,8 @@ class _KindredScreenState extends State<KindredScreen> {
                 }
                 return KindredGrid(
                   kin: kin,
-                  onAvatarTap: (person) {
-                    showModalBottomSheet(
+                  onAvatarTap: (person) async {
+                    final result = await showModalBottomSheet<String>(
                       context: context,
                       isScrollControlled: true,
                       isDismissible: true,
@@ -624,6 +624,10 @@ class _KindredScreenState extends State<KindredScreen> {
                       barrierColor: Colors.black26,
                       builder: (_) => KinSheet(person: person),
                     );
+
+                    if (result == 'delete' && mounted) {
+                      context.read<KinProvider>().deleteLocalKin(person.id);
+                    }
                   },
                 );
               },

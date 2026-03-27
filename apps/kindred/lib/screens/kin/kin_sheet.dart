@@ -766,15 +766,9 @@ class _KinSheetState extends State<KinSheet> {
                                     child: const Text('Keep them'),
                                   ),
                                   CupertinoDialogAction(
-                                    onPressed: () async {
+                                    onPressed: () {
                                       Navigator.pop(context); // Close dialog
-
-                                      final kinProvider = context.read<KinProvider>();
-                                      await kinProvider.deleteLocalKin(widget.person.id);
-
-                                      if (mounted) {
-                                        Navigator.pop(context); // Close sheet
-                                      }
+                                      Navigator.pop(context, 'delete'); // Return result to parent
                                     },
                                     isDestructiveAction: true,
                                     child: const Text('Let go'),

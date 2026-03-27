@@ -36,14 +36,11 @@ class _KindredAppState extends State<KindredApp> {
     authService = AuthService(storage: secureStorage);
 
     // Create API with token provider from AuthService
+    // Note: We don't set onUnauthorized here - 401s on data endpoints should fail silently
+    // and not log the user out. Only auth endpoints should handle unauthorized state.
     kindredApi = KindredApiFactory.create(
       storage: secureStorage,
       tokenProvider: () async => authService.token,
-      onUnauthorized: () {
-        // Clear auth state and navigate to login if needed
-        authService.logout();
-        debugPrint('User unauthorized - cleared auth state');
-      },
     );
 
     profileService = ProfileService(api: kindredApi);
