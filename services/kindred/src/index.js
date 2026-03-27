@@ -12,7 +12,8 @@ const {
   deleteWishlistLink,
   addDate,
   deleteDate,
-  getProfile
+  getProfile,
+  deleteProfile
 } = require('./profiles');
 const {
   getKin,
@@ -70,6 +71,7 @@ app.post('/profiles/me/wishlist-links', authenticate, addWishlistLink);
 app.delete('/profiles/me/wishlist-links/:id', authenticate, deleteWishlistLink);
 app.post('/profiles/me/dates', authenticate, addDate);
 app.delete('/profiles/me/dates/:id', authenticate, deleteDate);
+app.delete('/profiles/me', authenticate, deleteProfile);
 app.get('/profiles/:userId', getProfile); // Public - no auth required
 
 // Kin routes

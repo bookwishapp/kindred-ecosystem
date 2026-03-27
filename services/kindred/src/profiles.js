@@ -277,6 +277,26 @@ async function getProfile(req, res) {
   }
 }
 
+async function deleteProfile(req, res) {
+  try {
+    // Delete the profile for the authenticated user
+    // Database cascades will handle deleting related wishlist links and dates
+    const result = await pool.query(
+      'DELETE FROM profiles WHERE user_id = $1 RETURNING id',
+      [req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    res.json({ success: true, message: 'Profile deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 module.exports = {
   getMyProfile,
   createProfile,
@@ -285,5 +305,6 @@ module.exports = {
   deleteWishlistLink,
   addDate,
   deleteDate,
-  getProfile
+  getProfile,
+  deleteProfile
 };

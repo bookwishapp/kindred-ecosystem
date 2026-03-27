@@ -85,6 +85,10 @@ class KindredApi {
     return await _apiClient.get('/profiles/$userId');
   }
 
+  Future<void> deleteProfile() async {
+    await _apiClient.delete('/profiles/me');
+  }
+
   // Kin endpoints
   Future<List<KinPerson>> getKin() async {
     final response = await _apiClient.get('/kin');

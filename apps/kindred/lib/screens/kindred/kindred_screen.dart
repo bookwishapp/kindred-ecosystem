@@ -12,6 +12,8 @@ import '../../providers/kin_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/local_db.dart';
+import '../../services/kindred_api.dart';
+import 'package:core/core.dart';
 import '../../widgets/kindred_grid.dart';
 
 class KindredScreen extends StatefulWidget {
@@ -116,6 +118,67 @@ class _KindredScreenState extends State<KindredScreen> {
       barrierColor: Colors.black26,
       builder: (_) => const ShowUpSheet(),
     );
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    // Get services before async gap
+    final authService = context.read<AuthService>();
+    final kindredApi = KindredApi(
+      baseUrl: 'https://api.fromkindred.com',
+      storage: SecureStorageService(),
+    );
+
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+          'This removes your profile and cannot be undone. '
+          'Your kin and notes stay on your device.',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // Delete profile from server
+        await kindredApi.deleteProfile();
+
+        // Clear auth and log out
+        await authService.logout();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Account deleted'),
+              backgroundColor: AppTheme.colors.accent,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not delete account right now'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildAppBarAvatar() {
@@ -385,6 +448,63 @@ class _KindredScreenState extends State<KindredScreen> {
                       ),
                     ),
 
+                    // Legal links
+                    const Divider(height: 1),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        InkWell(
+                          onTap: () async {
+                            setState(() {
+                              _showSettingsDropdown = false;
+                            });
+                            await launchUrl(Uri.parse('https://fromkindred.com/privacy'));
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacing.space2,
+                              vertical: AppTheme.spacing.space1,
+                            ),
+                            child: Text(
+                              'Privacy',
+                              style: AppTheme.text.caption.copyWith(
+                                color: AppTheme.colors.tertiaryText,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '·',
+                          style: AppTheme.text.caption.copyWith(
+                            color: AppTheme.colors.tertiaryText,
+                            fontSize: 11,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            setState(() {
+                              _showSettingsDropdown = false;
+                            });
+                            await launchUrl(Uri.parse('https://fromkindred.com/terms'));
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacing.space2,
+                              vertical: AppTheme.spacing.space1,
+                            ),
+                            child: Text(
+                              'Terms',
+                              style: AppTheme.text.caption.copyWith(
+                                color: AppTheme.colors.tertiaryText,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
                     // Sign out (only if authenticated)
                     if (authService.isAuthenticated) ...[
                       const Divider(height: 1),
@@ -401,6 +521,25 @@ class _KindredScreenState extends State<KindredScreen> {
                             'Sign out',
                             style: AppTheme.text.caption.copyWith(
                               color: AppTheme.colors.tertiaryText,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _showSettingsDropdown = false;
+                          });
+                          _handleDeleteAccount();
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.all(AppTheme.spacing.space2),
+                          child: Text(
+                            'Delete account',
+                            style: AppTheme.text.caption.copyWith(
+                              color: CupertinoColors.destructiveRed,
                               fontSize: 12,
                             ),
                           ),

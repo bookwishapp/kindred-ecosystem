@@ -302,7 +302,7 @@ class KinProvider extends ChangeNotifier {
       await _api.addKinLinked(linkedProfileId: linkedProfileId);
       await loadKin(); // Reload the list
     } catch (e) {
-      _error = e.toString();
+      _error = 'Could not add this person right now.';
       notifyListeners();
       rethrow;
     }

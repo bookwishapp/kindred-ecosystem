@@ -113,6 +113,12 @@ export default async function ProfilePage({ params }: PageProps) {
         </a>
       </div>
 
+      <div className="profile-footer">
+        <a href="/privacy" className="profile-footer-link">Privacy</a>
+        <span className="profile-footer-separator">·</span>
+        <a href="/terms" className="profile-footer-link">Terms</a>
+      </div>
+
       <div className="kindred-logo">Kindred</div>
     </div>
   )

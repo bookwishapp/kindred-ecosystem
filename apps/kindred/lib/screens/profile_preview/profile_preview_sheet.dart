@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ui_kit/ui_kit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:core/core.dart';
 import '../../services/kindred_api.dart';
 import '../../providers/kin_provider.dart';
 
@@ -30,7 +31,10 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
   @override
   void initState() {
     super.initState();
-    _api = KindredApiFactory.create();
+    _api = KindredApi(
+      baseUrl: 'https://api.fromkindred.com',
+      storage: SecureStorageService(),
+    );
     _loadProfile();
   }
 
