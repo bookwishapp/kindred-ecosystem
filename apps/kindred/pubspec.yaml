@@ -118,11 +118,6 @@ flutter:
 
 flutter_native_splash:
   color: "#F0EDE6"
-  image: assets/kindred_logo.png
   color_dark: "#F0EDE6"
+  image: assets/kindred_logo.png
   image_dark: assets/kindred_logo.png
-  ios_content_mode: scaleAspectFit
-  android_gravity: center
-  android_12:
-    color: "#F0EDE6"
-    image: assets/kindred_logo.png

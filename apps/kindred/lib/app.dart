@@ -6,6 +6,7 @@ import 'package:uni_links/uni_links.dart';
 import 'router.dart';
 import 'providers/kin_provider.dart';
 import 'services/kindred_api.dart';
+import 'services/auth_api.dart';
 import 'services/auth_service.dart';
 import 'services/profile_service.dart';
 import 'services/deep_link_service.dart';
@@ -24,6 +25,7 @@ class _KindredAppState extends State<KindredApp> {
   late final AuthService authService;
   late final ProfileService profileService;
   late final KindredApi kindredApi;
+  late final AuthApi authApi;
   late final DeepLinkService deepLinkService;
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -44,6 +46,12 @@ class _KindredAppState extends State<KindredApp> {
       tokenProvider: () async => authService.token,
     );
 
+    // Create Auth API for profile operations
+    authApi = AuthApiFactory.create(
+      storage: secureStorage,
+      tokenProvider: () async => authService.token,
+    );
+
     // Set up restore callback for after successful auth
     authService.onAuthSuccess = (userId, accessToken) async {
       await BackupService().restore(
@@ -53,7 +61,7 @@ class _KindredAppState extends State<KindredApp> {
       );
     };
 
-    profileService = ProfileService(api: kindredApi);
+    profileService = ProfileService(api: authApi);
 
     // Create deep link service
     deepLinkService = DeepLinkService(

@@ -86,9 +86,8 @@ class PhotoUploadService {
       }
 
       final response = await _dio.post(
-        '$baseUrl/api/upload-url',
+        '$baseUrl/upload-url',
         data: {
-          'fileName': fileName,
           'contentType': contentType,
         },
         options: Options(

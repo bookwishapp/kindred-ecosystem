@@ -13,7 +13,7 @@ interface PageProps {
 
 async function getProfile(userId: string): Promise<ProfileData | null> {
   try {
-    const res = await fetch(`https://api.fromkindred.com/profiles/${userId}`, {
+    const res = await fetch(`https://auth.terryheath.com/profile/${userId}`, {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     })
 
@@ -21,7 +21,8 @@ async function getProfile(userId: string): Promise<ProfileData | null> {
       return null
     }
 
-    return res.json()
+    const data = await res.json()
+    return data.profile || null
   } catch (error) {
     console.error('Error fetching profile:', error)
     return null

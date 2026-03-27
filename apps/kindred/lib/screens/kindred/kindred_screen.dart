@@ -593,7 +593,11 @@ class _KindredScreenState extends State<KindredScreen> {
               actions: [
                 Padding(
                   padding: const EdgeInsets.only(right: 16),
-                  child: _buildAppBarAvatar(),
+                  child: Consumer<ProfileService>(
+                    builder: (context, profileService, _) {
+                      return _buildAppBarAvatar();
+                    },
+                  ),
                 ),
               ],
             ),

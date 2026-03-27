@@ -32,7 +32,6 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
   DateTime? _selectedBirthday;
   String? _localPhotoPath;
   String? _uploadedPhotoUrl;
-  bool _isAddingLink = false;
   bool _isEditingName = false;
   bool _isUploading = false;
 
@@ -74,7 +73,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
     try {
       final s3PhotoUrl = await _uploadPhotoIfNeeded();
       if (s3PhotoUrl != null) {
-        await profileService.updateProfile({'photo_url': s3PhotoUrl});
+        await profileService.saveProfile(photoUrl: s3PhotoUrl);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -116,8 +115,8 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
       final dio = Dio();
       final storage = SecureStorageService();
       final baseUrl = const String.fromEnvironment(
-        'KINDRED_API_URL',
-        defaultValue: 'https://api.fromkindred.com',
+        'AUTH_API_URL',
+        defaultValue: 'https://auth.terryheath.com',
       );
 
       final photoUrl = await PhotoUploadService.upload(
@@ -406,23 +405,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         ),
         SizedBox(height: AppTheme.spacing.space2),
 
-        // Add wishlist link
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _isAddingLink = true;
-            });
-          },
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing.space1),
-            child: Text(
-              '+ Add a wishlist link',
-              style: AppTheme.text.body.copyWith(
-                color: AppTheme.colors.accent,
-              ),
-            ),
-          ),
-        ),
+        // Wishlist functionality temporarily removed
         SizedBox(height: AppTheme.spacing.space4),
 
         // Show Up button
@@ -438,7 +421,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                       final s3PhotoUrl = await _uploadPhotoIfNeeded();
 
                       // Create profile with S3 URL
-                      await profileService.createProfile(
+                      await profileService.saveProfile(
                         name: _nameController.text,
                         birthday: _selectedBirthday,
                         photoUrl: s3PhotoUrl,
@@ -495,7 +478,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                   padding: EdgeInsets.zero,
                   onSubmitted: (value) async {
                     if (value.isNotEmpty) {
-                      await profileService.updateProfile({'name': value});
+                      await profileService.saveProfile(name: value);
                     }
                     setState(() {
                       _isEditingName = false;
@@ -528,38 +511,9 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           SizedBox(height: AppTheme.spacing.space3),
         ],
 
-        // Wishlist links
-        if (profileService.wishlistLinks.isNotEmpty) ...[
-          ...profileService.wishlistLinks.map((link) {
-            return Dismissible(
-              key: Key(link['id']),
-              onDismissed: (_) async {
-                await profileService.removeWishlistLink(link['id']);
-              },
-              child: GestureDetector(
-                onTap: () async {
-                  final uri = Uri.tryParse(link['url']);
-                  if (uri != null) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                },
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: AppTheme.spacing.space2),
-                  child: Text(
-                    link['label'],
-                    style: AppTheme.text.body.copyWith(
-                      color: AppTheme.colors.accent,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
 
-        // Add wishlist link
-        if (_isAddingLink) ...[
+        // Wishlist link editing temporarily removed
+        /* if (_isAddingLink) ...[
           CupertinoTextField(
             controller: _linkLabelController,
             autofocus: true,
@@ -644,11 +598,11 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
               ),
             ),
           ),
-        ],
+        ], */
         SizedBox(height: AppTheme.spacing.space3),
 
-        // Shared dates
-        if (profileService.sharedDates.isNotEmpty) ...[
+        // Shared dates functionality temporarily removed
+        /* if (profileService.sharedDates.isNotEmpty) ...[
           ...profileService.sharedDates.map((date) {
             final dateObj = DateTime.parse(date['date']);
             return Dismissible(
@@ -665,9 +619,10 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
               ),
             );
           }),
-        ],
+        ], */
 
-        // Add date
+        // Add date functionality temporarily removed
+        /*
         GestureDetector(
           onTap: () {
             // Date adding functionality not yet implemented
@@ -681,6 +636,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
             ),
           ),
         ),
+        */
 
         Divider(
           color: AppTheme.colors.border,
