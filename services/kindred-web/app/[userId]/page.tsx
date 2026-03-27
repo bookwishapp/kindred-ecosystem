@@ -81,7 +81,7 @@ export default async function ProfilePage({ params }: PageProps) {
     )
   }
 
-  const deepLink = `kindred://profile/${profile.id}`
+  const deepLink = `kindred://${profile.id}`
 
   return (
     <div className="container">

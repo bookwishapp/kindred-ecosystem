@@ -22,9 +22,10 @@ kindred-ecosystem/
     ui_kit/           → Shared Flutter theme and components
     core/             → Shared Flutter utilities (HTTP client, date helpers)
   services/
-    auth/             → Central authentication service (Node/Express)
+    auth/             → Central authentication service (Node/Express) — auth.terryheath.com
     web/              → terryheath.com — blog, newsletter, ecosystem admin (Next.js)
-    kindred/          → Kindred backend API (Node/Express) — deployed at kindred.terryheath.com
+    kindred/          → Kindred API backend (Node/Express) — api.fromkindred.com
+    kindred-web/      → fromkindred.com — profile pages, marketing, App Store redirect (Next.js)
   docs/               → Architecture, guidelines, prompts
   melos.yaml
 ```
@@ -78,9 +79,7 @@ Central authentication for the entire ecosystem.
 - Single identity works across all apps
 - Node/Express, Postgres on Railway
 - Admin at auth.terryheath.com/admin
-- Pending: embed redirect_uri in verify URL so deep link works from email
-- Pending: accept app_name in POST body for per-app email subject lines
-- Pending: deferred deep linking page at auth.terryheath.com/open for browser fallback
+- Pending: deferred deep linking page for browser fallback
 
 #### /services/web — terryheath.com
 The hub. Does three things:
@@ -91,6 +90,23 @@ The hub. Does three things:
 Next.js, Postgres on Railway.
 
 Current status: deployed, admin working, newsletter send requires SES SMTP credential verification, subscribers tab and cron job pending fixes.
+
+#### /services/kindred — api.fromkindred.com
+The Kindred API backend.
+- All Kindred app data: profiles, kin records, dates, wishlist links
+- JWT verification via shared JWT_SECRET with auth service
+- Presigned S3 URLs for photo uploads
+- Node/Express, Postgres on Railway
+- Old domain kindred.terryheath.com to be retired once Flutter app updated
+
+#### /services/kindred-web — fromkindred.com
+The public face of Kindred.
+- Profile landing pages at `/profile/{userId}` — shown when someone shares their Kindred profile
+- Deep link redirect to app (`kindred://profile/{userId}`)
+- App Store redirect when app not installed
+- Marketing site (future)
+
+Next.js, no database, separate Railway service. Fetches profile data from api.fromkindred.com.
 
 ---
 
@@ -158,7 +174,8 @@ Local-only Kindred users (no profile, no account) do not need auth.
   - SMTP: port 587, STARTTLS, host email-smtp.us-east-1.amazonaws.com
 - **Storage:** AWS S3 (per-app buckets: kindred-uploads, analoglist-assets)
 - **DNS:** Cloudflare
-- **Domains:** terryheath.com, auth.terryheath.com, kindred.terryheath.com
+- **Domains:** terryheath.com, auth.terryheath.com, api.fromkindred.com, fromkindred.com
+  - Note: kindred.terryheath.com is the old API domain — retire once Flutter app points to api.fromkindred.com
 
 ---
 

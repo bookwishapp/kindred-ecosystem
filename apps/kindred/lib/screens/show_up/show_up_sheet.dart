@@ -470,7 +470,6 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
 
   Widget _buildExistingProfileState(ProfileService profileService) {
     final profile = profileService.profile!;
-    final userId = context.read<AuthService>().accessToken; // Need user ID from auth
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -691,10 +690,15 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         // Share button
         Center(
           child: CupertinoButton(
-            onPressed: () {
-              // Need actual user ID from auth service
-              final profileUrl = 'https://kindred.terryheath.com/profile/$userId';
-              Share.share(profileUrl);
+            onPressed: () async {
+              // Get user ID from secure storage
+              final storage = SecureStorageService();
+              final userId = await storage.getUserId();
+              if (userId != null) {
+                await Share.share(
+                  'See my Kindred profile: https://fromkindred.com/$userId',
+                );
+              }
             },
             child: Text(
               'Share',

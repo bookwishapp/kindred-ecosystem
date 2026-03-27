@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uni_links/uni_links.dart';
 import 'dart:async';
 import 'auth_service.dart';
+import '../screens/profile_preview/profile_preview_sheet.dart';
 
 /// Service that handles deep links for the app
 class DeepLinkService {
@@ -70,6 +71,14 @@ class DeepLinkService {
       if (token != null) {
         _handleAuthVerification(token);
       }
+      return;
+    }
+
+    // Check if this is a profile link (kindred://{userId})
+    if (uri.scheme == 'kindred' && uri.host.isNotEmpty && uri.host != 'auth') {
+      final userId = uri.host;
+      debugPrint('Handling profile deep link for user: $userId');
+      _showProfilePreview(userId);
     }
   }
 
@@ -105,6 +114,19 @@ class DeepLinkService {
           ),
         );
       }
+    }
+  }
+
+  /// Show profile preview sheet
+  void _showProfilePreview(String userId) {
+    final context = contextProvider();
+    if (context != null && context.mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => ProfilePreviewSheet(userId: userId),
+      );
     }
   }
 }

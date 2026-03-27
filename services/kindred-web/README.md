@@ -4,9 +4,9 @@ Public-facing web app for Kindred profiles, served from fromkindred.com.
 
 ## Features
 
-- Public profile pages at `/profile/[userId]`
+- Public profile pages at `/{userId}`
 - Fetches profile data from api.fromkindred.com API
-- "Keep in Kindred" button with deep link to `kindred://profile/{userId}`
+- "Keep in Kindred" button with deep link to `kindred://{userId}`
 - Warm, minimal design with Poppins font
 
 ## Development
@@ -49,7 +49,7 @@ This app is configured for Railway deployment:
 ## Deep Linking
 
 Profile pages include a "Keep in Kindred" button that deep links to:
-- `kindred://profile/{userId}`
+- `kindred://{userId}`
 
 This opens the Kindred app and navigates to the profile if the app is installed.
 
