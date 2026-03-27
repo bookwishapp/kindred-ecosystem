@@ -21,6 +21,8 @@ const {
   revokeAllSessions
 } = require('./admin');
 const { isAdminConfigured } = require('./adminAuth');
+const { getMyProfile, upsertProfile, getPublicProfile, deleteProfile } = require('./profiles');
+const { getUploadUrl } = require('./upload');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -61,6 +63,15 @@ app.get('/auth/verify', corsMiddleware, verifyMagicLink);
 app.post('/auth/refresh', corsMiddleware, refreshAccessToken);
 app.post('/auth/logout', corsMiddleware, logout);
 app.get('/auth/me', corsMiddleware, authenticate, getCurrentUser);
+
+// Profile routes
+app.get('/profile', corsMiddleware, authenticate, getMyProfile);
+app.post('/profile', corsMiddleware, authenticate, upsertProfile);
+app.delete('/profile', corsMiddleware, authenticate, deleteProfile);
+app.get('/profile/:userId', corsMiddleware, getPublicProfile); // no auth — public
+
+// Upload
+app.post('/upload-url', corsMiddleware, authenticate, getUploadUrl);
 
 // Admin routes (no CORS - same-origin requests only)
 app.get('/admin/login', showLoginForm);
