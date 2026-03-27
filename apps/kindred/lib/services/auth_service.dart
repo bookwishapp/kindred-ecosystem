@@ -12,9 +12,13 @@ class AuthService extends ChangeNotifier {
   final SecureStorageService _storage;
 
   String? _accessToken;
+  String? _userId;
   bool _isLoading = false;
   String? _error;
   bool _magicLinkSent = false;
+
+  // Callback for triggering restore after successful auth
+  Future<void> Function(String userId, String accessToken)? onAuthSuccess;
 
   AuthService({required SecureStorageService storage}) : _storage = storage {
     _dio = Dio(BaseOptions(
@@ -29,6 +33,7 @@ class AuthService extends ChangeNotifier {
   // Getters
   String? get accessToken => _accessToken;
   String? get token => _accessToken; // Alias for compatibility
+  String? get userId => _userId;
   bool get isAuthenticated => _accessToken != null;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -38,6 +43,7 @@ class AuthService extends ChangeNotifier {
   Future<void> initialize() async {
     try {
       _accessToken = await _storage.getAuthToken();
+      _userId = await _storage.getUserId();
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to load auth token: $e');
@@ -90,6 +96,7 @@ class AuthService extends ChangeNotifier {
       final data = response.data;
       if (data['access_token'] != null) {
         _accessToken = data['access_token'];
+        _userId = data['user_id'];
 
         // Save tokens to secure storage
         await _storage.saveAuthToken(data['access_token']);
@@ -103,6 +110,13 @@ class AuthService extends ChangeNotifier {
         _isLoading = false;
         _error = null;
         notifyListeners();
+
+        // Trigger restore after successful auth
+        if (onAuthSuccess != null && _userId != null && _accessToken != null) {
+          onAuthSuccess!(_userId!, _accessToken!).catchError((e) {
+            debugPrint('Restore after auth failed: $e');
+          });
+        }
       } else {
         throw Exception('No access token received');
       }
@@ -120,20 +134,31 @@ class AuthService extends ChangeNotifier {
   }
 
   // Handle access token directly (from deep link redirect)
-  Future<void> handleAccessToken(String token) async {
+  Future<void> handleAccessToken(String token, {String? userId}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
       _accessToken = token;
+      _userId = userId;
 
       // Save token to secure storage
       await _storage.saveAuthToken(token);
+      if (userId != null) {
+        await _storage.saveUserId(userId);
+      }
 
       _isLoading = false;
       _error = null;
       notifyListeners();
+
+      // Trigger restore after successful auth
+      if (onAuthSuccess != null && _userId != null && _accessToken != null) {
+        onAuthSuccess!(_userId!, _accessToken!).catchError((e) {
+          debugPrint('Restore after auth failed: $e');
+        });
+      }
 
       debugPrint('Successfully handled access token from deep link');
     } catch (e) {
@@ -181,6 +206,7 @@ class AuthService extends ChangeNotifier {
   Future<void> logout() async {
     await _storage.clearAll();
     _accessToken = null;
+    _userId = null;
     _magicLinkSent = false;
     _error = null;
     notifyListeners();

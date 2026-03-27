@@ -56,8 +56,9 @@ class DeepLinkService {
     if (uri.scheme == 'kindred') {
       final accessToken = uri.queryParameters['access_token'];
       if (accessToken != null) {
+        final userId = uri.queryParameters['user_id'];
         debugPrint('Handling access token from deep link');
-        authService.handleAccessToken(accessToken);
+        authService.handleAccessToken(accessToken, userId: userId);
         return;
       }
     }

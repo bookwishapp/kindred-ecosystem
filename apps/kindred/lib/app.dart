@@ -9,6 +9,7 @@ import 'services/kindred_api.dart';
 import 'services/auth_service.dart';
 import 'services/profile_service.dart';
 import 'services/deep_link_service.dart';
+import 'services/backup_service.dart';
 import 'widgets/app_shell.dart';
 
 class KindredApp extends StatefulWidget {
@@ -42,6 +43,15 @@ class _KindredAppState extends State<KindredApp> {
       storage: secureStorage,
       tokenProvider: () async => authService.token,
     );
+
+    // Set up restore callback for after successful auth
+    authService.onAuthSuccess = (userId, accessToken) async {
+      await BackupService().restore(
+        userId: userId,
+        accessToken: accessToken,
+        api: kindredApi,
+      );
+    };
 
     profileService = ProfileService(api: kindredApi);
 
@@ -93,9 +103,9 @@ class _KindredAppState extends State<KindredApp> {
         ChangeNotifierProvider<AuthService>.value(value: authService),
         ChangeNotifierProvider<ProfileService>.value(value: profileService),
 
-        // Create KinProvider with the API
+        // Create KinProvider with the API and AuthService
         ChangeNotifierProvider(
-          create: (context) => KinProvider(api: kindredApi),
+          create: (context) => KinProvider(api: kindredApi, authService: authService),
         ),
 
         // Keep the existing bottom sheet provider

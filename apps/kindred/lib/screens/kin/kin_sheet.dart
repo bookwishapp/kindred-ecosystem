@@ -768,7 +768,7 @@ class _KinSheetState extends State<KinSheet> {
                                   CupertinoDialogAction(
                                     onPressed: () {
                                       Navigator.pop(context); // Close dialog
-                                      Navigator.pop(context, 'delete'); // Return result to parent
+                                      Navigator.of(context, rootNavigator: true).pop('delete'); // Return result to parent using root navigator
                                     },
                                     isDestructiveAction: true,
                                     child: const Text('Let go'),

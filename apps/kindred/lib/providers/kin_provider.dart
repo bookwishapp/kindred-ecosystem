@@ -3,9 +3,12 @@ import 'package:uuid/uuid.dart';
 import '../models/kin_person.dart';
 import '../services/kindred_api.dart';
 import '../services/local_db.dart';
+import '../services/backup_service.dart';
+import '../services/auth_service.dart';
 
 class KinProvider extends ChangeNotifier {
   final KindredApi _api;
+  final AuthService? _authService;
 
   // Internal storage for kin list
   List<KinPerson> _kin = [];
@@ -21,7 +24,9 @@ class KinProvider extends ChangeNotifier {
   // Track the last known kin list to detect changes
   List<KinPerson>? _lastKinList;
 
-  KinProvider({required KindredApi api}) : _api = api {
+  KinProvider({required KindredApi api, AuthService? authService})
+      : _api = api,
+        _authService = authService {
     // Load kin data on initialization
     loadKin();
   }
@@ -301,6 +306,7 @@ class KinProvider extends ChangeNotifier {
     try {
       await _api.addKinLinked(linkedProfileId: linkedProfileId);
       await loadKin(); // Reload the list
+      _triggerBackup(); // Backup after adding linked kin
     } catch (e) {
       _error = 'Could not add this person right now.';
       notifyListeners();
@@ -321,6 +327,7 @@ class KinProvider extends ChangeNotifier {
         localBirthday: birthday?.toIso8601String(),
       );
       await loadKin(); // Reload the list
+      _triggerBackup(); // Backup after adding local kin
     } catch (e) {
       // If API fails (e.g., not authenticated), save locally only
       debugPrint('API failed, adding to local state only: $e');
@@ -352,6 +359,7 @@ class KinProvider extends ChangeNotifier {
       });
 
       notifyListeners();
+      _triggerBackup(); // Backup after saving local kin
       // Don't rethrow - silently handle the error
     }
   }
@@ -419,6 +427,7 @@ class KinProvider extends ChangeNotifier {
       _updateNaturalPositions(_kin);
 
       notifyListeners();
+      _triggerBackup(); // Backup after deleting kin
     } catch (e) {
       debugPrint('Failed to delete local kin: $e');
       rethrow;
@@ -428,5 +437,22 @@ class KinProvider extends ChangeNotifier {
   // Legacy method - kept for compatibility but should be removed later
   void holdAtTop(String id) {
     setPosition(id, 0.0);
+  }
+
+  // Trigger backup after data changes (fire-and-forget)
+  void _triggerBackup() {
+    if (_authService == null || !_authService.isAuthenticated) {
+      debugPrint('Backup skipped: not authenticated');
+      return;
+    }
+
+    // Fire and forget - backup failure should never block UI
+    BackupService()
+        .backup(
+          userId: _authService.userId,
+          accessToken: _authService.accessToken!,
+          api: _api,
+        )
+        .catchError((e) => debugPrint('Backup failed silently: $e'));
   }
 }

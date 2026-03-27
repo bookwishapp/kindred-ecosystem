@@ -162,6 +162,19 @@ class KindredApi {
   Future<Map<String, dynamic>> healthCheck() async {
     return await _apiClient.get('/health');
   }
+
+  // Backup endpoints
+  Future<void> saveBackup({required String ciphertext}) async {
+    await _apiClient.post('/backup', data: {
+      'ciphertext': ciphertext,
+      'version': 1,
+    });
+  }
+
+  Future<Map<String, dynamic>?> getBackup() async {
+    final response = await _apiClient.get('/backup');
+    return response['backup'] as Map<String, dynamic>?;
+  }
 }
 
 /// Factory for creating KindredApi instances

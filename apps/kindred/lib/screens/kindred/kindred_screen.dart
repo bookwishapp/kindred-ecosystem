@@ -617,6 +617,7 @@ class _KindredScreenState extends State<KindredScreen> {
                   onAvatarTap: (person) async {
                     final result = await showModalBottomSheet<String>(
                       context: context,
+                      useRootNavigator: true,
                       isScrollControlled: true,
                       isDismissible: true,
                       enableDrag: true,

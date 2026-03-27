@@ -25,6 +25,7 @@ const {
   deleteKinDate
 } = require('./kin');
 const { getUploadUrl } = require('./upload');
+const { saveBackup, getBackup } = require('./backup');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -89,6 +90,10 @@ app.put('/kin/:id', authenticate, updateKin);
 app.delete('/kin/:id', authenticate, deleteKin);
 app.post('/kin/:id/dates', authenticate, addKinDate);
 app.delete('/kin/:id/dates/:dateId', authenticate, deleteKinDate);
+
+// Backup routes
+app.post('/backup', authenticate, saveBackup);
+app.get('/backup', authenticate, getBackup);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
