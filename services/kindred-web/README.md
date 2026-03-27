@@ -5,7 +5,7 @@ Public-facing web app for Kindred profiles, served from fromkindred.com.
 ## Features
 
 - Public profile pages at `/profile/[userId]`
-- Fetches profile data from kindred.terryheath.com API
+- Fetches profile data from api.fromkindred.com API
 - "Keep in Kindred" button with deep link to `kindred://profile/{userId}`
 - Warm, minimal design with Poppins font
 
@@ -29,7 +29,7 @@ npm start
 
 Copy `.env.example` to `.env.local` and update as needed:
 
-- `NEXT_PUBLIC_API_URL`: Kindred API endpoint (default: https://kindred.terryheath.com)
+- `NEXT_PUBLIC_API_URL`: Kindred API endpoint (default: https://api.fromkindred.com)
 - `NODE_ENV`: Environment (development/production)
 - `PORT`: Server port (Railway sets this automatically)
 

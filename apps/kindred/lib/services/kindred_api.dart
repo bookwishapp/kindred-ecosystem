@@ -162,8 +162,6 @@ class KindredApi {
 
 /// Factory for creating KindredApi instances
 class KindredApiFactory {
-  static const String defaultBaseUrl = 'https://kindred.terryheath.com';
-
   static KindredApi create({
     String? baseUrl,
     SecureStorageService? storage,
@@ -179,7 +177,9 @@ class KindredApiFactory {
   }
 
   static String _getBaseUrl() {
-    // Use Railway URL for both debug and production
-    return defaultBaseUrl;
+    return const String.fromEnvironment(
+      'KINDRED_API_URL',
+      defaultValue: 'https://api.fromkindred.com',
+    );
   }
 }

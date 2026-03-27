@@ -13,7 +13,7 @@ interface PageProps {
 
 async function getProfile(userId: string): Promise<ProfileData | null> {
   try {
-    const res = await fetch(`https://kindred.terryheath.com/profiles/${userId}`, {
+    const res = await fetch(`https://api.fromkindred.com/profiles/${userId}`, {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     })
 
