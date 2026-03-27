@@ -238,18 +238,21 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         SizedBox(height: AppTheme.spacing.space4),
 
         // Email field
-        TextField(
+        CupertinoTextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           style: AppTheme.text.body,
-          decoration: InputDecoration(
-            hintText: 'Email',
-            hintStyle: AppTheme.text.body.copyWith(
-              color: AppTheme.colors.tertiaryText,
-            ),
-            border: InputBorder.none,
-            filled: true,
-            fillColor: AppTheme.colors.surface,
+          placeholder: 'Email',
+          placeholderStyle: AppTheme.text.body.copyWith(
+            color: AppTheme.colors.tertiaryText,
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing.space2,
+            vertical: AppTheme.spacing.space2,
+          ),
+          decoration: BoxDecoration(
+            color: AppTheme.colors.surface,
+            borderRadius: BorderRadius.circular(AppTheme.radius.sm),
           ),
         ),
         SizedBox(height: AppTheme.spacing.space2),
@@ -311,33 +314,64 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         SizedBox(height: AppTheme.spacing.space3),
 
         // Name field
-        TextField(
+        CupertinoTextField(
           controller: _nameController,
           style: AppTheme.text.body,
-          decoration: InputDecoration(
-            hintText: 'Your name',
-            hintStyle: AppTheme.text.body.copyWith(
-              color: AppTheme.colors.tertiaryText,
-            ),
-            border: InputBorder.none,
+          placeholder: 'Your name',
+          placeholderStyle: AppTheme.text.body.copyWith(
+            color: AppTheme.colors.tertiaryText,
           ),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing.space2,
+            vertical: AppTheme.spacing.space2,
+          ),
+          decoration: null,
         ),
         SizedBox(height: AppTheme.spacing.space2),
 
         // Birthday picker
         GestureDetector(
-          onTap: () async {
-            final picked = await showDatePicker(
+          onTap: () {
+            showCupertinoModalPopup(
               context: context,
-              initialDate: _selectedBirthday ?? DateTime(DateTime.now().year - 30, 1, 1),
-              firstDate: DateTime(1900),
-              lastDate: DateTime.now(),
+              builder: (BuildContext context) => Container(
+                height: 250,
+                color: AppTheme.colors.warmWhite,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CupertinoButton(
+                          child: Text('Cancel'),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        CupertinoButton(
+                          child: Text('Done'),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: CupertinoDatePicker(
+                        mode: CupertinoDatePickerMode.date,
+                        initialDateTime: _selectedBirthday ??
+                            DateTime(DateTime.now().year - 30, 1, 1),
+                        minimumDate: DateTime(1900),
+                        maximumDate: DateTime.now(),
+                        onDateTimeChanged: (DateTime newDate) {
+                          setState(() {
+                            _selectedBirthday = newDate;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
-            if (picked != null) {
-              setState(() {
-                _selectedBirthday = picked;
-              });
-            }
           },
           child: Container(
             padding: EdgeInsets.symmetric(
@@ -453,14 +487,13 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         // Name (editable)
         Center(
           child: _isEditingName
-              ? TextField(
+              ? CupertinoTextField(
                   controller: _nameController,
                   autofocus: true,
                   textAlign: TextAlign.center,
                   style: AppTheme.text.headingLarge,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                  ),
+                  decoration: null,
+                  padding: EdgeInsets.zero,
                   onSubmitted: (value) async {
                     if (value.isNotEmpty) {
                       await profileService.updateProfile({'name': value});
@@ -528,35 +561,38 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
 
         // Add wishlist link
         if (_isAddingLink) ...[
-          TextField(
+          CupertinoTextField(
             controller: _linkLabelController,
             autofocus: true,
             style: AppTheme.text.body,
-            decoration: InputDecoration(
-              hintText: 'Label',
-              hintStyle: AppTheme.text.body.copyWith(
-                color: AppTheme.colors.tertiaryText,
-              ),
-              border: InputBorder.none,
+            placeholder: 'Label',
+            placeholderStyle: AppTheme.text.body.copyWith(
+              color: AppTheme.colors.tertiaryText,
             ),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing.space2,
+              vertical: AppTheme.spacing.space1,
+            ),
+            decoration: null,
           ),
-          TextField(
+          CupertinoTextField(
             controller: _linkUrlController,
             style: AppTheme.text.body,
-            decoration: InputDecoration(
-              hintText: 'URL',
-              hintStyle: AppTheme.text.body.copyWith(
-                color: AppTheme.colors.tertiaryText,
-              ),
-              border: InputBorder.none,
+            placeholder: 'URL',
+            placeholderStyle: AppTheme.text.body.copyWith(
+              color: AppTheme.colors.tertiaryText,
             ),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing.space2,
+              vertical: AppTheme.spacing.space1,
+            ),
+            decoration: null,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              IconButton(
-                icon: const Icon(CupertinoIcons.check_mark, size: 20),
-                color: AppTheme.colors.secondaryText,
+              CupertinoButton(
+                padding: EdgeInsets.zero,
                 onPressed: () async {
                   if (_linkLabelController.text.isNotEmpty &&
                       _linkUrlController.text.isNotEmpty) {
@@ -571,15 +607,24 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                     });
                   }
                 },
+                child: Icon(
+                  CupertinoIcons.check_mark,
+                  size: 20,
+                  color: AppTheme.colors.secondaryText,
+                ),
               ),
-              IconButton(
-                icon: const Icon(CupertinoIcons.xmark, size: 20),
-                color: AppTheme.colors.tertiaryText,
+              CupertinoButton(
+                padding: EdgeInsets.zero,
                 onPressed: () {
                   setState(() {
                     _isAddingLink = false;
                   });
                 },
+                child: Icon(
+                  CupertinoIcons.xmark,
+                  size: 20,
+                  color: AppTheme.colors.tertiaryText,
+                ),
               ),
             ],
           ),

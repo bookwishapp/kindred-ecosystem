@@ -298,4 +298,15 @@ class LocalDb {
     final db = await database;
     await db.delete('kin_people', where: 'id = ?', whereArgs: [id]);
   }
+
+  /// Update a local kin person's photo
+  Future<void> updateKinPhoto(String id, String photoPath) async {
+    final db = await database;
+    await db.update(
+      'kin_people',
+      {'photo_url': photoPath},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }

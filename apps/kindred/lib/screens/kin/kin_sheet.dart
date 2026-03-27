@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/kin_person.dart';
 import '../../providers/kin_provider.dart';
 import '../../services/local_db.dart';
+import '../../services/photo_service.dart';
 
 class KinSheet extends StatefulWidget {
   final KinPerson person;
@@ -105,6 +107,55 @@ class _KinSheetState extends State<KinSheet> {
     );
   }
 
+  Widget _buildAvatarImage() {
+    final photoUrl = widget.person.photoUrl!;
+    if (photoUrl.startsWith('/')) {
+      // Local file path
+      return Image.file(
+        File(photoUrl),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(color: AppTheme.colors.surface);
+        },
+      );
+    } else {
+      // Network URL
+      return CachedNetworkImage(
+        imageUrl: photoUrl,
+        fit: BoxFit.cover,
+      );
+    }
+  }
+
+  List<Widget> _buildProfileSection() {
+    // Check if anything is shared
+    final hasSharedContent = widget.person.birthday != null ||
+        false; // Add wishlist check when implemented
+
+    if (!hasSharedContent) {
+      // Show single empty state for entire profile section
+      return [_buildEmptyState('Nothing shared yet.')];
+    } else {
+      // Show individual sections
+      final widgets = <Widget>[];
+
+      if (widget.person.birthday != null) {
+        widgets.add(
+          Text(
+            'Birthday — ${_formatDate(widget.person.birthday!)}',
+            style: AppTheme.text.body,
+          ),
+        );
+        widgets.add(SizedBox(height: AppTheme.spacing.space3));
+      }
+
+      // Wishlist links (shared) - placeholder for now
+      // Will be shown here when implemented
+
+      return widgets;
+    }
+  }
+
   Widget _buildNoteSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,22 +208,20 @@ class _KinSheetState extends State<KinSheet> {
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child: CupertinoTextField(
                   controller: _noteController,
                   autofocus: true,
                   style: AppTheme.text.body,
-                  decoration: InputDecoration(
-                    hintText: 'Write a note...',
-                    hintStyle: AppTheme.text.body.copyWith(
-                      color: AppTheme.colors.tertiaryText,
-                    ),
-                    border: InputBorder.none,
+                  placeholder: 'Write a note...',
+                  placeholderStyle: AppTheme.text.body.copyWith(
+                    color: AppTheme.colors.tertiaryText,
                   ),
+                  decoration: null,
+                  padding: EdgeInsets.zero,
                 ),
               ),
-              IconButton(
-                icon: const Icon(CupertinoIcons.check_mark, size: 20),
-                color: AppTheme.colors.secondaryText,
+              CupertinoButton(
+                padding: EdgeInsets.zero,
                 onPressed: () async {
                   if (_noteController.text.trim().isNotEmpty) {
                     await _db.addNote(widget.person.id, _noteController.text.trim());
@@ -183,16 +232,25 @@ class _KinSheetState extends State<KinSheet> {
                     _loadLocalData();
                   }
                 },
+                child: Icon(
+                  CupertinoIcons.check_mark,
+                  size: 20,
+                  color: AppTheme.colors.secondaryText,
+                ),
               ),
-              IconButton(
-                icon: const Icon(CupertinoIcons.xmark, size: 20),
-                color: AppTheme.colors.tertiaryText,
+              CupertinoButton(
+                padding: EdgeInsets.zero,
                 onPressed: () {
                   _noteController.clear();
                   setState(() {
                     _isAddingNote = false;
                   });
                 },
+                child: Icon(
+                  CupertinoIcons.xmark,
+                  size: 20,
+                  color: AppTheme.colors.tertiaryText,
+                ),
               ),
             ],
           ),
@@ -263,32 +321,60 @@ class _KinSheetState extends State<KinSheet> {
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: CupertinoTextField(
                       controller: _dateLabelController,
                       autofocus: true,
                       style: AppTheme.text.body,
-                      decoration: InputDecoration(
-                        hintText: 'Label',
-                        hintStyle: AppTheme.text.body.copyWith(
-                          color: AppTheme.colors.tertiaryText,
-                        ),
-                        border: InputBorder.none,
+                      placeholder: 'Label',
+                      placeholderStyle: AppTheme.text.body.copyWith(
+                        color: AppTheme.colors.tertiaryText,
                       ),
+                      decoration: null,
+                      padding: EdgeInsets.zero,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () async {
-                      final picked = await showDatePicker(
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      showCupertinoModalPopup(
                         context: context,
-                        initialDate: _selectedDate ?? DateTime.now(),
-                        firstDate: DateTime(1900),
-                        lastDate: DateTime(2100),
+                        builder: (BuildContext context) => Container(
+                          height: 250,
+                          color: AppTheme.colors.warmWhite,
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  CupertinoButton(
+                                    child: Text('Cancel'),
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                  CupertinoButton(
+                                    child: Text('Done'),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                ],
+                              ),
+                              Expanded(
+                                child: CupertinoDatePicker(
+                                  mode: CupertinoDatePickerMode.date,
+                                  initialDateTime: _selectedDate ?? DateTime.now(),
+                                  minimumDate: DateTime(1900),
+                                  maximumDate: DateTime(2100),
+                                  onDateTimeChanged: (DateTime newDate) {
+                                    setState(() {
+                                      _selectedDate = newDate;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
-                      if (picked != null) {
-                        setState(() {
-                          _selectedDate = picked;
-                        });
-                      }
                     },
                     child: Text(
                       _selectedDate != null
@@ -304,9 +390,8 @@ class _KinSheetState extends State<KinSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.check_mark, size: 20),
-                    color: AppTheme.colors.secondaryText,
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
                     onPressed: () async {
                       if (_dateLabelController.text.trim().isNotEmpty && _selectedDate != null) {
                         await _db.addPrivateDate(
@@ -323,10 +408,14 @@ class _KinSheetState extends State<KinSheet> {
                         _loadLocalData();
                       }
                     },
+                    child: Icon(
+                      CupertinoIcons.check_mark,
+                      size: 20,
+                      color: AppTheme.colors.secondaryText,
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.xmark, size: 20),
-                    color: AppTheme.colors.tertiaryText,
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
                     onPressed: () {
                       _dateLabelController.clear();
                       setState(() {
@@ -334,6 +423,11 @@ class _KinSheetState extends State<KinSheet> {
                         _selectedDate = null;
                       });
                     },
+                    child: Icon(
+                      CupertinoIcons.xmark,
+                      size: 20,
+                      color: AppTheme.colors.tertiaryText,
+                    ),
                   ),
                 ],
               ),
@@ -413,35 +507,38 @@ class _KinSheetState extends State<KinSheet> {
         if (_isAddingLink) ...[
           Column(
             children: [
-              TextField(
+              CupertinoTextField(
                 controller: _linkLabelController,
                 autofocus: true,
                 style: AppTheme.text.body,
-                decoration: InputDecoration(
-                  hintText: 'Label',
-                  hintStyle: AppTheme.text.body.copyWith(
-                    color: AppTheme.colors.tertiaryText,
-                  ),
-                  border: InputBorder.none,
+                placeholder: 'Label',
+                placeholderStyle: AppTheme.text.body.copyWith(
+                  color: AppTheme.colors.tertiaryText,
+                ),
+                decoration: null,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing.space2,
+                  vertical: AppTheme.spacing.space1,
                 ),
               ),
-              TextField(
+              CupertinoTextField(
                 controller: _linkUrlController,
                 style: AppTheme.text.body,
-                decoration: InputDecoration(
-                  hintText: 'URL',
-                  hintStyle: AppTheme.text.body.copyWith(
-                    color: AppTheme.colors.tertiaryText,
-                  ),
-                  border: InputBorder.none,
+                placeholder: 'URL',
+                placeholderStyle: AppTheme.text.body.copyWith(
+                  color: AppTheme.colors.tertiaryText,
+                ),
+                decoration: null,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing.space2,
+                  vertical: AppTheme.spacing.space1,
                 ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.check_mark, size: 20),
-                    color: AppTheme.colors.secondaryText,
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
                     onPressed: () async {
                       if (_linkLabelController.text.trim().isNotEmpty &&
                           _linkUrlController.text.trim().isNotEmpty) {
@@ -458,10 +555,14 @@ class _KinSheetState extends State<KinSheet> {
                         _loadLocalData();
                       }
                     },
+                    child: Icon(
+                      CupertinoIcons.check_mark,
+                      size: 20,
+                      color: AppTheme.colors.secondaryText,
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(CupertinoIcons.xmark, size: 20),
-                    color: AppTheme.colors.tertiaryText,
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
                     onPressed: () {
                       _linkLabelController.clear();
                       _linkUrlController.clear();
@@ -469,6 +570,11 @@ class _KinSheetState extends State<KinSheet> {
                         _isAddingLink = false;
                       });
                     },
+                    child: Icon(
+                      CupertinoIcons.xmark,
+                      size: 20,
+                      color: AppTheme.colors.tertiaryText,
+                    ),
                   ),
                 ],
               ),
@@ -530,30 +636,45 @@ class _KinSheetState extends State<KinSheet> {
 
               // Avatar
               Center(
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppTheme.colors.surface,
-                  ),
-                  child: widget.person.photoUrl != null
-                      ? ClipOval(
-                          child: CachedNetworkImage(
-                            imageUrl: widget.person.photoUrl!,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Center(
-                          child: Text(
-                            widget.person.name.isNotEmpty
-                                ? widget.person.name[0].toUpperCase()
-                                : '?',
-                            style: AppTheme.text.heading.copyWith(
-                              color: AppTheme.colors.secondaryText,
+                child: GestureDetector(
+                  onTap: widget.person.type == KinPersonType.local
+                      ? () async {
+                          final photoPath = await PhotoService.pickPhoto(context);
+                          if (photoPath != null && mounted) {
+                            final kinProvider = context.read<KinProvider>();
+                            await kinProvider.updateKinPhoto(widget.person.id, photoPath);
+                          }
+                        }
+                      : null,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.colors.surface,
+                      border: widget.person.type == KinPersonType.local
+                          ? Border.all(
+                              color: AppTheme.colors.border,
+                              width: 2,
+                              strokeAlign: BorderSide.strokeAlignOutside,
+                            )
+                          : null,
+                    ),
+                    child: widget.person.photoUrl != null
+                        ? ClipOval(
+                            child: _buildAvatarImage(),
+                          )
+                        : Center(
+                            child: Text(
+                              widget.person.name.isNotEmpty
+                                  ? widget.person.name[0].toUpperCase()
+                                  : '?',
+                              style: AppTheme.text.heading.copyWith(
+                                color: AppTheme.colors.secondaryText,
+                              ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
               ),
               SizedBox(height: AppTheme.spacing.space3),
@@ -567,7 +688,7 @@ class _KinSheetState extends State<KinSheet> {
                 ),
               ),
 
-              // "let go" option — only visible when manually positioned
+              // "release" option — only visible when manually positioned
               if (widget.person.positionOverride != null) ...[
                 SizedBox(height: AppTheme.spacing.space1),
                 Center(
@@ -577,7 +698,7 @@ class _KinSheetState extends State<KinSheet> {
                       Navigator.pop(context);
                     },
                     child: Text(
-                      'let go',
+                      'release',
                       style: AppTheme.text.caption.copyWith(
                         color: AppTheme.colors.secondaryText,
                       ),
@@ -602,21 +723,7 @@ class _KinSheetState extends State<KinSheet> {
                     ),
 
                     // === THEIR PROFILE ===
-
-                    // Dates (shared)
-                    if (widget.person.birthday != null) ...[
-                      Text(
-                        'Birthday — ${_formatDate(widget.person.birthday!)}',
-                        style: AppTheme.text.body,
-                      ),
-                    ] else ...[
-                      _buildEmptyState('Nothing shared yet.'),
-                    ],
-
-                    SizedBox(height: AppTheme.spacing.space3),
-
-                    // Wishlist links (shared) - placeholder for now
-                    _buildEmptyState('Nothing here yet.'),
+                    ..._buildProfileSection(),
 
                     Divider(
                       color: AppTheme.colors.border,
@@ -641,6 +748,50 @@ class _KinSheetState extends State<KinSheet> {
 
                     // === THINGS THEY MIGHT LIKE ===
                     _buildPrivateWishlistSection(),
+
+                    // "let go" option - remove from kin
+                    if (widget.person.type == KinPersonType.local) ...[
+                      SizedBox(height: AppTheme.spacing.space4),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            showCupertinoDialog(
+                              context: context,
+                              builder: (BuildContext context) => CupertinoAlertDialog(
+                                content: const Text('Let them go?'),
+                                actions: [
+                                  CupertinoDialogAction(
+                                    onPressed: () => Navigator.pop(context),
+                                    isDefaultAction: true,
+                                    child: const Text('Keep them'),
+                                  ),
+                                  CupertinoDialogAction(
+                                    onPressed: () async {
+                                      Navigator.pop(context); // Close dialog
+
+                                      final kinProvider = context.read<KinProvider>();
+                                      await kinProvider.deleteLocalKin(widget.person.id);
+
+                                      if (mounted) {
+                                        Navigator.pop(context); // Close sheet
+                                      }
+                                    },
+                                    isDestructiveAction: true,
+                                    child: const Text('Let go'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'let go',
+                            style: AppTheme.text.caption.copyWith(
+                              color: AppTheme.colors.secondaryText,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
 
                     SizedBox(height: AppTheme.spacing.space6),
                   ],

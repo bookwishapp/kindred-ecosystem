@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ui_kit/ui_kit.dart';
 import '../../providers/kin_provider.dart';
+import '../../services/local_db.dart';
 import '../../services/photo_service.dart';
 
 class AddKinSheet extends StatefulWidget {
@@ -23,6 +24,8 @@ class _AddKinSheetState extends State<AddKinSheet> {
 
   final List<Map<String, dynamic>> _additionalDates = [];
   bool _isAddingDate = false;
+  bool _isSaving = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -126,28 +129,21 @@ class _AddKinSheetState extends State<AddKinSheet> {
               SizedBox(height: AppTheme.spacing.space4),
 
               // Name field
-              TextField(
+              CupertinoTextField(
                 controller: _nameController,
                 style: AppTheme.text.body,
-                decoration: InputDecoration(
-                  hintText: 'Name',
-                  hintStyle: AppTheme.text.body.copyWith(
-                    color: AppTheme.colors.tertiaryText,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radius.sm),
-                    borderSide: BorderSide(color: AppTheme.colors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radius.sm),
-                    borderSide: BorderSide(color: AppTheme.colors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radius.sm),
-                    borderSide: BorderSide(color: AppTheme.colors.accent, width: 2),
-                  ),
-                  filled: true,
-                  fillColor: AppTheme.colors.surface,
+                placeholder: 'Name',
+                placeholderStyle: AppTheme.text.body.copyWith(
+                  color: AppTheme.colors.tertiaryText,
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing.space2,
+                  vertical: AppTheme.spacing.space2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.colors.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.radius.sm),
+                  border: Border.all(color: AppTheme.colors.border),
                 ),
               ),
               SizedBox(height: AppTheme.spacing.space3),
@@ -266,20 +262,20 @@ class _AddKinSheetState extends State<AddKinSheet> {
                 Row(
                   children: [
                     Expanded(
-                      child: TextField(
+                      child: CupertinoTextField(
                         controller: _dateLabelController,
                         autofocus: true,
                         style: AppTheme.text.body,
-                        decoration: InputDecoration(
-                          hintText: 'Label',
-                          hintStyle: AppTheme.text.body.copyWith(
-                            color: AppTheme.colors.tertiaryText,
-                          ),
-                          border: InputBorder.none,
+                        placeholder: 'Label',
+                        placeholderStyle: AppTheme.text.body.copyWith(
+                          color: AppTheme.colors.tertiaryText,
                         ),
+                        decoration: null,
+                        padding: EdgeInsets.zero,
                       ),
                     ),
-                    TextButton(
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
                       onPressed: () {
                         showCupertinoModalPopup(
                           context: context,
@@ -330,9 +326,8 @@ class _AddKinSheetState extends State<AddKinSheet> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(CupertinoIcons.check_mark, size: 20),
-                      color: AppTheme.colors.secondaryText,
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
                       onPressed: () {
                         if (_dateLabelController.text.isNotEmpty && _selectedDate != null) {
                           setState(() {
@@ -346,10 +341,14 @@ class _AddKinSheetState extends State<AddKinSheet> {
                           });
                         }
                       },
+                      child: Icon(
+                        CupertinoIcons.check_mark,
+                        size: 20,
+                        color: AppTheme.colors.secondaryText,
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(CupertinoIcons.xmark, size: 20),
-                      color: AppTheme.colors.tertiaryText,
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
                       onPressed: () {
                         setState(() {
                           _isAddingDate = false;
@@ -357,6 +356,11 @@ class _AddKinSheetState extends State<AddKinSheet> {
                           _selectedDate = null;
                         });
                       },
+                      child: Icon(
+                        CupertinoIcons.xmark,
+                        size: 20,
+                        color: AppTheme.colors.tertiaryText,
+                      ),
                     ),
                   ],
                 ),
@@ -380,34 +384,109 @@ class _AddKinSheetState extends State<AddKinSheet> {
               ],
               SizedBox(height: AppTheme.spacing.space5),
 
+              // Error message
+              if (_errorMessage != null) ...[
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing.space2,
+                    vertical: AppTheme.spacing.space1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.colors.surface,
+                    borderRadius: BorderRadius.circular(AppTheme.radius.sm),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.exclamationmark_circle,
+                        size: 16,
+                        color: AppTheme.colors.error,
+                      ),
+                      SizedBox(width: AppTheme.spacing.space1),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: AppTheme.text.caption.copyWith(
+                            color: AppTheme.colors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: AppTheme.spacing.space2),
+              ],
+
               // Keep button
               SizedBox(
                 width: double.infinity,
                 child: CupertinoButton(
                   color: AppTheme.colors.accent,
-                  onPressed: () async {
-                    if (_nameController.text.isNotEmpty) {
+                  onPressed: _isSaving ? null : () async {
+                    // Validate name
+                    if (_nameController.text.trim().isEmpty) {
+                      setState(() {
+                        _errorMessage = 'Please enter a name';
+                      });
+                      return;
+                    }
+
+                    setState(() {
+                      _isSaving = true;
+                      _errorMessage = null;
+                    });
+
+                    try {
                       final kinProvider = context.read<KinProvider>();
+
+                      // Add the kin person
                       await kinProvider.addKinLocal(
                         name: _nameController.text.trim(),
-                        photoUrl: _localPhotoPath, // Will need S3 upload later
+                        photoUrl: _localPhotoPath,
                         birthday: _selectedBirthday,
                       );
 
-                      // TODO: Add additional dates to LocalDb
+                      // Get the newly added person's ID
+                      // The person should be the last one added to the list
+                      final newPerson = kinProvider.kin.lastWhere(
+                        (person) => person.name == _nameController.text.trim(),
+                        orElse: () => throw Exception('Could not find newly added person'),
+                      );
+
+                      // Add additional dates to LocalDb
+                      for (final date in _additionalDates) {
+                        await LocalDb.instance.addPrivateDate(
+                          newPerson.id,
+                          date['label'],
+                          date['date'],
+                          true, // recurs annually by default
+                        );
+                      }
+
+                      // Reload kin to update dates
+                      await kinProvider.loadKin();
 
                       // Dismiss sheet
                       if (mounted) {
                         Navigator.pop(context);
                       }
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() {
+                          _isSaving = false;
+                          _errorMessage = 'Failed to add person. Please try again.';
+                        });
+                      }
                     }
                   },
-                  child: Text(
-                    'Keep',
-                    style: AppTheme.text.button.copyWith(
-                      color: AppTheme.colors.warmWhite,
-                    ),
-                  ),
+                  child: _isSaving
+                      ? const CupertinoActivityIndicator(color: Colors.white)
+                      : Text(
+                          'Keep',
+                          style: AppTheme.text.button.copyWith(
+                            color: AppTheme.colors.warmWhite,
+                          ),
+                        ),
                 ),
               ),
               SizedBox(height: AppTheme.spacing.space2),

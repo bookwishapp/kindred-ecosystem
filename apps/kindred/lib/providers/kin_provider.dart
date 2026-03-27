@@ -390,6 +390,41 @@ class KinProvider extends ChangeNotifier {
     }
   }
 
+  // Update photo for a local kin person
+  Future<void> updateKinPhoto(String id, String photoPath) async {
+    // Update in local database
+    await LocalDb.instance.updateKinPhoto(id, photoPath);
+
+    // Update in memory
+    _kin = _kin.map((person) {
+      if (person.id == id) {
+        return person.copyWith(photoUrl: photoPath);
+      }
+      return person;
+    }).toList();
+
+    notifyListeners();
+  }
+
+  // Delete a local kin person
+  Future<void> deleteLocalKin(String id) async {
+    try {
+      // Delete from database
+      await LocalDb.instance.deleteLocalKin(id);
+
+      // Remove from memory
+      _kin.removeWhere((person) => person.id == id);
+
+      // Update natural positions
+      _updateNaturalPositions(_kin);
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to delete local kin: $e');
+      rethrow;
+    }
+  }
+
   // Legacy method - kept for compatibility but should be removed later
   void holdAtTop(String id) {
     setPosition(id, 0.0);

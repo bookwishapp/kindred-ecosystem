@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ui_kit/ui_kit.dart';
 
@@ -22,20 +23,19 @@ class AddKinScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Spacer(),
-            ElevatedButton(
+            CupertinoButton(
               onPressed: () {
                 // TODO: Implement manual add flow
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.colors.warmBlack,
-                foregroundColor: AppTheme.colors.warmWhite,
-                padding: EdgeInsets.symmetric(
-                  vertical: AppTheme.spacing.space2,
-                ),
+              color: AppTheme.colors.accent,
+              padding: EdgeInsets.symmetric(
+                vertical: AppTheme.spacing.space2,
               ),
               child: Text(
                 'Keep someone',
-                style: AppTheme.text.button,
+                style: AppTheme.text.button.copyWith(
+                  color: AppTheme.colors.warmWhite,
+                ),
               ),
             ),
             const Spacer(),

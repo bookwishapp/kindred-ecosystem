@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
 class PhotoService {
   static final ImagePicker _picker = ImagePicker();
@@ -126,9 +130,12 @@ class PhotoService {
       );
 
       if (image != null) {
-        // For now, return the local file path
-        // S3 upload will be added in a future session
-        return image.path;
+        // Copy to permanent location
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = '${const Uuid().v4()}${path.extension(image.path)}';
+        final permanentPath = '${appDir.path}/$fileName';
+        await File(image.path).copy(permanentPath);
+        return permanentPath;
       }
     } catch (e) {
       debugPrint('Error picking image: $e');

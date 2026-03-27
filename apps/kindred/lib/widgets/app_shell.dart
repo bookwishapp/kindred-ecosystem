@@ -103,13 +103,14 @@ class AppShell extends StatelessWidget {
                   color: AppTheme.colors.fabBackground,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: IconButton(
-                  icon: Icon(
+                child: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () => _showAddKinSheet(context),
+                  child: Icon(
                     CupertinoIcons.plus,
                     color: AppTheme.colors.fabIcon,
                     size: 28,
                   ),
-                  onPressed: () => _showAddKinSheet(context),
                 ),
               ),
               // You - opens Show Up sheet

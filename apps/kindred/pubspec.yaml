@@ -50,6 +50,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   sqflite: ^2.3.0
   path: ^1.8.0
+  path_provider: ^2.1.0
 
   # Images
   cached_network_image: ^3.3.1
