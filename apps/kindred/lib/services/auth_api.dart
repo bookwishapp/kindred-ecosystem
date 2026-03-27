@@ -48,6 +48,38 @@ class AuthApi {
       'contentType': contentType,
     });
   }
+
+  // Wishlist link endpoints
+  Future<Map<String, dynamic>> addWishlistLink({
+    required String label,
+    required String url,
+  }) async {
+    return await _apiClient.post('/profile/links', data: {
+      'label': label,
+      'url': url,
+    });
+  }
+
+  Future<void> deleteWishlistLink(String linkId) async {
+    await _apiClient.delete('/profile/links/$linkId');
+  }
+
+  // Shared date endpoints
+  Future<Map<String, dynamic>> addSharedDate({
+    required String label,
+    required String date,
+    bool recursAnnually = true,
+  }) async {
+    return await _apiClient.post('/profile/dates', data: {
+      'label': label,
+      'date': date,
+      'recurs_annually': recursAnnually,
+    });
+  }
+
+  Future<void> deleteSharedDate(String dateId) async {
+    await _apiClient.delete('/profile/dates/$dateId');
+  }
 }
 
 /// Factory for creating AuthApi instances

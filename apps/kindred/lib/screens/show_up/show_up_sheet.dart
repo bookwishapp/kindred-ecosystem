@@ -32,6 +32,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
   DateTime? _selectedBirthday;
   String? _localPhotoPath;
   String? _uploadedPhotoUrl;
+  bool _isAddingLink = false;
   bool _isEditingName = false;
   bool _isUploading = false;
 
@@ -405,7 +406,23 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         ),
         SizedBox(height: AppTheme.spacing.space2),
 
-        // Wishlist functionality temporarily removed
+        // Add wishlist link
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _isAddingLink = true;
+            });
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing.space1),
+            child: Text(
+              '+ Add a wishlist link',
+              style: AppTheme.text.body.copyWith(
+                color: AppTheme.colors.accent,
+              ),
+            ),
+          ),
+        ),
         SizedBox(height: AppTheme.spacing.space4),
 
         // Show Up button
@@ -511,9 +528,38 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           SizedBox(height: AppTheme.spacing.space3),
         ],
 
+        // Wishlist links
+        if (profileService.wishlistLinks.isNotEmpty) ...[
+          ...profileService.wishlistLinks.map((link) {
+            return Dismissible(
+              key: Key(link['id']),
+              onDismissed: (_) async {
+                await profileService.removeWishlistLink(link['id']);
+              },
+              child: GestureDetector(
+                onTap: () async {
+                  final uri = Uri.tryParse(link['url']);
+                  if (uri != null) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: AppTheme.spacing.space2),
+                  child: Text(
+                    link['label'],
+                    style: AppTheme.text.body.copyWith(
+                      color: AppTheme.colors.accent,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
 
-        // Wishlist link editing temporarily removed
-        /* if (_isAddingLink) ...[
+        // Add wishlist link
+        if (_isAddingLink) ...[
           CupertinoTextField(
             controller: _linkLabelController,
             autofocus: true,
@@ -598,11 +644,11 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
               ),
             ),
           ),
-        ], */
+        ],
         SizedBox(height: AppTheme.spacing.space3),
 
-        // Shared dates functionality temporarily removed
-        /* if (profileService.sharedDates.isNotEmpty) ...[
+        // Shared dates
+        if (profileService.sharedDates.isNotEmpty) ...[
           ...profileService.sharedDates.map((date) {
             final dateObj = DateTime.parse(date['date']);
             return Dismissible(
@@ -619,10 +665,9 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
               ),
             );
           }),
-        ], */
+        ],
 
-        // Add date functionality temporarily removed
-        /*
+        // Add date
         GestureDetector(
           onTap: () {
             // Date adding functionality not yet implemented
@@ -636,7 +681,6 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
             ),
           ),
         ),
-        */
 
         Divider(
           color: AppTheme.colors.border,

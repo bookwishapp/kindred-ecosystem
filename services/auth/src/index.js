@@ -21,7 +21,16 @@ const {
   revokeAllSessions
 } = require('./admin');
 const { isAdminConfigured } = require('./adminAuth');
-const { getMyProfile, upsertProfile, getPublicProfile, deleteProfile } = require('./profiles');
+const {
+  getMyProfile,
+  upsertProfile,
+  getPublicProfile,
+  deleteProfile,
+  addWishlistLink,
+  deleteWishlistLink,
+  addSharedDate,
+  deleteSharedDate
+} = require('./profiles');
 const { getUploadUrl } = require('./upload');
 
 const app = express();
@@ -69,6 +78,14 @@ app.get('/profile', corsMiddleware, authenticate, getMyProfile);
 app.post('/profile', corsMiddleware, authenticate, upsertProfile);
 app.delete('/profile', corsMiddleware, authenticate, deleteProfile);
 app.get('/profile/:userId', corsMiddleware, getPublicProfile); // no auth — public
+
+// Wishlist link routes
+app.post('/profile/links', corsMiddleware, authenticate, addWishlistLink);
+app.delete('/profile/links/:linkId', corsMiddleware, authenticate, deleteWishlistLink);
+
+// Shared date routes
+app.post('/profile/dates', corsMiddleware, authenticate, addSharedDate);
+app.delete('/profile/dates/:dateId', corsMiddleware, authenticate, deleteSharedDate);
 
 // Upload
 app.post('/upload-url', corsMiddleware, authenticate, getUploadUrl);

@@ -1,11 +1,37 @@
 const pool = require('./db');
+const { randomUUID } = require('crypto');
 
 async function getMyProfile(req, res) {
-  const result = await pool.query(
-    'SELECT * FROM profiles WHERE user_id = $1',
-    [req.user.id]
-  );
-  res.json({ profile: result.rows[0] || null });
+  const client = await pool.connect();
+  try {
+    // Get basic profile
+    const profileResult = await client.query(
+      'SELECT * FROM profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+
+    let profile = profileResult.rows[0] || null;
+
+    if (profile) {
+      // Get wishlist links
+      const linksResult = await client.query(
+        'SELECT * FROM profile_wishlist_links WHERE user_id = $1 ORDER BY created_at DESC',
+        [req.user.id]
+      );
+      profile.wishlist_links = linksResult.rows;
+
+      // Get shared dates
+      const datesResult = await client.query(
+        'SELECT * FROM profile_shared_dates WHERE user_id = $1 ORDER BY date ASC',
+        [req.user.id]
+      );
+      profile.dates = datesResult.rows;
+    }
+
+    res.json({ profile });
+  } finally {
+    client.release();
+  }
 }
 
 async function upsertProfile(req, res) {
@@ -41,4 +67,55 @@ async function deleteProfile(req, res) {
   res.json({ success: true });
 }
 
-module.exports = { getMyProfile, upsertProfile, getPublicProfile, deleteProfile };
+// Wishlist link endpoints
+async function addWishlistLink(req, res) {
+  const { label, url } = req.body;
+  const result = await pool.query(
+    `INSERT INTO profile_wishlist_links (user_id, label, url)
+     VALUES ($1, $2, $3)
+     RETURNING *`,
+    [req.user.id, label, url]
+  );
+  res.json(result.rows[0]);
+}
+
+async function deleteWishlistLink(req, res) {
+  const { linkId } = req.params;
+  await pool.query(
+    'DELETE FROM profile_wishlist_links WHERE id = $1 AND user_id = $2',
+    [linkId, req.user.id]
+  );
+  res.json({ success: true });
+}
+
+// Shared date endpoints
+async function addSharedDate(req, res) {
+  const { label, date, recurs_annually = true } = req.body;
+  const result = await pool.query(
+    `INSERT INTO profile_shared_dates (user_id, label, date, recurs_annually)
+     VALUES ($1, $2, $3, $4)
+     RETURNING *`,
+    [req.user.id, label, date, recurs_annually]
+  );
+  res.json(result.rows[0]);
+}
+
+async function deleteSharedDate(req, res) {
+  const { dateId } = req.params;
+  await pool.query(
+    'DELETE FROM profile_shared_dates WHERE id = $1 AND user_id = $2',
+    [dateId, req.user.id]
+  );
+  res.json({ success: true });
+}
+
+module.exports = {
+  getMyProfile,
+  upsertProfile,
+  getPublicProfile,
+  deleteProfile,
+  addWishlistLink,
+  deleteWishlistLink,
+  addSharedDate,
+  deleteSharedDate
+};

@@ -29,6 +29,19 @@ class ProfileService extends ChangeNotifier {
     return null;
   }
 
+  List<Map<String, dynamic>> get wishlistLinks {
+    if (_profile?['wishlist_links'] != null) {
+      return List<Map<String, dynamic>>.from(_profile!['wishlist_links']);
+    }
+    return [];
+  }
+
+  List<Map<String, dynamic>> get sharedDates {
+    if (_profile?['dates'] != null) {
+      return List<Map<String, dynamic>>.from(_profile!['dates']);
+    }
+    return [];
+  }
 
   // Load cached profile from local storage
   Future<void> _loadCachedProfile() async {
@@ -130,6 +143,98 @@ class ProfileService extends ChangeNotifier {
     }
   }
 
+
+  // Add wishlist link
+  Future<void> addWishlistLink(String label, String url) async {
+    try {
+      final linkData = await _api.addWishlistLink(label: label, url: url);
+
+      // Update local profile with new link
+      if (_profile != null) {
+        final links = List<Map<String, dynamic>>.from(
+          _profile!['wishlist_links'] ?? [],
+        );
+        links.add(linkData);
+        _profile!['wishlist_links'] = links;
+        notifyListeners();
+      }
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // Remove wishlist link
+  Future<void> removeWishlistLink(String linkId) async {
+    try {
+      await _api.deleteWishlistLink(linkId);
+
+      // Update local profile
+      if (_profile != null && _profile!['wishlist_links'] != null) {
+        final links = List<Map<String, dynamic>>.from(
+          _profile!['wishlist_links'],
+        );
+        links.removeWhere((link) => link['id'] == linkId);
+        _profile!['wishlist_links'] = links;
+        notifyListeners();
+      }
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // Add shared date
+  Future<void> addSharedDate(
+    String label,
+    DateTime date, {
+    bool recursAnnually = true,
+  }) async {
+    try {
+      final dateData = await _api.addSharedDate(
+        label: label,
+        date: date.toIso8601String(),
+        recursAnnually: recursAnnually,
+      );
+
+      // Update local profile with new date
+      if (_profile != null) {
+        final dates = List<Map<String, dynamic>>.from(
+          _profile!['dates'] ?? [],
+        );
+        dates.add(dateData);
+        _profile!['dates'] = dates;
+        notifyListeners();
+      }
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // Remove shared date
+  Future<void> removeSharedDate(String dateId) async {
+    try {
+      await _api.deleteSharedDate(dateId);
+
+      // Update local profile
+      if (_profile != null && _profile!['dates'] != null) {
+        final dates = List<Map<String, dynamic>>.from(
+          _profile!['dates'],
+        );
+        dates.removeWhere((date) => date['id'] == dateId);
+        _profile!['dates'] = dates;
+        notifyListeners();
+      }
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
 
   // Clear profile (for logout)
   void clearProfile() {
