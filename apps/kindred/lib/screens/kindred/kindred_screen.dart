@@ -5,6 +5,7 @@ import 'package:ui_kit/ui_kit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:dio/dio.dart';
 import '../kin/kin_sheet.dart';
 import '../show_up/show_up_sheet.dart';
 import '../../providers/kin_provider.dart';
@@ -25,6 +26,7 @@ class _KindredScreenState extends State<KindredScreen> {
   bool _isFirstLaunch = false;
   bool _emailUpdatesEnabled = false;
   final TextEditingController _emailController = TextEditingController();
+  final Dio _dio = Dio();
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _KindredScreenState extends State<KindredScreen> {
   @override
   void dispose() {
     _emailController.dispose();
+    _dio.close();
     super.dispose();
   }
 
@@ -58,6 +61,46 @@ class _KindredScreenState extends State<KindredScreen> {
     }
   }
 
+  Future<bool> _subscribeToNewsletter(String email) async {
+    try {
+      final response = await _dio.post(
+        'https://terryheath.com/api/subscribe',
+        data: {
+          'email': email.trim(),
+          'source': 'kindred',
+        },
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+          validateStatus: (status) => status! < 500,
+        ),
+      );
+
+      return response.statusCode == 200 && response.data['success'] == true;
+    } catch (e) {
+      debugPrint('Subscribe error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _unsubscribeFromNewsletter(String email) async {
+    try {
+      final response = await _dio.post(
+        'https://terryheath.com/api/unsubscribe',
+        data: {
+          'email': email.trim(),
+        },
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+          validateStatus: (status) => status! < 500,
+        ),
+      );
+
+      return response.statusCode == 200 && response.data['success'] == true;
+    } catch (e) {
+      debugPrint('Unsubscribe error: $e');
+      return false;
+    }
+  }
 
   void _showShowUpSheet() {
     setState(() {
@@ -157,10 +200,29 @@ class _KindredScreenState extends State<KindredScreen> {
                     Column(
                       children: [
                         InkWell(
-                          onTap: () {
+                          onTap: () async {
+                            final newValue = !_emailUpdatesEnabled;
                             setState(() {
-                              _emailUpdatesEnabled = !_emailUpdatesEnabled;
+                              _emailUpdatesEnabled = newValue;
                             });
+
+                            // If toggling off and we have an email, unsubscribe
+                            if (!newValue && _emailController.text.isNotEmpty) {
+                              final success = await _unsubscribeFromNewsletter(_emailController.text);
+                              if (success) {
+                                // Clear local cache
+                                await LocalDb.instance.removeSetting('newsletter_email');
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text('Unsubscribed from updates'),
+                                      backgroundColor: AppTheme.colors.accent,
+                                      duration: const Duration(seconds: 1),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
                           },
                           child: Padding(
                             padding: EdgeInsets.all(AppTheme.spacing.space2),
@@ -174,10 +236,28 @@ class _KindredScreenState extends State<KindredScreen> {
                                 CupertinoSwitch(
                                   value: _emailUpdatesEnabled,
                                   activeTrackColor: AppTheme.colors.accent,
-                                  onChanged: (value) {
+                                  onChanged: (value) async {
                                     setState(() {
                                       _emailUpdatesEnabled = value;
                                     });
+
+                                    // If toggling off and we have an email, unsubscribe
+                                    if (!value && _emailController.text.isNotEmpty) {
+                                      final success = await _unsubscribeFromNewsletter(_emailController.text);
+                                      if (success) {
+                                        // Clear local cache
+                                        await LocalDb.instance.removeSetting('newsletter_email');
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: const Text('Unsubscribed from updates'),
+                                              backgroundColor: AppTheme.colors.accent,
+                                              duration: const Duration(seconds: 1),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
                                   },
                                 ),
                               ],
@@ -224,18 +304,37 @@ class _KindredScreenState extends State<KindredScreen> {
                                   ),
                                   onPressed: () async {
                                     if (_emailController.text.isNotEmpty) {
-                                      await LocalDb.instance.setSetting(
-                                        'newsletter_email',
-                                        _emailController.text.trim(),
-                                      );
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('Email saved'),
-                                            backgroundColor: AppTheme.colors.accent,
-                                            duration: Duration(seconds: 1),
-                                          ),
+                                      final email = _emailController.text.trim();
+
+                                      // Call subscribe API
+                                      final success = await _subscribeToNewsletter(email);
+
+                                      if (success) {
+                                        // Save to local cache for UI state
+                                        await LocalDb.instance.setSetting(
+                                          'newsletter_email',
+                                          email,
                                         );
+
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: const Text('Subscribed to updates!'),
+                                              backgroundColor: AppTheme.colors.accent,
+                                              duration: const Duration(seconds: 2),
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Failed to subscribe. Please try again.'),
+                                              backgroundColor: Colors.red,
+                                              duration: Duration(seconds: 2),
+                                            ),
+                                          );
+                                        }
                                       }
                                     }
                                   },
@@ -263,6 +362,24 @@ class _KindredScreenState extends State<KindredScreen> {
                         padding: EdgeInsets.all(AppTheme.spacing.space2),
                         child: Text(
                           'Support',
+                          style: AppTheme.text.body,
+                        ),
+                      ),
+                    ),
+                    const Divider(height: 1),
+
+                    // Settings (opens iOS system settings)
+                    InkWell(
+                      onTap: () async {
+                        setState(() {
+                          _showSettingsDropdown = false;
+                        });
+                        await launchUrl(Uri.parse('app-settings:'));
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(AppTheme.spacing.space2),
+                        child: Text(
+                          'Settings',
                           style: AppTheme.text.body,
                         ),
                       ),
@@ -323,7 +440,7 @@ class _KindredScreenState extends State<KindredScreen> {
           Scaffold(
             backgroundColor: AppTheme.colors.warmWhite,
             appBar: AppBar(
-              centerTitle: false,
+              centerTitle: true,
               backgroundColor: AppTheme.colors.warmWhite,
               elevation: 0,
               title: SvgPicture.asset(

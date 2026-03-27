@@ -119,6 +119,32 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // Handle access token directly (from deep link redirect)
+  Future<void> handleAccessToken(String token) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _accessToken = token;
+
+      // Save token to secure storage
+      await _storage.saveAuthToken(token);
+
+      _isLoading = false;
+      _error = null;
+      notifyListeners();
+
+      debugPrint('Successfully handled access token from deep link');
+    } catch (e) {
+      _error = 'Failed to save access token';
+      _isLoading = false;
+      notifyListeners();
+
+      debugPrint('Failed to handle access token: $e');
+    }
+  }
+
   // Refresh access token
   Future<void> refreshToken() async {
     try {

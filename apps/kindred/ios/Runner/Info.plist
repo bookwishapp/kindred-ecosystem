@@ -56,9 +56,13 @@
 			<string>com.terryheath.kindred</string>
 		</dict>
 	</array>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Kindred needs access to your photo library to add photos of your kin.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Kindred needs access to your camera to take photos of your kin.</string>
+	<string>To take a photo for someone in your Kin</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>To choose a photo for someone in your Kin</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSPrivacyUsageDescription</key>
+	<string>Photos you take or choose are stored on your device and only shared if you create a profile.</string>
 </dict>
 </plist>

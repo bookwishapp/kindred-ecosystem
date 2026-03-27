@@ -11,7 +11,7 @@ Kindred helps you take care of the people in your life — not by reminding you,
 - The main/home screen = **Kindred** (the app is named after this screen)
 - The avatar grid = **Your Kin**
 - Adding someone from their shared profile = **Keep**
-- Creating your own profile = **Rise Up**
+- Creating your own profile = **Show Up**
 - Inviting a local person to create a profile = **Invite to Show Up**
 - People in your grid = **your kin**
 - The app never uses: follow, track, remind, due, overdue, alert, notification, feed, social
@@ -196,17 +196,17 @@ Flutter app created, GoRouter, Provider, bottom nav (Kin / + / You), placeholder
 ### ✅ Session 2 — Avatar grid
 Stack-based positioning, ring system, drag positioning, float animations, size scaling, "let go".
 
-### 🔄 Session 3a — Backend service + profiles + kin records
-Railway service, Postgres migrations, REST endpoints. Auth via central auth service JWT. Profiles (Show Up), Kin records. Flutter app wired to real data. No encryption yet.
+### ✅ Session 3a — Backend service + profiles + kin records
+Railway service deployed at kindred.terryheath.com. Postgres migrations, REST endpoints. Auth via central auth service JWT. Flutter app wired to real data.
 
-### ⬜ Session 3b — Private notes UI
-Kin sheet full content: notes, private dates, private wishlist links. Local sqflite storage. No encryption yet — device only.
+### ✅ Session 3b — Private notes UI
+Kin sheet full content built: notes, private dates, private wishlist links. Local sqflite storage. kin_people table for local persistence. CupertinoDatePicker throughout.
 
 ### ⬜ Session 3c — Encrypted backup
 Encrypt private data before sending to server. Key derived from JWT. Restore on new device after login.
 
-### ⬜ Session 4 — Auth + Rise Up + Overlay Navigation
-Magic link flow wired to auth.terryheath.com. JWT storage in Flutter Secure Storage. Rise Up sheet (your editable profile as bottom sheet). Navbar redesigned — all surfaces are bottom sheets, Kindred grid always base layer. Settings dropdown. Onboarding copy. Deep link sharing.
+### 🔄 Session 4 — Auth + Show Up + Overlay Navigation
+Magic link flow partially working — email sends, token returns. Deep link redirect needs fix (redirect_uri must be embedded in verify URL). APP_NAME needs to be per-app not global env var. Navbar redesigned — all surfaces bottom sheets. Show Up sheet with three states. Settings dropdown with avatar in AppBar. Logo left-aligned. Onboarding first-launch copy in place. Deferred deep linking (browser fallback) needed before TestFlight.
 
 ### ⬜ Session 5 — Add Kin screen
 Full Add Kin flow: manual entry (name, photo, dates). Full screen push from + button.

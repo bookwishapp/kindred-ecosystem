@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ui_kit/ui_kit.dart';
 import 'package:core/core.dart';
+import 'package:uni_links/uni_links.dart';
 import 'router.dart';
 import 'providers/kin_provider.dart';
 import 'services/kindred_api.dart';
@@ -59,6 +60,21 @@ class _KindredAppState extends State<KindredApp> {
 
   Future<void> _initializeServices() async {
     await authService.initialize();
+
+    // Check for initial deep link (cold start)
+    try {
+      final initialUri = await getInitialUri();
+      if (initialUri != null && initialUri.scheme == 'kindred') {
+        final token = initialUri.queryParameters['access_token'];
+        if (token != null) {
+          debugPrint('Found access token in initial deep link');
+          await authService.handleAccessToken(token);
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to handle initial deep link: $e');
+    }
+
     await deepLinkService.initialize();
   }
 

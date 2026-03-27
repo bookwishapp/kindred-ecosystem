@@ -265,6 +265,16 @@ class LocalDb {
     );
   }
 
+  /// Remove a setting
+  Future<void> removeSetting(String key) async {
+    final db = await database;
+    await db.delete(
+      'app_settings',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+  }
+
   // ========== Kin People Methods ==========
 
   /// Save a local kin person

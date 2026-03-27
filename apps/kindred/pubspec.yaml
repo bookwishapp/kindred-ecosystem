@@ -55,6 +55,7 @@ dependencies:
   cached_network_image: ^3.3.1
   image_picker: ^1.0.0
   flutter_svg: ^2.0.10
+  permission_handler: ^11.0.0
 
   # Utilities
   share_plus: ^7.2.1

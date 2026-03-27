@@ -24,6 +24,7 @@ kindred-ecosystem/
   services/
     auth/             → Central authentication service (Node/Express)
     web/              → terryheath.com — blog, newsletter, ecosystem admin (Next.js)
+    kindred/          → Kindred backend API (Node/Express) — deployed at kindred.terryheath.com
   docs/               → Architecture, guidelines, prompts
   melos.yaml
 ```
@@ -77,6 +78,9 @@ Central authentication for the entire ecosystem.
 - Single identity works across all apps
 - Node/Express, Postgres on Railway
 - Admin at auth.terryheath.com/admin
+- Pending: embed redirect_uri in verify URL so deep link works from email
+- Pending: accept app_name in POST body for per-app email subject lines
+- Pending: deferred deep linking page at auth.terryheath.com/open for browser fallback
 
 #### /services/web — terryheath.com
 The hub. Does three things:
@@ -147,10 +151,14 @@ Local-only Kindred users (no profile, no account) do not need auth.
 ## Infrastructure
 
 - **Hosting:** Railway (all services)
-- **Email:** AWS SES (transactional + newsletter)
+- **Email:** AWS SES — one account, one verified domain (terryheath.com)
+  - Auth service: magic links from noreply@terryheath.com
+  - terryheath.com: newsletter from terry@terryheath.com
+  - All services share the same SES SMTP credentials
+  - SMTP: port 587, STARTTLS, host email-smtp.us-east-1.amazonaws.com
 - **Storage:** AWS S3 (per-app buckets: kindred-uploads, analoglist-assets)
 - **DNS:** Cloudflare
-- **Domains:** terryheath.com, auth.terryheath.com
+- **Domains:** terryheath.com, auth.terryheath.com, kindred.terryheath.com
 
 ---
 
@@ -159,7 +167,7 @@ Local-only Kindred users (no profile, no account) do not need auth.
 1. ✅ Auth service (services/auth)
 2. ✅ terryheath.com (services/web)
 3. ✅ Monorepo scaffold + ui_kit + core (packages/)
-4. 🔄 Kindred Flutter app (apps/kindred) — Sessions 1 & 2 complete
+4. 🔄 Kindred Flutter app (apps/kindred) — Sessions 1, 2, 3a, 3b, 4 (partial) complete
 5. ⬜ AnalogList rebuild (apps/analoglist)
 6. ⬜ North Star Postal integration (TBD)
 

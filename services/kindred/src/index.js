@@ -23,6 +23,7 @@ const {
   addKinDate,
   deleteKinDate
 } = require('./kin');
+const { getUploadUrl } = require('./upload');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -57,6 +58,9 @@ app.use(cookieParser());
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', service: 'kindred' });
 });
+
+// Upload route
+app.post('/api/upload-url', authenticate, getUploadUrl);
 
 // Profile routes
 app.get('/profiles/me', authenticate, getMyProfile);

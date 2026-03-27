@@ -8,40 +8,52 @@ export async function POST(request) {
   try {
     const { email, token } = await request.json();
 
-    if (!email || !token) {
+    if (!email) {
       return NextResponse.json(
-        { error: 'Email and token are required' },
+        { error: 'Email is required' },
         { status: 400 }
       );
     }
 
-    // Validate token
-    if (!validateUnsubscribeToken(email, token)) {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // If token is provided, validate it (for email unsubscribe links)
+    // If no token, allow direct API unsubscribe (from Kindred app)
+    if (token && !validateUnsubscribeToken(email, token)) {
       return NextResponse.json(
         { error: 'Invalid unsubscribe token' },
         { status: 400 }
       );
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
     const client = await db.getClient();
 
     try {
       await client.query('BEGIN');
 
-      // Add to suppressions
+      // Add to suppressions with ON CONFLICT DO NOTHING
+      // This handles duplicates gracefully
       await client.query(
         `INSERT INTO suppressions (email, reason)
          VALUES ($1, 'unsubscribed')
          ON CONFLICT (email) DO NOTHING`,
-        [email]
+        [normalizedEmail]
       );
 
-      // Update subscriber status
+      // Update subscriber status if they exist
       await client.query(
         `UPDATE subscribers
          SET status = 'suppressed'
          WHERE email = $1`,
-        [email]
+        [normalizedEmail]
       );
 
       await client.query('COMMIT');

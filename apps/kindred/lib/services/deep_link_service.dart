@@ -51,6 +51,16 @@ class DeepLinkService {
 
     final uri = Uri.parse(link);
 
+    // Check if this is a direct access token from auth redirect
+    if (uri.scheme == 'kindred') {
+      final accessToken = uri.queryParameters['access_token'];
+      if (accessToken != null) {
+        debugPrint('Handling access token from deep link');
+        authService.handleAccessToken(accessToken);
+        return;
+      }
+    }
+
     // Check if this is an auth verification link
     if (uri.scheme == 'kindred' &&
         uri.host == 'auth' &&

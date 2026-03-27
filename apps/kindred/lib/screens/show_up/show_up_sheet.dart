@@ -6,9 +6,12 @@ import 'package:ui_kit/ui_kit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:dio/dio.dart';
+import 'package:core/core.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/photo_service.dart';
+import '../../services/photo_upload_service.dart';
 
 class ShowUpSheet extends StatefulWidget {
   const ShowUpSheet({super.key});
@@ -28,8 +31,10 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
   // Form state
   DateTime? _selectedBirthday;
   String? _localPhotoPath;
+  String? _uploadedPhotoUrl;
   bool _isAddingLink = false;
   bool _isEditingName = false;
+  bool _isUploading = false;
 
   @override
   void dispose() {
@@ -54,13 +59,102 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
     if (path != null) {
       setState(() {
         _localPhotoPath = path;
+        _uploadedPhotoUrl = null; // Reset uploaded URL when new photo is picked
       });
+
+      // If we have an existing profile, upload and update immediately
+      final profileService = context.read<ProfileService>();
+      if (profileService.hasProfile) {
+        await _updateProfilePhoto(profileService);
+      }
+    }
+  }
+
+  Future<void> _updateProfilePhoto(ProfileService profileService) async {
+    try {
+      final s3PhotoUrl = await _uploadPhotoIfNeeded();
+      if (s3PhotoUrl != null) {
+        await profileService.updateProfile({'photo_url': s3PhotoUrl});
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Photo updated successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update photo: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<String?> _uploadPhotoIfNeeded() async {
+    // If we already uploaded this photo, return the URL
+    if (_uploadedPhotoUrl != null) {
+      return _uploadedPhotoUrl;
+    }
+
+    // If there's no local photo to upload, return null
+    if (_localPhotoPath == null) {
+      return null;
+    }
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final dio = Dio();
+      final storage = SecureStorageService();
+      final baseUrl = const String.fromEnvironment(
+        'KINDRED_API_URL',
+        defaultValue: 'http://localhost:3001',
+      );
+
+      final photoUrl = await PhotoUploadService.upload(
+        filePath: _localPhotoPath!,
+        dio: dio,
+        baseUrl: baseUrl,
+        tokenProvider: storage.getAuthToken,
+      );
+
+      setState(() {
+        _uploadedPhotoUrl = photoUrl;
+        _isUploading = false;
+      });
+
+      return photoUrl;
+    } catch (e) {
+      debugPrint('Failed to upload photo: $e');
+      setState(() {
+        _isUploading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload photo: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      return null;
     }
   }
 
   Widget _buildAvatar({String? photoUrl, String? name, double size = 80}) {
     return GestureDetector(
-      onTap: _pickPhoto,
+      onTap: _isUploading ? null : _pickPhoto,
       child: Container(
         width: size,
         height: size,
@@ -69,24 +163,30 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           color: AppTheme.colors.surface,
         ),
         child: ClipOval(
-          child: _localPhotoPath != null
-              ? Image.file(
-                  File(_localPhotoPath!),
-                  fit: BoxFit.cover,
+          child: _isUploading
+              ? Center(
+                  child: CupertinoActivityIndicator(
+                    color: AppTheme.colors.secondaryText,
+                  ),
                 )
-              : photoUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: photoUrl,
+              : _localPhotoPath != null
+                  ? Image.file(
+                      File(_localPhotoPath!),
                       fit: BoxFit.cover,
                     )
-                  : Center(
-                      child: Text(
-                        name?.isNotEmpty == true ? name![0].toUpperCase() : '?',
-                        style: AppTheme.text.heading.copyWith(
-                          color: AppTheme.colors.secondaryText,
+                  : photoUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: photoUrl,
+                          fit: BoxFit.cover,
+                        )
+                      : Center(
+                          child: Text(
+                            name?.isNotEmpty == true ? name![0].toUpperCase() : '?',
+                            style: AppTheme.text.heading.copyWith(
+                              color: AppTheme.colors.secondaryText,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
         ),
       ),
     );
@@ -296,21 +396,38 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           width: double.infinity,
           child: CupertinoButton(
             color: AppTheme.colors.accent,
-            onPressed: () async {
-              if (_nameController.text.isNotEmpty) {
-                await profileService.createProfile(
-                  name: _nameController.text,
-                  birthday: _selectedBirthday,
-                  photoUrl: _localPhotoPath, // Will need S3 upload later
-                );
-              }
-            },
-            child: Text(
-              'Show Up',
-              style: AppTheme.text.button.copyWith(
-                color: AppTheme.colors.warmWhite,
-              ),
-            ),
+            onPressed: (_isUploading || profileService.loading || _nameController.text.isEmpty)
+                ? null
+                : () async {
+                    try {
+                      // Upload photo to S3 first if needed
+                      final s3PhotoUrl = await _uploadPhotoIfNeeded();
+
+                      // Create profile with S3 URL
+                      await profileService.createProfile(
+                        name: _nameController.text,
+                        birthday: _selectedBirthday,
+                        photoUrl: s3PhotoUrl,
+                      );
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to create profile: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+            child: _isUploading
+                ? const CupertinoActivityIndicator(color: Colors.white)
+                : Text(
+                    'Show Up',
+                    style: AppTheme.text.button.copyWith(
+                      color: AppTheme.colors.warmWhite,
+                    ),
+                  ),
           ),
         ),
       ],
