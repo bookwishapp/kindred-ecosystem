@@ -1,6 +1,6 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 
 // Create S3 client
 const s3Client = new S3Client({
@@ -33,7 +33,7 @@ async function getUploadUrl(req, res) {
     }
 
     // Generate unique key with user ID prefix for organization
-    const key = `profiles/${req.user.id}/${uuidv4()}.${extension}`;
+    const key = `profiles/${req.user.id}/${randomUUID()}.${extension}`;
 
     // Create presigned URL for PUT request
     const command = new PutObjectCommand({
