@@ -5,17 +5,6 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { authenticate } = require('./middleware');
 const {
-  getMyProfile,
-  createProfile,
-  updateProfile,
-  addWishlistLink,
-  deleteWishlistLink,
-  addDate,
-  deleteDate,
-  getProfile,
-  deleteProfile
-} = require('./profiles');
-const {
   getKin,
   addKinLinked,
   addKinLocal,
@@ -24,7 +13,6 @@ const {
   addKinDate,
   deleteKinDate
 } = require('./kin');
-const { getUploadUrl } = require('./upload');
 const { saveBackup, getBackup } = require('./backup');
 
 const app = express();
@@ -60,20 +48,6 @@ app.use(cookieParser());
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', service: 'kindred' });
 });
-
-// Upload route
-app.post('/api/upload-url', authenticate, getUploadUrl);
-
-// Profile routes
-app.get('/profiles/me', authenticate, getMyProfile);
-app.post('/profiles', authenticate, createProfile);
-app.put('/profiles/me', authenticate, updateProfile);
-app.post('/profiles/me/wishlist-links', authenticate, addWishlistLink);
-app.delete('/profiles/me/wishlist-links/:id', authenticate, deleteWishlistLink);
-app.post('/profiles/me/dates', authenticate, addDate);
-app.delete('/profiles/me/dates/:id', authenticate, deleteDate);
-app.delete('/profiles/me', authenticate, deleteProfile);
-app.get('/profiles/:userId', getProfile); // Public - no auth required
 
 // Kin routes
 app.get('/kin', authenticate, getKin);
