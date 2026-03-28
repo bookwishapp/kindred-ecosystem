@@ -12,7 +12,7 @@ async function getKin(req, res) {
           'id', kd.id, 'label', kd.label, 'date', kd.date, 'recurs_annually', kd.recurs_annually
         )) FILTER (WHERE kd.id IS NOT NULL) as dates
       FROM kin_records kr
-      LEFT JOIN profiles p ON kr.linked_profile_id = p.id
+      LEFT JOIN profiles p ON kr.linked_profile_id = p.user_id
       LEFT JOIN kin_dates kd ON kr.id = kd.kin_record_id
       WHERE kr.owner_user_id = $1
       GROUP BY kr.id, p.id`,
@@ -62,9 +62,9 @@ async function addKinLinked(req, res) {
   }
 
   try {
-    // Check if profile exists
+    // Check if profile exists (linked_profile_id is actually the user_id)
     const profileCheck = await pool.query(
-      'SELECT id FROM profiles WHERE id = $1',
+      'SELECT user_id FROM profiles WHERE user_id = $1',
       [linked_profile_id]
     );
 
