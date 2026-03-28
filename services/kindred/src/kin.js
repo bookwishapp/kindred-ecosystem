@@ -9,7 +9,7 @@ async function getKin(req, res) {
         )) FILTER (WHERE kd.id IS NOT NULL) as dates
       FROM kin_records kr
       LEFT JOIN kin_dates kd ON kr.id::text = kd.kin_record_id::text
-      WHERE kr.owner_user_id = $1::uuid
+      WHERE kr.owner_user_id::text = $1
       GROUP BY kr.id`,
       [req.user.id]
     );
@@ -53,7 +53,7 @@ async function addKinLinked(req, res) {
   try {
     // Check if already added
     const existingCheck = await pool.query(
-      'SELECT id FROM kin_records WHERE owner_user_id = $1 AND linked_profile_id = $2',
+      'SELECT id FROM kin_records WHERE owner_user_id::text = $1 AND linked_profile_id::text = $2',
       [req.user.id, linked_profile_id]
     );
 
@@ -64,7 +64,7 @@ async function addKinLinked(req, res) {
     // Add to kin
     const result = await pool.query(
       `INSERT INTO kin_records (owner_user_id, type, linked_profile_id)
-       VALUES ($1, 'linked', $2)
+       VALUES ($1::uuid, 'linked', $2::uuid)
        RETURNING *`,
       [req.user.id, linked_profile_id]
     );
