@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/kin_person.dart';
 import '../services/kindred_api.dart';
+import '../services/auth_api.dart';
 import '../services/local_db.dart';
 import '../services/backup_service.dart';
 import '../services/auth_service.dart';
@@ -9,6 +10,7 @@ import '../services/auth_service.dart';
 class KinProvider extends ChangeNotifier {
   final KindredApi _api;
   final AuthService? _authService;
+  final AuthApi? _authApi;
 
   // Internal storage for kin list
   List<KinPerson> _kin = [];
@@ -24,9 +26,10 @@ class KinProvider extends ChangeNotifier {
   // Track the last known kin list to detect changes
   List<KinPerson>? _lastKinList;
 
-  KinProvider({required KindredApi api, AuthService? authService})
+  KinProvider({required KindredApi api, AuthService? authService, AuthApi? authApi})
       : _api = api,
-        _authService = authService {
+        _authService = authService,
+        _authApi = authApi {
     // Load kin data on initialization
     loadKin();
   }
@@ -51,7 +54,7 @@ class KinProvider extends ChangeNotifier {
         if (person.type == KinPersonType.linked && person.linkedProfileId != null) {
           try {
             // Fetch profile from auth service
-            final profile = await _authService?.authApi?.getPublicProfile(person.linkedProfileId!);
+            final profile = await _authApi?.getPublicProfile(person.linkedProfileId!);
             if (profile != null) {
               // Update person with profile data
               return person.copyWith(

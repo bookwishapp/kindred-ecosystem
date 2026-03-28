@@ -9,6 +9,7 @@ import 'package:dio/dio.dart';
 import '../kin/kin_sheet.dart';
 import '../show_up/show_up_sheet.dart';
 import '../../providers/kin_provider.dart';
+import '../../models/kin_person.dart';
 import '../../services/auth_service.dart';
 import '../../services/auth_api.dart';
 import '../../services/profile_service.dart';

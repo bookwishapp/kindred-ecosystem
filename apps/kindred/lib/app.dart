@@ -129,9 +129,13 @@ class _KindredAppState extends State<KindredApp> {
         ChangeNotifierProvider<AuthService>.value(value: authService),
         ChangeNotifierProvider<ProfileService>.value(value: profileService),
 
-        // Create KinProvider with the API and AuthService
+        // Create KinProvider with the API, AuthService, and AuthApi
         ChangeNotifierProvider(
-          create: (context) => KinProvider(api: kindredApi, authService: authService),
+          create: (context) => KinProvider(
+            api: kindredApi,
+            authService: authService,
+            authApi: authApi,
+          ),
         ),
 
         // Keep the existing bottom sheet provider
