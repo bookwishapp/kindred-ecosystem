@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import 'package:core/core.dart';
 import '../../services/auth_service.dart';
+import '../../services/auth_api.dart';
 import '../../services/profile_service.dart';
 import '../../services/photo_service.dart';
 import '../../services/photo_upload_service.dart';
@@ -997,8 +998,8 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                   if (_dateLabelController.text.isNotEmpty && _selectedDate != null) {
                     await profileService.addSharedDate(
                       _dateLabelController.text,
-                      _selectedDate!.toIso8601String().split('T')[0], // Format as YYYY-MM-DD
-                      true, // recurs_annually
+                      _selectedDate!,
+                      recursAnnually: true,
                     );
                     _dateLabelController.clear();
                     setState(() {
