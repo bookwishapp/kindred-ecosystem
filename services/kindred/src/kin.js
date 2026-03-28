@@ -62,16 +62,6 @@ async function addKinLinked(req, res) {
   }
 
   try {
-    // Check if profile exists (linked_profile_id is actually the user_id)
-    const profileCheck = await pool.query(
-      'SELECT user_id FROM profiles WHERE user_id = $1',
-      [linked_profile_id]
-    );
-
-    if (profileCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Profile not found' });
-    }
-
     // Check if already added
     const existingCheck = await pool.query(
       'SELECT id FROM kin_records WHERE owner_user_id = $1 AND linked_profile_id = $2',
