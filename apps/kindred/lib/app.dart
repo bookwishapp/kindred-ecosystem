@@ -43,13 +43,27 @@ class _KindredAppState extends State<KindredApp> {
     // and not log the user out. Only auth endpoints should handle unauthorized state.
     kindredApi = KindredApiFactory.create(
       storage: secureStorage,
-      tokenProvider: () async => authService.token,
+      tokenProvider: () async {
+        // Try to get token from AuthService first (in memory)
+        final token = authService.token;
+        if (token != null) return token;
+
+        // Fallback to loading from secure storage if not in memory yet
+        return await secureStorage.getAuthToken();
+      },
     );
 
     // Create Auth API for profile operations
     authApi = AuthApiFactory.create(
       storage: secureStorage,
-      tokenProvider: () async => authService.token,
+      tokenProvider: () async {
+        // Try to get token from AuthService first (in memory)
+        final token = authService.token;
+        if (token != null) return token;
+
+        // Fallback to loading from secure storage if not in memory yet
+        return await secureStorage.getAuthToken();
+      },
     );
 
     // Set up restore callback for after successful auth
