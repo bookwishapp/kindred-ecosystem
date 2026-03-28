@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:ui_kit/ui_kit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -749,9 +750,30 @@ class _KinSheetState extends State<KinSheet> {
                     // === THINGS THEY MIGHT LIKE ===
                     _buildPrivateWishlistSection(),
 
-                    // "let go" option - remove from kin
+                    // Options for local kin
                     if (widget.person.type == KinPersonType.local) ...[
                       SizedBox(height: AppTheme.spacing.space4),
+
+                      // "Invite to Show Up" option
+                      Center(
+                        child: GestureDetector(
+                          onTap: () async {
+                            await Share.share(
+                              'I keep track of the people I care about in Kindred. Show up: https://fromkindred.com',
+                            );
+                          },
+                          child: Text(
+                            'Invite to Show Up',
+                            style: AppTheme.text.caption.copyWith(
+                              color: AppTheme.colors.secondaryText,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: AppTheme.spacing.space2),
+
+                      // "let go" option - remove from kin
                       Center(
                         child: GestureDetector(
                           onTap: () {

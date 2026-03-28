@@ -1,19 +1,30 @@
 import { Metadata } from 'next'
 
 interface ProfileData {
-  id: string
+  user_id: string
   name: string
+  username?: string
   photo_url?: string
   birthday?: string
+  wishlist_links?: Array<{
+    id: string
+    label: string
+    url: string
+  }>
+  shared_dates?: Array<{
+    id: string
+    label: string
+    date: string
+  }>
 }
 
 interface PageProps {
-  params: Promise<{ userId: string }>
+  params: Promise<{ username: string }>
 }
 
-async function getProfile(userId: string): Promise<ProfileData | null> {
+async function getProfile(username: string): Promise<ProfileData | null> {
   try {
-    const res = await fetch(`https://auth.terryheath.com/profile/${userId}`, {
+    const res = await fetch(`https://auth.terryheath.com/profile/${username}`, {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     })
 
@@ -30,8 +41,8 @@ async function getProfile(userId: string): Promise<ProfileData | null> {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { userId } = await params
-  const profile = await getProfile(userId)
+  const { username } = await params
+  const profile = await getProfile(username)
 
   if (!profile) {
     return {
@@ -65,8 +76,8 @@ function getInitial(name: string): string {
 }
 
 export default async function ProfilePage({ params }: PageProps) {
-  const { userId } = await params
-  const profile = await getProfile(userId)
+  const { username } = await params
+  const profile = await getProfile(username)
 
   if (!profile) {
     return (
@@ -82,7 +93,7 @@ export default async function ProfilePage({ params }: PageProps) {
     )
   }
 
-  const deepLink = `kindred://${profile.id}`
+  const deepLink = `kindred://profile/${username}`
 
   return (
     <div className="container">
@@ -105,12 +116,12 @@ export default async function ProfilePage({ params }: PageProps) {
 
         {profile.birthday && (
           <p className="birthday">
-            Birthday: {formatBirthday(profile.birthday)}
+            {formatBirthday(profile.birthday)}
           </p>
         )}
 
         <a href={deepLink} className="keep-button">
-          Keep in Kindred
+          Keep {profile.name} in Kindred
         </a>
       </div>
 

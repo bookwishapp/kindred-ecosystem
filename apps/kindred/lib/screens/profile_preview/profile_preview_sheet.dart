@@ -5,15 +5,16 @@ import 'package:ui_kit/ui_kit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core/core.dart';
-import '../../services/kindred_api.dart';
+import '../../services/auth_api.dart';
+import '../../services/auth_service.dart';
 import '../../providers/kin_provider.dart';
 
 class ProfilePreviewSheet extends StatefulWidget {
-  final String userId;
+  final String username;
 
   const ProfilePreviewSheet({
     super.key,
-    required this.userId,
+    required this.username,
   });
 
   @override
@@ -22,31 +23,30 @@ class ProfilePreviewSheet extends StatefulWidget {
 
 class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
   Map<String, dynamic>? _profile;
-  List<dynamic> _wishlistLinks = [];
-  List<dynamic> _dates = [];
   bool _isLoading = true;
   String? _error;
-  late KindredApi _api;
+  late AuthApi _api;
+  late AuthService _authService;
 
   @override
   void initState() {
     super.initState();
-    _api = KindredApi(
-      baseUrl: 'https://api.fromkindred.com',
-      storage: SecureStorageService(),
+    final storage = SecureStorageService();
+    _authService = AuthService(storage: storage);
+    _api = AuthApi(
+      baseUrl: 'https://auth.terryheath.com',
+      storage: storage,
     );
     _loadProfile();
   }
 
   Future<void> _loadProfile() async {
     try {
-      final response = await _api.getProfile(widget.userId);
+      final response = await _api.getPublicProfile(widget.username);
 
       if (mounted) {
         setState(() {
           _profile = response['profile'];
-          _wishlistLinks = response['wishlist_links'] ?? [];
-          _dates = response['dates'] ?? [];
           _isLoading = false;
         });
       }
@@ -73,7 +73,7 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
 
     // Check if any person in kin has this linkedProfileId
     return kinProvider.kin.any((person) =>
-      person.linkedProfileId == _profile!['id']
+      person.linkedProfileId == _profile!['user_id']
     );
   }
 
@@ -150,6 +150,9 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
     }
 
     final isAlreadyInKin = _isAlreadyInKin(kinProvider);
+    final isAuthenticated = _authService.isAuthenticated;
+    final wishlistLinks = _profile!['wishlist_links'] ?? [];
+    final sharedDates = _profile!['shared_dates'] ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,19 +175,21 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
         ),
         SizedBox(height: AppTheme.spacing.space2),
 
-        // Birthday
+        // Birthday (month/day only, no year)
         if (_profile!['birthday'] != null) ...[
           Center(
             child: Text(
-              'Birthday — ${_formatDate(DateTime.parse(_profile!['birthday']))}',
-              style: AppTheme.text.body,
+              _formatDate(DateTime.parse(_profile!['birthday'])),
+              style: AppTheme.text.body.copyWith(
+                color: AppTheme.colors.secondaryText,
+              ),
             ),
           ),
           SizedBox(height: AppTheme.spacing.space3),
         ],
 
         // Wishlist links
-        if (_wishlistLinks.isNotEmpty) ...[
+        if (wishlistLinks.isNotEmpty) ...[
           Text(
             'Wishlist',
             style: AppTheme.text.label.copyWith(
@@ -192,7 +197,7 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
             ),
           ),
           SizedBox(height: AppTheme.spacing.space1),
-          ..._wishlistLinks.map((link) {
+          ...wishlistLinks.map((link) {
             return GestureDetector(
               onTap: () async {
                 final uri = Uri.tryParse(link['url']);
@@ -202,21 +207,27 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
               },
               child: Padding(
                 padding: EdgeInsets.only(bottom: AppTheme.spacing.space2),
-                child: Text(
-                  link['label'],
-                  style: AppTheme.text.body.copyWith(
-                    color: AppTheme.colors.accent,
-                    decoration: TextDecoration.underline,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        link['label'],
+                        style: AppTheme.text.body.copyWith(
+                          color: AppTheme.colors.accent,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
           }),
-          SizedBox(height: AppTheme.spacing.space3),
+          SizedBox(height: AppTheme.spacing.space2),
         ],
 
         // Shared dates
-        if (_dates.isNotEmpty) ...[
+        if (sharedDates.isNotEmpty) ...[
           Text(
             'Important dates',
             style: AppTheme.text.label.copyWith(
@@ -224,13 +235,15 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
             ),
           ),
           SizedBox(height: AppTheme.spacing.space1),
-          ..._dates.map((date) {
+          ...sharedDates.map((date) {
             final dateObj = DateTime.parse(date['date']);
             return Padding(
-              padding: EdgeInsets.only(bottom: AppTheme.spacing.space2),
+              padding: EdgeInsets.only(bottom: AppTheme.spacing.space1),
               child: Text(
                 '${date['label']} — ${_formatDate(dateObj)}',
-                style: AppTheme.text.body,
+                style: AppTheme.text.body.copyWith(
+                  color: AppTheme.colors.secondaryText,
+                ),
               ),
             );
           }),
@@ -239,8 +252,17 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
 
         const Spacer(),
 
-        // Keep button or Already in Kin message
-        if (isAlreadyInKin) ...[
+        // Keep button or status messages
+        if (!isAuthenticated) ...[
+          Center(
+            child: Text(
+              'Show Up to keep someone',
+              style: AppTheme.text.body.copyWith(
+                color: AppTheme.colors.tertiaryText,
+              ),
+            ),
+          ),
+        ] else if (isAlreadyInKin) ...[
           Center(
             child: Text(
               'Already in your Kin',
@@ -256,23 +278,16 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
               color: AppTheme.colors.accent,
               onPressed: () async {
                 try {
-                  await kinProvider.addKinLinked(_profile!['id']);
+                  await kinProvider.addKinLinked(_profile!['user_id']);
 
                   if (mounted) {
-                    // Show success and close sheet
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${_profile!['name']} added to your Kin'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
                     Navigator.of(context).pop();
                   }
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Could not add to Kin: ${e.toString()}'),
+                        content: Text('Could not keep this person right now'),
                         backgroundColor: Colors.red,
                       ),
                     );

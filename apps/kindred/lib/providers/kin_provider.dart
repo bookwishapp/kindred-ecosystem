@@ -308,7 +308,7 @@ class KinProvider extends ChangeNotifier {
       await loadKin(); // Reload the list
       _triggerBackup(); // Backup after adding linked kin
     } catch (e) {
-      _error = 'Could not add this person right now.';
+      _error = 'Could not keep this person right now.';
       notifyListeners();
       rethrow;
     }

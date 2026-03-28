@@ -75,11 +75,24 @@ class DeepLinkService {
       return;
     }
 
-    // Check if this is a profile link (kindred://{userId})
-    if (uri.scheme == 'kindred' && uri.host.isNotEmpty && uri.host != 'auth') {
-      final userId = uri.host;
-      debugPrint('Handling profile deep link for user: $userId');
-      _showProfilePreview(userId);
+    // Universal link: fromkindred.com/{username}
+    if (uri.host == 'fromkindred.com' &&
+        uri.pathSegments.length == 1 &&
+        uri.pathSegments[0].isNotEmpty &&
+        uri.pathSegments[0] != '.well-known') {
+      debugPrint('Handling Universal Link profile for username: ${uri.pathSegments[0]}');
+      _showProfilePreview(uri.pathSegments[0]);
+      return;
+    }
+
+    // Custom scheme: kindred://profile/{username}
+    if (uri.scheme == 'kindred' &&
+        uri.pathSegments.isNotEmpty &&
+        uri.pathSegments.first == 'profile' &&
+        uri.pathSegments.length > 1) {
+      debugPrint('Handling custom scheme profile for username: ${uri.pathSegments[1]}');
+      _showProfilePreview(uri.pathSegments[1]);
+      return;
     }
   }
 
@@ -119,14 +132,14 @@ class DeepLinkService {
   }
 
   /// Show profile preview sheet
-  void _showProfilePreview(String userId) {
+  void _showProfilePreview(String username) {
     final context = contextProvider();
     if (context != null && context.mounted) {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (context) => ProfilePreviewSheet(userId: userId),
+        builder: (context) => ProfilePreviewSheet(username: username),
       );
     }
   }
