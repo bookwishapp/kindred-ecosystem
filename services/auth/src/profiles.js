@@ -83,31 +83,53 @@ async function upsertProfile(req, res) {
 async function getPublicProfile(req, res) {
   const { userId } = req.params;
 
-  // Check if it's a UUID or username
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const usernameRegex = /^[a-z0-9_]{3,20}$/;
+  const client = await pool.connect();
+  try {
+    // Check if it's a UUID or username
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const usernameRegex = /^[a-z0-9_]{3,20}$/;
 
-  let query;
-  let params;
+    let query;
+    let params;
 
-  if (uuidRegex.test(userId)) {
-    // It's a UUID
-    query = 'SELECT user_id, name, username, photo_url, birthday FROM profiles WHERE user_id = $1';
-    params = [userId];
-  } else if (usernameRegex.test(userId)) {
-    // It's a username
-    query = 'SELECT user_id, name, username, photo_url, birthday FROM profiles WHERE username = $1';
-    params = [userId];
-  } else {
-    // Invalid format
-    return res.status(404).json({ error: 'Not found' });
+    if (uuidRegex.test(userId)) {
+      // It's a UUID
+      query = 'SELECT user_id, name, username, photo_url, birthday FROM profiles WHERE user_id = $1';
+      params = [userId];
+    } else if (usernameRegex.test(userId)) {
+      // It's a username
+      query = 'SELECT user_id, name, username, photo_url, birthday FROM profiles WHERE username = $1';
+      params = [userId];
+    } else {
+      // Invalid format
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const result = await client.query(query, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    const profile = result.rows[0];
+
+    // Get wishlist links
+    const linksResult = await client.query(
+      'SELECT id, label, url FROM profile_wishlist_links WHERE user_id = $1 ORDER BY created_at DESC',
+      [profile.user_id]
+    );
+    profile.wishlist_links = linksResult.rows;
+
+    // Get shared dates
+    const datesResult = await client.query(
+      'SELECT id, label, date, recurs_annually FROM profile_shared_dates WHERE user_id = $1 ORDER BY date ASC',
+      [profile.user_id]
+    );
+    profile.shared_dates = datesResult.rows;
+
+    res.json({ profile });
+  } finally {
+    client.release();
   }
-
-  const result = await pool.query(query, params);
-  if (result.rows.length === 0) {
-    return res.status(404).json({ error: 'Profile not found' });
-  }
-  res.json({ profile: result.rows[0] });
 }
 
 async function deleteProfile(req, res) {
