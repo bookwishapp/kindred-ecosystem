@@ -52,6 +52,13 @@ async function upsertProfile(req, res) {
 
 async function getPublicProfile(req, res) {
   const { userId } = req.params;
+
+  // Validate UUID format to prevent SQL errors
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(userId)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
   const result = await pool.query(
     'SELECT user_id, name, photo_url, birthday FROM profiles WHERE user_id = $1',
     [userId]

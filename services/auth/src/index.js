@@ -39,7 +39,7 @@ const PORT = process.env.PORT || 3000;
 // Parse allowed origins from environment variable
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://localhost:3000'];
+  : ['http://localhost:3000', 'https://fromkindred.com'];
 
 // Create CORS middleware for auth routes only
 const corsMiddleware = cors({
