@@ -120,9 +120,16 @@ export default async function ProfilePage({ params }: PageProps) {
           </p>
         )}
 
-        <a href={deepLink} className="keep-button">
+        {/* Mobile: deep link opens app */}
+        <a href={deepLink} className="keep-button mobile-only">
           Keep {profile.name} in Kindred
         </a>
+
+        {/* Desktop: prompt to get the app */}
+        <div className="keep-button desktop-only">
+          <p className="keep-desktop-text">Keep {profile.name} in Kindred</p>
+          <a href="https://apps.apple.com" className="app-store-link">Get Kindred on iPhone</a>
+        </div>
       </div>
 
       <div className="profile-footer">
