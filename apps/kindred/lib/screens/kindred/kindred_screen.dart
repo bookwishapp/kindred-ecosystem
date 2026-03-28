@@ -639,7 +639,14 @@ class _KindredScreenState extends State<KindredScreen> {
                     );
 
                     if (result == 'delete' && mounted) {
-                      context.read<KinProvider>().deleteLocalKin(person.id);
+                      final provider = context.read<KinProvider>();
+                      if (person.type == KinPersonType.local) {
+                        // For local kin, delete from local database only
+                        provider.deleteLocalKin(person.id);
+                      } else {
+                        // For linked kin, delete from server via API
+                        provider.deleteKin(person.id);
+                      }
                     }
                   },
                 );

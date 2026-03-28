@@ -8,8 +8,8 @@ async function getKin(req, res) {
           'id', kd.id, 'label', kd.label, 'date', kd.date, 'recurs_annually', kd.recurs_annually
         )) FILTER (WHERE kd.id IS NOT NULL) as dates
       FROM kin_records kr
-      LEFT JOIN kin_dates kd ON kr.id = kd.kin_record_id
-      WHERE kr.owner_user_id = $1
+      LEFT JOIN kin_dates kd ON kr.id::text = kd.kin_record_id::text
+      WHERE kr.owner_user_id = $1::uuid
       GROUP BY kr.id`,
       [req.user.id]
     );

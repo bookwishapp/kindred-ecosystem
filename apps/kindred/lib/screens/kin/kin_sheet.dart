@@ -750,11 +750,11 @@ class _KinSheetState extends State<KinSheet> {
                     // === THINGS THEY MIGHT LIKE ===
                     _buildPrivateWishlistSection(),
 
-                    // Options for local kin
-                    if (widget.person.type == KinPersonType.local) ...[
-                      SizedBox(height: AppTheme.spacing.space4),
+                    // Options section
+                    SizedBox(height: AppTheme.spacing.space4),
 
-                      // "Invite to Show Up" option
+                    // "Invite to Show Up" option - only for local kin
+                    if (widget.person.type == KinPersonType.local) ...[
                       Center(
                         child: GestureDetector(
                           onTap: () async {
@@ -770,44 +770,43 @@ class _KinSheetState extends State<KinSheet> {
                           ),
                         ),
                       ),
-
                       SizedBox(height: AppTheme.spacing.space2),
+                    ],
 
-                      // "let go" option - remove from kin
-                      Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            showCupertinoDialog(
-                              context: context,
-                              builder: (BuildContext context) => CupertinoAlertDialog(
-                                content: const Text('Let them go?'),
-                                actions: [
-                                  CupertinoDialogAction(
-                                    onPressed: () => Navigator.pop(context),
-                                    isDefaultAction: true,
-                                    child: const Text('Keep them'),
-                                  ),
-                                  CupertinoDialogAction(
-                                    onPressed: () {
-                                      Navigator.pop(context); // Close dialog
-                                      Navigator.of(context, rootNavigator: true).pop('delete'); // Return result to parent using root navigator
-                                    },
-                                    isDestructiveAction: true,
-                                    child: const Text('Let go'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'let go',
-                            style: AppTheme.text.caption.copyWith(
-                              color: AppTheme.colors.secondaryText,
+                    // "let go" option - available for ALL kin types
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          showCupertinoDialog(
+                            context: context,
+                            builder: (BuildContext context) => CupertinoAlertDialog(
+                              content: const Text('Let them go?'),
+                              actions: [
+                                CupertinoDialogAction(
+                                  onPressed: () => Navigator.pop(context),
+                                  isDefaultAction: true,
+                                  child: const Text('Keep them'),
+                                ),
+                                CupertinoDialogAction(
+                                  onPressed: () {
+                                    Navigator.pop(context); // Close dialog
+                                    Navigator.of(context, rootNavigator: true).pop('delete'); // Return result to parent using root navigator
+                                  },
+                                  isDestructiveAction: true,
+                                  child: const Text('Let go'),
+                                ),
+                              ],
                             ),
+                          );
+                        },
+                        child: Text(
+                          'let go',
+                          style: AppTheme.text.caption.copyWith(
+                            color: AppTheme.colors.secondaryText,
                           ),
                         ),
                       ),
-                    ],
+                    ),
 
                     SizedBox(height: AppTheme.spacing.space6),
                   ],

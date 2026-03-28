@@ -46,8 +46,31 @@ class KinProvider extends ChangeNotifier {
     try {
       final kinList = await _api.getKin();
 
+      // For linked kin, fetch profile data from auth service
+      final kinWithProfiles = await Future.wait(kinList.map((person) async {
+        if (person.type == KinPersonType.linked && person.linkedProfileId != null) {
+          try {
+            // Fetch profile from auth service
+            final profile = await _authService?.authApi?.getPublicProfile(person.linkedProfileId!);
+            if (profile != null) {
+              // Update person with profile data
+              return person.copyWith(
+                name: profile['name'] ?? person.name,
+                photoUrl: profile['photo_url'],
+                birthday: profile['birthday'] != null
+                  ? DateTime.parse(profile['birthday'])
+                  : person.birthday,
+              );
+            }
+          } catch (e) {
+            debugPrint('Failed to fetch profile for ${person.linkedProfileId}: $e');
+          }
+        }
+        return person;
+      }));
+
       // Load private dates for each kin person and populate allDates
-      final kinWithDates = await Future.wait(kinList.map((person) async {
+      final kinWithDates = await Future.wait(kinWithProfiles.map((person) async {
         final privateDates = await LocalDb.instance.getPrivateDates(person.id);
 
         // Combine birthday with private dates

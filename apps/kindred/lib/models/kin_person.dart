@@ -28,14 +28,23 @@ class KinPerson {
     String? photoUrl;
     DateTime? birthday;
 
-    if (type == KinPersonType.linked && json['profile'] != null) {
-      // For linked kin, get data from the profile
-      final profile = json['profile'] as Map<String, dynamic>;
-      name = profile['name'] ?? 'Unknown';
-      photoUrl = profile['photo_url'];
-      // Parse birthday if present
-      if (profile['birthday'] != null) {
-        birthday = DateTime.parse(profile['birthday']);
+    if (type == KinPersonType.linked) {
+      // For linked kin, profile data may be included or fetched separately
+      if (json['profile'] != null) {
+        final profile = json['profile'] as Map<String, dynamic>;
+        name = profile['name'] ?? 'Unknown';
+        photoUrl = profile['photo_url'];
+        // Parse birthday if present
+        if (profile['birthday'] != null) {
+          birthday = DateTime.parse(profile['birthday']);
+        }
+      } else {
+        // Profile will be fetched separately - use placeholders
+        name = json['profile_name'] ?? 'Loading...';
+        photoUrl = json['profile_photo_url'];
+        if (json['profile_birthday'] != null) {
+          birthday = DateTime.parse(json['profile_birthday']);
+        }
       }
     } else {
       // For local kin, get data from local fields
