@@ -188,7 +188,7 @@ When a person has a manual position override (`positionOverride != null`), the K
 - No TypeScript — plain JavaScript
 - CORS applies to `/auth/*` routes only — never to `/admin/*` routes
 - Magic links: single-use, 15 minute expiry
-- JWTs: 15 minute access token, 30 day refresh token
+- JWTs: 30 day access token, 30 day refresh token
 
 ---
 
@@ -229,6 +229,8 @@ Claude MUST NOT:
 - "Let's add a social feed"
 - "I'll fix that and push it" (without showing the change first)
 - "The fix has been deployed" (without verifying it worked)
+- "join" — never use join. Users "show up" or "keep" someone.
+- "/profile/" in URLs — profile links are fromkindred.com/{username} not /profile/{username}
 
 ---
 

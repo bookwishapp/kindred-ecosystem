@@ -99,11 +99,22 @@ Avoid:
 Button:
 > Keep
 
+Avoid:
+- Add
+- Follow
+- Connect
+- Join
+
 ---
 
 ### Invite
 
 > Invite to Show Up
+
+Avoid:
+- Join Kindred
+- Sign up
+- Create an account
 
 ---
 

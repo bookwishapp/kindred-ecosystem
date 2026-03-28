@@ -131,7 +131,8 @@ class _KinSheetState extends State<KinSheet> {
   List<Widget> _buildProfileSection() {
     // Check if anything is shared
     final hasSharedContent = widget.person.birthday != null ||
-        false; // Add wishlist check when implemented
+        widget.person.wishlistLinks.isNotEmpty ||
+        widget.person.sharedDates.isNotEmpty;
 
     if (!hasSharedContent) {
       // Show single empty state for entire profile section
@@ -150,8 +151,38 @@ class _KinSheetState extends State<KinSheet> {
         widgets.add(SizedBox(height: AppTheme.spacing.space3));
       }
 
-      // Wishlist links (shared) - placeholder for now
-      // Will be shown here when implemented
+      // Shared dates
+      for (final date in widget.person.sharedDates) {
+        widgets.add(
+          Text(
+            '${date['label']} — ${_formatDate(DateTime.parse(date['date']))}',
+            style: AppTheme.text.body,
+          ),
+        );
+        widgets.add(SizedBox(height: AppTheme.spacing.space3));
+      }
+
+      // Wishlist links (shared)
+      for (final link in widget.person.wishlistLinks) {
+        widgets.add(
+          GestureDetector(
+            onTap: () async {
+              final url = Uri.parse(link['url']);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: Text(
+              link['label'] ?? 'Link',
+              style: AppTheme.text.body.copyWith(
+                color: AppTheme.colors.primary,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        );
+        widgets.add(SizedBox(height: AppTheme.spacing.space3));
+      }
 
       return widgets;
     }

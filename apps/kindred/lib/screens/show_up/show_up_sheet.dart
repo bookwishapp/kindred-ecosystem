@@ -31,9 +31,6 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
   final TextEditingController _linkUrlController = TextEditingController();
   final TextEditingController _dateLabelController = TextEditingController();
 
-  // Focus nodes
-  final FocusNode _usernameFocusNode = FocusNode();
-
   // Form state
   DateTime? _selectedBirthday;
   DateTime? _selectedDate;
@@ -57,7 +54,6 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
     _linkLabelController.dispose();
     _linkUrlController.dispose();
     _dateLabelController.dispose();
-    _usernameFocusNode.dispose();
     _usernameDebounceTimer?.cancel();
     super.dispose();
   }
@@ -680,42 +676,29 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         // Username (editable)
         Center(
           child: _isEditingUsername
-              ? Focus(
-                  focusNode: _usernameFocusNode,
-                  onFocusChange: (hasFocus) async {
-                    if (!hasFocus && _usernameError == null) {
-                      // Save on focus loss if valid
-                      final value = _usernameController.text;
-                      await profileService.saveProfile(username: value.isEmpty ? null : value);
-                      setState(() {
-                        _isEditingUsername = false;
-                      });
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      CupertinoTextField(
-                        controller: _usernameController,
-                        focusNode: _usernameFocusNode,
-                        autofocus: true,
-                        textAlign: TextAlign.center,
-                        style: AppTheme.text.body,
-                        decoration: null,
-                        padding: EdgeInsets.zero,
-                        onChanged: (value) {
+              ? Column(
+                  children: [
+                    CupertinoTextField(
+                      controller: _usernameController,
+                      autofocus: false,
+                      textAlign: TextAlign.center,
+                      style: AppTheme.text.body,
+                      decoration: null,
+                      padding: EdgeInsets.zero,
+                      onChanged: (value) {
+                        setState(() {
+                          _usernameError = _validateUsername(value);
+                        });
+                      },
+                      onSubmitted: (value) async {
+                        if (_usernameError == null) {
+                          await profileService.saveProfile(username: value.isEmpty ? null : value);
                           setState(() {
-                            _usernameError = _validateUsername(value);
+                            _isEditingUsername = false;
                           });
-                        },
-                        onSubmitted: (value) async {
-                          if (_usernameError == null) {
-                            await profileService.saveProfile(username: value.isEmpty ? null : value);
-                            setState(() {
-                              _isEditingUsername = false;
-                            });
-                          }
-                        },
-                      ),
+                        }
+                      },
+                    ),
                     if (_usernameError != null) ...[
                       SizedBox(height: AppTheme.spacing.space1),
                       Text(
@@ -726,8 +709,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                       ),
                     ],
                   ],
-                ),
-              )
+                )
               : GestureDetector(
                   onTap: () {
                     _usernameController.text = profile['username'] ?? '';

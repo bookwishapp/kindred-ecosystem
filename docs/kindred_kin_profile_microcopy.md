@@ -132,6 +132,11 @@ Button:
 
 > Invite to Show Up
 
+Not: "Invite to join"
+Not: "Add them to Kindred"
+
+The invite is an invitation to show up — not to sign up for something.
+
 ---
 
 ## 6. Subtle Guidance Patterns

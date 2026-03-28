@@ -7,6 +7,8 @@ class KinPerson {
   final double? positionOverride; // 0.0 = top, 1.0 = bottom. null = date-driven
   final DateTime? birthday;
   final List<DateTime> allDates; // birthday + private dates combined
+  final List<Map<String, dynamic>> wishlistLinks;
+  final List<Map<String, dynamic>> sharedDates;
 
   const KinPerson({
     required this.id,
@@ -17,6 +19,8 @@ class KinPerson {
     this.positionOverride,
     this.birthday,
     this.allDates = const [],
+    this.wishlistLinks = const [],
+    this.sharedDates = const [],
   });
 
   // Factory constructor to create from JSON
@@ -79,6 +83,8 @@ class KinPerson {
     bool clearPositionOverride = false,
     DateTime? birthday,
     List<DateTime>? allDates,
+    List<Map<String, dynamic>>? wishlistLinks,
+    List<Map<String, dynamic>>? sharedDates,
   }) {
     return KinPerson(
       id: id ?? this.id,
@@ -89,6 +95,8 @@ class KinPerson {
       positionOverride: clearPositionOverride ? null : (positionOverride ?? this.positionOverride),
       birthday: birthday ?? this.birthday,
       allDates: allDates ?? this.allDates,
+      wishlistLinks: wishlistLinks ?? this.wishlistLinks,
+      sharedDates: sharedDates ?? this.sharedDates,
     );
   }
 

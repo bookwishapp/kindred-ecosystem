@@ -65,6 +65,8 @@ class KinProvider extends ChangeNotifier {
                   birthday: profileData['birthday'] != null
                     ? DateTime.parse(profileData['birthday'])
                     : person.birthday,
+                  wishlistLinks: List<Map<String, dynamic>>.from(profile['wishlist_links'] ?? []),
+                  sharedDates: List<Map<String, dynamic>>.from(profile['shared_dates'] ?? []),
                 );
               }
             }
@@ -397,6 +399,7 @@ class KinProvider extends ChangeNotifier {
   Future<void> deleteKin(String id) async {
     try {
       await _api.deleteKin(id);
+      await LocalDb.instance.deleteLocalKin(id);
       await loadKin(); // Reload the list
     } catch (e) {
       _error = e.toString();

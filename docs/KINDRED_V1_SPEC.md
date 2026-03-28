@@ -103,7 +103,7 @@ Two paths:
 
 From any Local person's page:
 - Send an invite (via share sheet — text, email, etc.)
-- If they create a profile and accept, they convert from Local to Linked
+- If they show up, they convert from Local to Linked
 - Your private notes are preserved through the conversion
 
 ---
@@ -202,14 +202,17 @@ Railway service deployed at kindred.terryheath.com. Postgres migrations, REST en
 ### ✅ Session 3b — Private notes UI
 Kin sheet full content built: notes, private dates, private wishlist links. Local sqflite storage. kin_people table for local persistence. CupertinoDatePicker throughout.
 
-### ⬜ Session 3c — Encrypted backup
-Encrypt private data before sending to server. Key derived from JWT. Restore on new device after login.
+### ✅ Session 3c — Encrypted backup
+Private data encrypted (AES-256-GCM, key derived from JWT) before sending to kindred backend. Restore runs on login. Server stores ciphertext only.
 
-### 🔄 Session 4 — Auth + Show Up + Overlay Navigation
-Magic link flow partially working — email sends, token returns. Deep link redirect needs fix (redirect_uri must be embedded in verify URL). APP_NAME needs to be per-app not global env var. Navbar redesigned — all surfaces bottom sheets. Show Up sheet with three states. Settings dropdown with avatar in AppBar. Logo left-aligned. Onboarding first-launch copy in place. Deferred deep linking (browser fallback) needed before TestFlight.
+### ✅ Session 4 — Auth + Show Up + Overlay Navigation
+Fully working in TestFlight. Magic link sends, deep link returns JWT to app. 30-day access tokens. Show Up sheet: photo, name, username, birthday, wishlist links, shared dates. AppBar avatar updates. Settings dropdown: email updates, settings, sign out, delete account. Profile stored in auth service (cross-app identity).
 
-### ⬜ Session 5 — Add Kin screen
-Full Add Kin flow: manual entry (name, photo, dates). Full screen push from + button.
+### ✅ Session 5 — Add Kin full flow
+Local kin: name, photo (device only), birthday, dates. Persists in sqflite. Appears in grid immediately with correct ring/size/position. Photo displays in kin sheet. Can add photo to existing kin. Let go (delete) works.
+
+### ⬜ Session 6 — Keep flow (linked profiles)
+Universal Links (AASA file) so fromkindred.com links open app directly. Profile preview sheet when receiving kindred://profile/{username} deep link. Keep button adds linked kin. Invite to Show Up from local kin sheet.
 
 ---
 

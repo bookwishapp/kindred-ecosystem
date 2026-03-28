@@ -75,7 +75,7 @@ Minimal shared utilities only.
 #### /services/auth — auth.terryheath.com
 Central authentication for the entire ecosystem.
 - Magic link only (no passwords)
-- Issues JWTs (15 min access token, 30 day refresh token)
+- Issues JWTs (30 day access token, 30 day refresh token)
 - Single identity works across all apps
 - Node/Express, Postgres on Railway
 - Admin at auth.terryheath.com/admin
@@ -101,8 +101,8 @@ The Kindred API backend.
 
 #### /services/kindred-web — fromkindred.com
 The public face of Kindred.
-- Profile landing pages at `/profile/{userId}` — shown when someone shares their Kindred profile
-- Deep link redirect to app (`kindred://profile/{userId}`)
+- Profile landing pages at `/{username}` — shown when someone shares their Kindred profile
+- Deep link redirect to app (`kindred://profile/{username}`)
 - App Store redirect when app not installed
 - Marketing site (future)
 
@@ -175,7 +175,6 @@ Local-only Kindred users (no profile, no account) do not need auth.
 - **Storage:** AWS S3 (per-app buckets: kindred-uploads, analoglist-assets)
 - **DNS:** Cloudflare
 - **Domains:** terryheath.com, auth.terryheath.com, api.fromkindred.com, fromkindred.com
-  - Note: kindred.terryheath.com is the old API domain — retire once Flutter app points to api.fromkindred.com
 
 ---
 
