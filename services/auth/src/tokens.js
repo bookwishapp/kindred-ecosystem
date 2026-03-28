@@ -21,7 +21,7 @@ function signAccessToken(userId, email) {
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: '15m'
+      expiresIn: '30d'
     }
   );
 }
