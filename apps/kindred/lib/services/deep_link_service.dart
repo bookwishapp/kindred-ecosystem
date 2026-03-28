@@ -133,8 +133,10 @@ class DeepLinkService {
 
   /// Show profile preview sheet
   void _showProfilePreview(String username) {
+    debugPrint('_showProfilePreview called for: $username');
     Future.delayed(const Duration(milliseconds: 300), () {
       final context = navigatorKey.currentContext;
+      debugPrint('Navigator context: ${context != null ? "present" : "NULL"}');
       if (context != null) {
         showModalBottomSheet(
           context: context,
