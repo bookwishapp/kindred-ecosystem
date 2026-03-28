@@ -31,6 +31,9 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
   final TextEditingController _linkUrlController = TextEditingController();
   final TextEditingController _dateLabelController = TextEditingController();
 
+  // Focus nodes
+  final FocusNode _usernameFocusNode = FocusNode();
+
   // Form state
   DateTime? _selectedBirthday;
   DateTime? _selectedDate;
@@ -54,6 +57,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
     _linkLabelController.dispose();
     _linkUrlController.dispose();
     _dateLabelController.dispose();
+    _usernameFocusNode.dispose();
     _usernameDebounceTimer?.cancel();
     super.dispose();
   }
@@ -676,29 +680,42 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         // Username (editable)
         Center(
           child: _isEditingUsername
-              ? Column(
-                  children: [
-                    CupertinoTextField(
-                      controller: _usernameController,
-                      autofocus: true,
-                      textAlign: TextAlign.center,
-                      style: AppTheme.text.body,
-                      decoration: null,
-                      padding: EdgeInsets.zero,
-                      onChanged: (value) {
-                        setState(() {
-                          _usernameError = _validateUsername(value);
-                        });
-                      },
-                      onSubmitted: (value) async {
-                        if (_usernameError == null) {
-                          await profileService.saveProfile(username: value.isEmpty ? null : value);
+              ? Focus(
+                  focusNode: _usernameFocusNode,
+                  onFocusChange: (hasFocus) async {
+                    if (!hasFocus && _usernameError == null) {
+                      // Save on focus loss if valid
+                      final value = _usernameController.text;
+                      await profileService.saveProfile(username: value.isEmpty ? null : value);
+                      setState(() {
+                        _isEditingUsername = false;
+                      });
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      CupertinoTextField(
+                        controller: _usernameController,
+                        focusNode: _usernameFocusNode,
+                        autofocus: true,
+                        textAlign: TextAlign.center,
+                        style: AppTheme.text.body,
+                        decoration: null,
+                        padding: EdgeInsets.zero,
+                        onChanged: (value) {
                           setState(() {
-                            _isEditingUsername = false;
+                            _usernameError = _validateUsername(value);
                           });
-                        }
-                      },
-                    ),
+                        },
+                        onSubmitted: (value) async {
+                          if (_usernameError == null) {
+                            await profileService.saveProfile(username: value.isEmpty ? null : value);
+                            setState(() {
+                              _isEditingUsername = false;
+                            });
+                          }
+                        },
+                      ),
                     if (_usernameError != null) ...[
                       SizedBox(height: AppTheme.spacing.space1),
                       Text(
@@ -709,7 +726,8 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                       ),
                     ],
                   ],
-                )
+                ),
+              )
               : GestureDetector(
                   onTap: () {
                     _usernameController.text = profile['username'] ?? '';
@@ -887,41 +905,55 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         if (profileService.sharedDates.isNotEmpty) ...[
           ...profileService.sharedDates.map((date) {
             final dateObj = DateTime.parse(date['date']);
-            return Dismissible(
-              key: Key(date['id']),
-              onDismissed: (_) async {
-                await profileService.removeSharedDate(date['id']);
-              },
-              child: Padding(
-                padding: EdgeInsets.only(bottom: AppTheme.spacing.space2),
-                child: Text(
-                  '${date['label']} — ${_formatDate(dateObj)}',
-                  style: AppTheme.text.body,
-                ),
+            return Padding(
+              padding: EdgeInsets.only(bottom: AppTheme.spacing.space1),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${date['label']} — ${_formatDate(dateObj)}',
+                    style: AppTheme.text.body,
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      await profileService.removeSharedDate(date['id']);
+                    },
+                    child: Icon(
+                      CupertinoIcons.xmark,
+                      size: 16,
+                      color: AppTheme.colors.tertiaryText,
+                    ),
+                  ),
+                ],
               ),
             );
           }),
         ],
+        SizedBox(height: AppTheme.spacing.space2),
 
         // Add date modal
         if (_isAddingDate) ...[
           SizedBox(height: AppTheme.spacing.space2),
-          CupertinoTextField(
-            controller: _dateLabelController,
-            autofocus: true,
-            style: AppTheme.text.body,
-            placeholder: 'Date label (e.g., Anniversary)',
-            placeholderStyle: AppTheme.text.body.copyWith(
-              color: AppTheme.colors.tertiaryText,
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: AppTheme.spacing.space2,
-              vertical: AppTheme.spacing.space1,
-            ),
-            decoration: null,
-          ),
-          SizedBox(height: AppTheme.spacing.space1),
-          GestureDetector(
+          Row(
+            children: [
+              Expanded(
+                child: CupertinoTextField(
+                  controller: _dateLabelController,
+                  autofocus: true,
+                  style: AppTheme.text.body,
+                  placeholder: 'Label',
+                  placeholderStyle: AppTheme.text.body.copyWith(
+                    color: AppTheme.colors.tertiaryText,
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing.space2,
+                    vertical: AppTheme.spacing.space1,
+                  ),
+                  decoration: null,
+                ),
+              ),
+              SizedBox(width: AppTheme.spacing.space2),
+              GestureDetector(
             onTap: () {
               showCupertinoModalPopup(
                 context: context,
@@ -988,6 +1020,8 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                 ],
               ),
             ),
+          ),
+            ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
