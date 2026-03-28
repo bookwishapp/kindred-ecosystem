@@ -23,15 +23,21 @@ class AuthApi {
 
   Future<Map<String, dynamic>> createOrUpdateProfile({
     String? name,
+    String? username,
     String? photoUrl,
     String? birthday,
   }) async {
     final data = <String, dynamic>{};
     if (name != null) data['name'] = name;
+    if (username != null) data['username'] = username;
     if (photoUrl != null) data['photo_url'] = photoUrl;
     if (birthday != null) data['birthday'] = birthday;
 
     return await _apiClient.post('/profile', data: data);
+  }
+
+  Future<Map<String, dynamic>> checkUsername(String username) async {
+    return await _apiClient.get('/profile/check-username/$username');
   }
 
   Future<Map<String, dynamic>> getPublicProfile(String userId) async {

@@ -125,6 +125,7 @@ class _KindredAppState extends State<KindredApp> {
         // Provide core services
         Provider<SecureStorageService>.value(value: secureStorage),
         Provider<KindredApi>.value(value: kindredApi),
+        Provider<AuthApi>.value(value: authApi),
 
         // Provide auth and profile services
         ChangeNotifierProvider<AuthService>.value(value: authService),

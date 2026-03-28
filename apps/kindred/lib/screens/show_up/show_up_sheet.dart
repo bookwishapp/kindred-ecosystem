@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,25 +25,35 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
   // Form controllers
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _linkLabelController = TextEditingController();
   final TextEditingController _linkUrlController = TextEditingController();
   final TextEditingController _dateLabelController = TextEditingController();
 
   // Form state
   DateTime? _selectedBirthday;
+  DateTime? _selectedDate;
   String? _localPhotoPath;
   String? _uploadedPhotoUrl;
+  String? _usernameError;
+  bool? _usernameAvailable;
+  bool _checkingUsername = false;
+  Timer? _usernameDebounceTimer;
   bool _isAddingLink = false;
+  bool _isAddingDate = false;
   bool _isEditingName = false;
+  bool _isEditingUsername = false;
   bool _isUploading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _nameController.dispose();
+    _usernameController.dispose();
     _linkLabelController.dispose();
     _linkUrlController.dispose();
     _dateLabelController.dispose();
+    _usernameDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -52,6 +63,76 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
     return '${months[date.month - 1]} ${date.day}';
+  }
+
+  String? _validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return null; // Username is optional
+    }
+
+    // Check format
+    final usernameRegex = RegExp(r'^[a-z0-9_]{3,20}$');
+    if (!usernameRegex.hasMatch(value)) {
+      return '3-20 chars, lowercase alphanumeric and underscores only';
+    }
+
+    // Check against reserved words
+    const reservedWords = [
+      'about', 'help', 'support', 'terms', 'privacy', 'login', 'logout', 'signup',
+      'register', 'admin', 'api', 'app', 'www', 'mail', 'email', 'contact', 'home',
+      'index', 'profile', 'user', 'users', 'account', 'accounts', 'settings',
+      'billing', 'pricing', 'press', 'blog', 'news', 'legal', 'security', 'status',
+      'download', 'downloads', 'install', 'kindred', 'fromkindred'
+    ];
+
+    if (reservedWords.contains(value.toLowerCase())) {
+      return 'Username not available';
+    }
+
+    return null;
+  }
+
+  Future<void> _checkUsernameAvailability(String username) async {
+    // Cancel any existing timer
+    _usernameDebounceTimer?.cancel();
+
+    // Don't check if username is empty or has validation errors
+    if (username.isEmpty || _usernameError != null) {
+      setState(() {
+        _usernameAvailable = null;
+        _checkingUsername = false;
+      });
+      return;
+    }
+
+    // Set checking state
+    setState(() {
+      _checkingUsername = true;
+      _usernameAvailable = null;
+    });
+
+    // Debounce for 500ms
+    _usernameDebounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        final authApi = context.read<AuthApi>();
+        final result = await authApi.checkUsername(username);
+
+        if (mounted && _usernameController.text == username) {
+          setState(() {
+            _usernameAvailable = result['available'] ?? false;
+            _checkingUsername = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Failed to check username availability: $e');
+        if (mounted) {
+          setState(() {
+            _usernameAvailable = null;
+            _checkingUsername = false;
+          });
+        }
+      }
+    });
   }
 
   Future<void> _pickPhoto() async {
@@ -329,6 +410,79 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         ),
         SizedBox(height: AppTheme.spacing.space2),
 
+        // Username field
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              alignment: Alignment.centerRight,
+              children: [
+                CupertinoTextField(
+                  controller: _usernameController,
+                  style: AppTheme.text.body,
+                  placeholder: 'Username (optional)',
+                  placeholderStyle: AppTheme.text.body.copyWith(
+                    color: AppTheme.colors.tertiaryText,
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing.space2,
+                    vertical: AppTheme.spacing.space2,
+                  ),
+                  decoration: null,
+                  onChanged: (value) {
+                    setState(() {
+                      _usernameError = _validateUsername(value);
+                      _usernameAvailable = null;
+                    });
+                    if (_usernameError == null && value.isNotEmpty) {
+                      _checkUsernameAvailability(value);
+                    }
+                  },
+                ),
+                // Show availability indicator
+                if (_checkingUsername)
+                  Padding(
+                    padding: EdgeInsets.only(right: AppTheme.spacing.space2),
+                    child: CupertinoActivityIndicator(radius: 8),
+                  )
+                else if (_usernameAvailable == true && _usernameError == null && _usernameController.text.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(right: AppTheme.spacing.space2),
+                    child: Icon(
+                      CupertinoIcons.check_mark_circled,
+                      color: Colors.teal,
+                      size: 20,
+                    ),
+                  ),
+              ],
+            ),
+            if (_usernameError != null) ...[
+              SizedBox(height: AppTheme.spacing.space1),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing.space2),
+                child: Text(
+                  _usernameError!,
+                  style: AppTheme.text.caption.copyWith(
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ] else if (_usernameAvailable == false && _usernameController.text.isNotEmpty) ...[
+              SizedBox(height: AppTheme.spacing.space1),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing.space2),
+                child: Text(
+                  'Already taken',
+                  style: AppTheme.text.caption.copyWith(
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        SizedBox(height: AppTheme.spacing.space2),
+
         // Birthday picker
         GestureDetector(
           onTap: () {
@@ -430,7 +584,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           width: double.infinity,
           child: CupertinoButton(
             color: AppTheme.colors.accent,
-            onPressed: (_isUploading || profileService.loading || _nameController.text.isEmpty)
+            onPressed: (_isUploading || profileService.loading || _nameController.text.isEmpty || _usernameError != null)
                 ? null
                 : () async {
                     try {
@@ -440,6 +594,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                       // Create profile with S3 URL
                       await profileService.saveProfile(
                         name: _nameController.text,
+                        username: _usernameController.text.isEmpty ? null : _usernameController.text,
                         birthday: _selectedBirthday,
                         photoUrl: s3PhotoUrl,
                       );
@@ -512,6 +667,61 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                   child: Text(
                     profile['name'] ?? 'Your name',
                     style: AppTheme.text.headingLarge,
+                  ),
+                ),
+        ),
+        SizedBox(height: AppTheme.spacing.space2),
+
+        // Username (editable)
+        Center(
+          child: _isEditingUsername
+              ? Column(
+                  children: [
+                    CupertinoTextField(
+                      controller: _usernameController,
+                      autofocus: true,
+                      textAlign: TextAlign.center,
+                      style: AppTheme.text.body,
+                      decoration: null,
+                      padding: EdgeInsets.zero,
+                      onChanged: (value) {
+                        setState(() {
+                          _usernameError = _validateUsername(value);
+                        });
+                      },
+                      onSubmitted: (value) async {
+                        if (_usernameError == null) {
+                          await profileService.saveProfile(username: value.isEmpty ? null : value);
+                          setState(() {
+                            _isEditingUsername = false;
+                          });
+                        }
+                      },
+                    ),
+                    if (_usernameError != null) ...[
+                      SizedBox(height: AppTheme.spacing.space1),
+                      Text(
+                        _usernameError!,
+                        style: AppTheme.text.caption.copyWith(
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ],
+                )
+              : GestureDetector(
+                  onTap: () {
+                    _usernameController.text = profile['username'] ?? '';
+                    setState(() {
+                      _isEditingUsername = true;
+                      _usernameError = null;
+                    });
+                  },
+                  child: Text(
+                    profile['username'] != null ? '@${profile['username']}' : '+ Add username',
+                    style: AppTheme.text.body.copyWith(
+                      color: profile['username'] != null ? AppTheme.colors.secondaryText : AppTheme.colors.accent,
+                    ),
                   ),
                 ),
         ),
@@ -648,6 +858,31 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         SizedBox(height: AppTheme.spacing.space3),
 
         // Shared dates
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Dates',
+              style: AppTheme.text.body.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                setState(() {
+                  _isAddingDate = true;
+                  _selectedDate = DateTime.now();
+                });
+              },
+              child: Icon(
+                CupertinoIcons.plus,
+                size: 20,
+                color: AppTheme.colors.accent,
+              ),
+            ),
+          ],
+        ),
         if (profileService.sharedDates.isNotEmpty) ...[
           ...profileService.sharedDates.map((date) {
             final dateObj = DateTime.parse(date['date']);
@@ -667,6 +902,136 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           }),
         ],
 
+        // Add date modal
+        if (_isAddingDate) ...[
+          SizedBox(height: AppTheme.spacing.space2),
+          CupertinoTextField(
+            controller: _dateLabelController,
+            autofocus: true,
+            style: AppTheme.text.body,
+            placeholder: 'Date label (e.g., Anniversary)',
+            placeholderStyle: AppTheme.text.body.copyWith(
+              color: AppTheme.colors.tertiaryText,
+            ),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing.space2,
+              vertical: AppTheme.spacing.space1,
+            ),
+            decoration: null,
+          ),
+          SizedBox(height: AppTheme.spacing.space1),
+          GestureDetector(
+            onTap: () {
+              showCupertinoModalPopup(
+                context: context,
+                builder: (BuildContext context) => Container(
+                  height: 250,
+                  color: AppTheme.colors.warmWhite,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CupertinoButton(
+                            child: Text('Cancel'),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          CupertinoButton(
+                            child: Text('Done'),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: CupertinoDatePicker(
+                          mode: CupertinoDatePickerMode.date,
+                          initialDateTime: _selectedDate ?? DateTime.now(),
+                          maximumDate: DateTime(DateTime.now().year + 10),
+                          onDateTimeChanged: (DateTime newDate) {
+                            setState(() {
+                              _selectedDate = newDate;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing.space2,
+                vertical: AppTheme.spacing.space1,
+              ),
+              decoration: BoxDecoration(
+                color: AppTheme.colors.surface,
+                borderRadius: BorderRadius.circular(AppTheme.radius.sm),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _selectedDate != null
+                        ? _formatDate(_selectedDate!)
+                        : 'Select date',
+                    style: AppTheme.text.body,
+                  ),
+                  Icon(
+                    CupertinoIcons.calendar,
+                    size: 20,
+                    color: AppTheme.colors.tertiaryText,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () async {
+                  if (_dateLabelController.text.isNotEmpty && _selectedDate != null) {
+                    await profileService.addSharedDate(
+                      _dateLabelController.text,
+                      _selectedDate!.toIso8601String().split('T')[0], // Format as YYYY-MM-DD
+                      true, // recurs_annually
+                    );
+                    _dateLabelController.clear();
+                    setState(() {
+                      _isAddingDate = false;
+                      _selectedDate = null;
+                    });
+                  }
+                },
+                child: Icon(
+                  CupertinoIcons.check_mark,
+                  size: 20,
+                  color: AppTheme.colors.secondaryText,
+                ),
+              ),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  setState(() {
+                    _isAddingDate = false;
+                    _selectedDate = null;
+                  });
+                },
+                child: Icon(
+                  CupertinoIcons.xmark,
+                  size: 20,
+                  color: AppTheme.colors.tertiaryText,
+                ),
+              ),
+            ],
+          ),
+        ],
+        SizedBox(height: AppTheme.spacing.space3),
+
         Divider(
           color: AppTheme.colors.border,
           height: AppTheme.spacing.space5,
@@ -676,13 +1041,21 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         Center(
           child: CupertinoButton(
             onPressed: () async {
-              // Get user ID from secure storage
-              final storage = SecureStorageService();
-              final userId = await storage.getUserId();
-              if (userId != null) {
+              // Use username if available, otherwise use userId
+              final username = profile['username'];
+              if (username != null) {
                 await Share.share(
-                  'See my Kindred profile: https://fromkindred.com/$userId',
+                  'See my Kindred profile: https://fromkindred.com/$username',
                 );
+              } else {
+                // Get user ID from secure storage as fallback
+                final storage = SecureStorageService();
+                final userId = await storage.getUserId();
+                if (userId != null) {
+                  await Share.share(
+                    'See my Kindred profile: https://fromkindred.com/$userId',
+                  );
+                }
               }
             },
             child: Text(

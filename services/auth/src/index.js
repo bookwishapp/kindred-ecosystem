@@ -29,7 +29,8 @@ const {
   addWishlistLink,
   deleteWishlistLink,
   addSharedDate,
-  deleteSharedDate
+  deleteSharedDate,
+  checkUsername
 } = require('./profiles');
 const { getUploadUrl } = require('./upload');
 
@@ -83,6 +84,7 @@ app.get('/auth/me', corsMiddleware, authenticate, getCurrentUser);
 app.get('/profile', corsMiddleware, authenticate, getMyProfile);
 app.post('/profile', corsMiddleware, authenticate, upsertProfile);
 app.delete('/profile', corsMiddleware, authenticate, deleteProfile);
+app.get('/profile/check-username/:username', corsMiddleware, checkUsername); // no auth — public
 app.get('/profile/:userId', corsMiddleware, getPublicProfile); // no auth — public
 
 // Wishlist link routes

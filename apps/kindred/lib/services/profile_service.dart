@@ -115,6 +115,7 @@ class ProfileService extends ChangeNotifier {
   // Create or update profile
   Future<void> saveProfile({
     String? name,
+    String? username,
     DateTime? birthday,
     String? photoUrl,
   }) async {
@@ -125,6 +126,7 @@ class ProfileService extends ChangeNotifier {
     try {
       final response = await _api.createOrUpdateProfile(
         name: name,
+        username: username,
         birthday: birthday?.toIso8601String(),
         photoUrl: photoUrl,
       );

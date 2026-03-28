@@ -35,34 +35,75 @@ async function getMyProfile(req, res) {
 }
 
 async function upsertProfile(req, res) {
-  const { name, photo_url, birthday } = req.body;
-  const result = await pool.query(
-    `INSERT INTO profiles (user_id, name, photo_url, birthday)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (user_id) DO UPDATE
-     SET name = COALESCE(EXCLUDED.name, profiles.name),
-         photo_url = COALESCE(EXCLUDED.photo_url, profiles.photo_url),
-         birthday = COALESCE(EXCLUDED.birthday, profiles.birthday),
-         updated_at = NOW()
-     RETURNING *`,
-    [req.user.id, name, photo_url, birthday]
-  );
-  res.json({ profile: result.rows[0] });
+  const { name, username, photo_url, birthday } = req.body;
+
+  // Validate username if provided
+  if (username !== undefined && username !== null) {
+    const usernameRegex = /^[a-z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      return res.status(400).json({ error: 'Username must be 3-20 characters, lowercase alphanumeric and underscores only' });
+    }
+
+    // Check against reserved words
+    const reservedWords = [
+      'about', 'help', 'support', 'terms', 'privacy', 'login', 'logout', 'signup',
+      'register', 'admin', 'api', 'app', 'www', 'mail', 'email', 'contact', 'home',
+      'index', 'profile', 'user', 'users', 'account', 'accounts', 'settings',
+      'billing', 'pricing', 'press', 'blog', 'news', 'legal', 'security', 'status',
+      'download', 'downloads', 'install', 'kindred', 'fromkindred'
+    ];
+
+    if (reservedWords.includes(username.toLowerCase())) {
+      return res.status(400).json({ error: 'Username not available' });
+    }
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO profiles (user_id, name, username, photo_url, birthday)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id) DO UPDATE
+       SET name = COALESCE(EXCLUDED.name, profiles.name),
+           username = COALESCE(EXCLUDED.username, profiles.username),
+           photo_url = COALESCE(EXCLUDED.photo_url, profiles.photo_url),
+           birthday = COALESCE(EXCLUDED.birthday, profiles.birthday),
+           updated_at = NOW()
+       RETURNING *`,
+      [req.user.id, name, username, photo_url, birthday]
+    );
+    res.json({ profile: result.rows[0] });
+  } catch (error) {
+    if (error.code === '23505' && error.constraint === 'profiles_username_key') {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+    throw error;
+  }
 }
 
 async function getPublicProfile(req, res) {
   const { userId } = req.params;
 
-  // Validate UUID format to prevent SQL errors
+  // Check if it's a UUID or username
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(userId)) {
+  const usernameRegex = /^[a-z0-9_]{3,20}$/;
+
+  let query;
+  let params;
+
+  if (uuidRegex.test(userId)) {
+    // It's a UUID
+    query = 'SELECT user_id, name, username, photo_url, birthday FROM profiles WHERE user_id = $1';
+    params = [userId];
+  } else if (usernameRegex.test(userId)) {
+    // It's a username
+    query = 'SELECT user_id, name, username, photo_url, birthday FROM profiles WHERE username = $1';
+    params = [userId];
+  } else {
+    // Invalid format
     return res.status(404).json({ error: 'Not found' });
   }
 
-  const result = await pool.query(
-    'SELECT user_id, name, photo_url, birthday FROM profiles WHERE user_id = $1',
-    [userId]
-  );
+  const result = await pool.query(query, params);
   if (result.rows.length === 0) {
     return res.status(404).json({ error: 'Profile not found' });
   }
@@ -116,6 +157,38 @@ async function deleteSharedDate(req, res) {
   res.json({ success: true });
 }
 
+// Check username availability
+async function checkUsername(req, res) {
+  const { username } = req.params;
+
+  // Validate format
+  const usernameRegex = /^[a-z0-9_]{3,20}$/;
+  if (!usernameRegex.test(username)) {
+    return res.json({ available: false });
+  }
+
+  // Check against reserved words
+  const reservedWords = [
+    'about', 'help', 'support', 'terms', 'privacy', 'login', 'logout', 'signup',
+    'register', 'admin', 'api', 'app', 'www', 'mail', 'email', 'contact', 'home',
+    'index', 'profile', 'user', 'users', 'account', 'accounts', 'settings',
+    'billing', 'pricing', 'press', 'blog', 'news', 'legal', 'security', 'status',
+    'download', 'downloads', 'install', 'kindred', 'fromkindred'
+  ];
+
+  if (reservedWords.includes(username.toLowerCase())) {
+    return res.json({ available: false });
+  }
+
+  // Check database
+  const result = await pool.query(
+    'SELECT 1 FROM profiles WHERE LOWER(username) = LOWER($1)',
+    [username]
+  );
+
+  res.json({ available: result.rows.length === 0 });
+}
+
 module.exports = {
   getMyProfile,
   upsertProfile,
@@ -124,5 +197,6 @@ module.exports = {
   addWishlistLink,
   deleteWishlistLink,
   addSharedDate,
-  deleteSharedDate
+  deleteSharedDate,
+  checkUsername
 };
