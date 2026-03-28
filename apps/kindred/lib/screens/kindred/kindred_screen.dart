@@ -10,9 +10,9 @@ import '../kin/kin_sheet.dart';
 import '../show_up/show_up_sheet.dart';
 import '../../providers/kin_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/auth_api.dart';
 import '../../services/profile_service.dart';
 import '../../services/local_db.dart';
-import '../../services/kindred_api.dart';
 import 'package:core/core.dart';
 import '../../widgets/kindred_grid.dart';
 
@@ -123,9 +123,17 @@ class _KindredScreenState extends State<KindredScreen> {
   Future<void> _handleDeleteAccount() async {
     // Get services before async gap
     final authService = context.read<AuthService>();
-    final kindredApi = KindredApi(
-      baseUrl: 'https://api.fromkindred.com',
-      storage: SecureStorageService(),
+    final storage = SecureStorageService();
+    final authApi = AuthApiFactory.create(
+      storage: storage,
+      tokenProvider: () async {
+        // Try to get token from AuthService first (in memory)
+        final token = authService.token;
+        if (token != null) return token;
+
+        // Fallback to loading from secure storage if not in memory yet
+        return await storage.getAuthToken();
+      },
     );
 
     final confirmed = await showCupertinoDialog<bool>(
@@ -152,8 +160,8 @@ class _KindredScreenState extends State<KindredScreen> {
 
     if (confirmed == true) {
       try {
-        // Delete profile from server
-        await kindredApi.deleteProfile();
+        // Delete profile from auth server
+        await authApi.deleteProfile();
 
         // Clear auth and log out
         await authService.logout();

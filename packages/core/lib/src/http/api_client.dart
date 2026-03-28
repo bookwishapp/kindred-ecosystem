@@ -39,9 +39,11 @@ class ApiClient {
               options.headers['Authorization'] = 'Bearer $token';
             }
           }
+          debugPrint('API Request: ${options.method} ${options.baseUrl}${options.path} | Auth: ${options.headers['Authorization'] != null ? 'present' : 'MISSING'}');
           handler.next(options);
         },
         onError: (error, handler) {
+          debugPrint('API Error: ${error.response?.statusCode} ${error.requestOptions.path} | Body: ${error.response?.data}');
           if (error.response?.statusCode == 401 && onUnauthorized != null) {
             onUnauthorized!();
           }
