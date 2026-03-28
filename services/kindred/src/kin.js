@@ -4,18 +4,13 @@ async function getKin(req, res) {
   try {
     const result = await pool.query(
       `SELECT kr.*,
-        p.name as profile_name,
-        p.photo_url as profile_photo_url,
-        p.birthday as profile_birthday,
-        p.bio as profile_bio,
         array_agg(DISTINCT jsonb_build_object(
           'id', kd.id, 'label', kd.label, 'date', kd.date, 'recurs_annually', kd.recurs_annually
         )) FILTER (WHERE kd.id IS NOT NULL) as dates
       FROM kin_records kr
-      LEFT JOIN profiles p ON kr.linked_profile_id = p.user_id
       LEFT JOIN kin_dates kd ON kr.id = kd.kin_record_id
       WHERE kr.owner_user_id = $1
-      GROUP BY kr.id, p.id`,
+      GROUP BY kr.id`,
       [req.user.id]
     );
 
@@ -31,13 +26,7 @@ async function getKin(req, res) {
 
       if (record.type === 'linked' && record.linked_profile_id) {
         kinData.linked_profile_id = record.linked_profile_id;
-        kinData.profile = {
-          id: record.linked_profile_id,
-          name: record.profile_name,
-          photo_url: record.profile_photo_url,
-          birthday: record.profile_birthday,
-          bio: record.profile_bio
-        };
+        // Profile data will need to be fetched separately from auth service
       } else if (record.type === 'local') {
         kinData.local_name = record.local_name;
         kinData.local_photo_url = record.local_photo_url;
