@@ -26,13 +26,11 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
   bool _isLoading = true;
   String? _error;
   late AuthApi _api;
-  late AuthService _authService;
 
   @override
   void initState() {
     super.initState();
     final storage = SecureStorageService();
-    _authService = AuthService(storage: storage);
     _api = AuthApi(
       baseUrl: 'https://auth.terryheath.com',
       storage: storage,
@@ -150,7 +148,7 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
     }
 
     final isAlreadyInKin = _isAlreadyInKin(kinProvider);
-    final isAuthenticated = _authService.isAuthenticated;
+    final isAuthenticated = context.watch<AuthService>().isAuthenticated;
     final wishlistLinks = _profile!['wishlist_links'] ?? [];
     final sharedDates = _profile!['shared_dates'] ?? [];
 

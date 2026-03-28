@@ -133,14 +133,17 @@ class DeepLinkService {
 
   /// Show profile preview sheet
   void _showProfilePreview(String username) {
-    final context = contextProvider();
-    if (context != null && context.mounted) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => ProfilePreviewSheet(username: username),
-      );
-    }
+    Future.delayed(const Duration(milliseconds: 300), () {
+      final context = contextProvider();
+      if (context != null && context.mounted) {
+        showModalBottomSheet(
+          context: context,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => ProfilePreviewSheet(username: username),
+        );
+      }
+    });
   }
 }
