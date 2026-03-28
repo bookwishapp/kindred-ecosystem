@@ -57,13 +57,16 @@ class KinProvider extends ChangeNotifier {
             final profile = await _authApi?.getPublicProfile(person.linkedProfileId!);
             if (profile != null) {
               // Update person with profile data
-              return person.copyWith(
-                name: profile['name'] ?? person.name,
-                photoUrl: profile['photo_url'],
-                birthday: profile['birthday'] != null
-                  ? DateTime.parse(profile['birthday'])
-                  : person.birthday,
-              );
+              final profileData = profile['profile'] as Map<String, dynamic>?;
+              if (profileData != null) {
+                return person.copyWith(
+                  name: profileData['name'] ?? person.name,
+                  photoUrl: profileData['photo_url'],
+                  birthday: profileData['birthday'] != null
+                    ? DateTime.parse(profileData['birthday'])
+                    : person.birthday,
+                );
+              }
             }
           } catch (e) {
             debugPrint('Failed to fetch profile for ${person.linkedProfileId}: $e');
