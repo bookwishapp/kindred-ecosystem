@@ -61,6 +61,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For form submissions
 app.use(cookieParser());
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Auth: ${req.headers.authorization ? 'present' : 'missing'}`);
+  next();
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', service: 'auth' });
