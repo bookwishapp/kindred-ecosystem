@@ -667,21 +667,6 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           }),
         ],
 
-        // Add date
-        GestureDetector(
-          onTap: () {
-            // Date adding functionality not yet implemented
-          },
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing.space1),
-            child: Icon(
-              CupertinoIcons.plus,
-              color: AppTheme.colors.accent,
-              size: 20,
-            ),
-          ),
-        ),
-
         Divider(
           color: AppTheme.colors.border,
           height: AppTheme.spacing.space5,
