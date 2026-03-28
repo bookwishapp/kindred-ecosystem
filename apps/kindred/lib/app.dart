@@ -66,16 +66,21 @@ class _KindredAppState extends State<KindredApp> {
       },
     );
 
+    // Create profile service
+    profileService = ProfileService(api: authApi);
+
     // Set up restore callback for after successful auth
     authService.onAuthSuccess = (userId, accessToken) async {
+      // First load the profile with the new token
+      await profileService.loadProfile();
+
+      // Then restore backup
       await BackupService().restore(
         userId: userId,
         accessToken: accessToken,
         api: kindredApi,
       );
     };
-
-    profileService = ProfileService(api: authApi);
 
     // Create deep link service
     deepLinkService = DeepLinkService(
