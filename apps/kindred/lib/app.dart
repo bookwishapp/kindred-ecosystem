@@ -28,8 +28,6 @@ class _KindredAppState extends State<KindredApp> {
   late final AuthApi authApi;
   late final DeepLinkService deepLinkService;
 
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
   @override
   void initState() {
     super.initState();
@@ -85,7 +83,7 @@ class _KindredAppState extends State<KindredApp> {
     // Create deep link service
     deepLinkService = DeepLinkService(
       authService: authService,
-      contextProvider: () => navigatorKey.currentContext,
+      navigatorKey: rootNavigatorKey,
     );
 
     // Initialize services

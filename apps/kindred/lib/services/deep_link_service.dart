@@ -7,13 +7,13 @@ import '../screens/profile_preview/profile_preview_sheet.dart';
 /// Service that handles deep links for the app
 class DeepLinkService {
   final AuthService authService;
-  final BuildContext? Function() contextProvider;
+  final GlobalKey<NavigatorState> navigatorKey;
 
   StreamSubscription? _linkSubscription;
 
   DeepLinkService({
     required this.authService,
-    required this.contextProvider,
+    required this.navigatorKey,
   });
 
   /// Initialize deep link handling
@@ -103,7 +103,7 @@ class DeepLinkService {
       await authService.verifyMagicLink(token);
 
       // Show success message if we have a context
-      final context = contextProvider();
+      final context = navigatorKey.currentContext;
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -119,7 +119,7 @@ class DeepLinkService {
       debugPrint('Failed to verify magic link: $e');
 
       // Show error message if we have a context
-      final context = contextProvider();
+      final context = navigatorKey.currentContext;
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -134,8 +134,8 @@ class DeepLinkService {
   /// Show profile preview sheet
   void _showProfilePreview(String username) {
     Future.delayed(const Duration(milliseconds: 300), () {
-      final context = contextProvider();
-      if (context != null && context.mounted) {
+      final context = navigatorKey.currentContext;
+      if (context != null) {
         showModalBottomSheet(
           context: context,
           useRootNavigator: true,
