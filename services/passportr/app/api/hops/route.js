@@ -1,11 +1,11 @@
 export const runtime = 'nodejs';
 
 const db = require('../../../lib/db');
-const { requireAuth } = require('../../../lib/auth');
+const { requireOrganizer } = require('../../../lib/auth');
 
 export async function GET(req) {
   try {
-    const user = requireAuth(req);
+    const user = requireOrganizer(req);
 
     const result = await db.query(
       `SELECT h.*,
@@ -23,6 +23,9 @@ export async function GET(req) {
     if (error.message === 'Unauthorized') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (error.message === 'Forbidden') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
     console.error('Get hops error:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -30,7 +33,7 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const user = requireAuth(req);
+    const user = requireOrganizer(req);
     const { slug, name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, coupon_expiry_minutes } = await req.json();
 
     if (!slug || !name || !start_date || !end_date || !stamp_cutoff_date || !redeem_cutoff_date) {
@@ -48,6 +51,9 @@ export async function POST(req) {
   } catch (error) {
     if (error.message === 'Unauthorized') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error.message === 'Forbidden') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
     console.error('Create hop error:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });

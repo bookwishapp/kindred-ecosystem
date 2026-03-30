@@ -20,4 +20,19 @@ function requireAuth(req) {
   return user;
 }
 
-module.exports = { verifyToken, getAuthUser, requireAuth };
+function isOrganizer(user) {
+  if (!user || !user.email) return false;
+  const organizerEmails = process.env.ORGANIZER_EMAILS || '';
+  const allowedEmails = organizerEmails.split(',').map(e => e.trim().toLowerCase()).filter(e => e);
+  return allowedEmails.includes(user.email.toLowerCase());
+}
+
+function requireOrganizer(req) {
+  const user = requireAuth(req);
+  if (!isOrganizer(user)) {
+    throw new Error('Forbidden');
+  }
+  return user;
+}
+
+module.exports = { verifyToken, getAuthUser, requireAuth, isOrganizer, requireOrganizer };

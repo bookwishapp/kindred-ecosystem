@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 
 const db = require('../../../../../lib/db');
-const { requireAuth } = require('../../../../../lib/auth');
+const { requireOrganizer } = require('../../../../../lib/auth');
 const { generateToken } = require('../../../../../lib/tokens');
 
 export async function GET(req, { params }) {
@@ -35,7 +35,7 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
-    const user = requireAuth(req);
+    const user = requireOrganizer(req);
     const { hopSlug } = params;
     const { name, address, description, reward_description, required, sort_order } = await req.json();
 
@@ -74,6 +74,9 @@ export async function POST(req, { params }) {
   } catch (error) {
     if (error.message === 'Unauthorized') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error.message === 'Forbidden') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
     console.error('Create venue error:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });

@@ -7,6 +7,7 @@ export default function OrganizeDashboard() {
   const [hops, setHops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,8 +23,11 @@ export default function OrganizeDashboard() {
       if (response.ok) {
         const data = await response.json();
         setHops(data.hops);
+      } else if (response.status === 403) {
+        // Organizer access denied
+        setAccessDenied(true);
       } else {
-        // Not authenticated
+        // Not authenticated or other error
         // For now, just show empty state
       }
       setLoading(false);
@@ -71,6 +75,20 @@ export default function OrganizeDashboard() {
     return (
       <div className="container" style={{ paddingTop: '80px' }}>
         <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="container" style={{ paddingTop: '80px' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '64px 32px', maxWidth: '500px', margin: '0 auto' }}>
+          <h1 style={{ fontSize: '28px', marginBottom: '16px' }}>Organizer Access Required</h1>
+          <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+            This area is currently available to authorized organizers only.
+            If you believe you should have access, please contact support.
+          </p>
+        </div>
       </div>
     );
   }

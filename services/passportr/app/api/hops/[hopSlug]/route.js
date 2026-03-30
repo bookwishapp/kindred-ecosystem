@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 
 const db = require('../../../../lib/db');
-const { requireAuth } = require('../../../../lib/auth');
+const { requireOrganizer } = require('../../../../lib/auth');
 
 export async function GET(req, { params }) {
   try {
@@ -25,7 +25,7 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
-    const user = requireAuth(req);
+    const user = requireOrganizer(req);
     const { hopSlug } = params;
     const { name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes } = await req.json();
 
@@ -65,6 +65,9 @@ export async function PUT(req, { params }) {
   } catch (error) {
     if (error.message === 'Unauthorized') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error.message === 'Forbidden') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
     console.error('Update hop error:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });

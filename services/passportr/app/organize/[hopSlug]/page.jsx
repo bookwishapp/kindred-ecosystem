@@ -8,11 +8,33 @@ export default function ManageHop({ params }) {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddVenue, setShowAddVenue] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
-    fetchHop();
-    fetchVenues();
-  }, [hopSlug]);
+    checkAccess();
+  }, []);
+
+  useEffect(() => {
+    if (!accessDenied) {
+      fetchHop();
+      fetchVenues();
+    }
+  }, [hopSlug, accessDenied]);
+
+  async function checkAccess() {
+    try {
+      const response = await fetch('/api/hops', {
+        credentials: 'include'
+      });
+
+      if (response.status === 403) {
+        setAccessDenied(true);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Failed to check access:', err);
+    }
+  }
 
   async function fetchHop() {
     try {
@@ -76,6 +98,20 @@ export default function ManageHop({ params }) {
     return (
       <div className="container" style={{ paddingTop: '80px' }}>
         <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="container" style={{ paddingTop: '80px' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '64px 32px', maxWidth: '500px', margin: '0 auto' }}>
+          <h1 style={{ fontSize: '28px', marginBottom: '16px' }}>Organizer Access Required</h1>
+          <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+            This area is currently available to authorized organizers only.
+            If you believe you should have access, please contact support.
+          </p>
+        </div>
       </div>
     );
   }
