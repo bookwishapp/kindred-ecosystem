@@ -22,6 +22,11 @@ export default function ManageHop({ params }) {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', venue_name: '' });
   const [inviting, setInviting] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importSourceSlug, setImportSourceSlug] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [allHops, setAllHops] = useState([]);
   const [showDeleteHop, setShowDeleteHop] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -71,6 +76,13 @@ export default function ManageHop({ params }) {
       if (participantsRes.ok) {
         const d = await participantsRes.json();
         setParticipants(d.participants);
+      }
+
+      const allHopsRes = await fetch('/api/hops', { credentials: 'include' });
+      if (allHopsRes.ok) {
+        const d = await allHopsRes.json();
+        // Exclude current hop from the list
+        setAllHops(d.hops.filter(h => h.slug !== hopSlug));
       }
     } catch (err) {
       console.error('Load error:', err);
@@ -217,6 +229,29 @@ export default function ManageHop({ params }) {
       if (res.ok) loadAll();
       else alert('Failed to cancel invitation');
     } catch { alert('Network error'); }
+  }
+
+  async function importVenues(e) {
+    e.preventDefault();
+    if (!importSourceSlug) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const res = await fetch(`/api/hops/${hopSlug}/invitations/import`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ source_hop_slug: importSourceSlug }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setImportResult(data);
+        loadAll();
+      } else {
+        alert(data.error || 'Import failed');
+      }
+    } catch { alert('Network error'); }
+    setImporting(false);
   }
 
   async function uploadHopImage(file, field, setUploading) {
@@ -443,6 +478,14 @@ export default function ManageHop({ params }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h2 style={{ fontSize: '24px' }}>Venues ({venues.length})</h2>
         <div style={{ display: 'flex', gap: '12px' }}>
+          {allHops.length > 0 && (
+            <button
+              onClick={() => { setShowImportModal(true); setImportResult(null); }}
+              style={{ fontSize: '14px', padding: '8px 16px', backgroundColor: 'var(--text-secondary)' }}
+            >
+              Import from Previous Hop
+            </button>
+          )}
           <button
             onClick={() => setShowInviteModal(true)}
             style={{ fontSize: '14px', padding: '8px 16px', backgroundColor: 'var(--text-secondary)' }}
@@ -454,6 +497,60 @@ export default function ManageHop({ params }) {
           </button>
         </div>
       </div>
+
+      {showImportModal && (
+        <div className="card" style={{ marginBottom: '24px', border: '2px solid var(--accent-teal)' }}>
+          <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>Import Venues from Previous Hop</h3>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+            Sends new invitations to all venues that accepted in a previous hop. Already-invited venues are skipped.
+          </p>
+          {importResult ? (
+            <div>
+              <p style={{ fontSize: '14px', marginBottom: '8px' }}>
+                ✅ Sent {importResult.sent} invitation{importResult.sent !== 1 ? 's' : ''}.
+                {importResult.skipped > 0 && ` Skipped ${importResult.skipped} already invited.`}
+              </p>
+              <button
+                onClick={() => setShowImportModal(false)}
+                style={{ fontSize: '14px', padding: '8px 16px' }}
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={importVenues}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                  Select Previous Hop
+                </label>
+                <select
+                  value={importSourceSlug}
+                  onChange={e => setImportSourceSlug(e.target.value)}
+                  required
+                  style={{ width: '100%' }}
+                >
+                  <option value="">Choose a hop...</option>
+                  {allHops.map(h => (
+                    <option key={h.id} value={h.slug}>{h.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" disabled={importing || !importSourceSlug}>
+                  {importing ? 'Sending invitations...' : 'Import & Send Invitations'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  style={{ backgroundColor: 'var(--text-secondary)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
 
       {showInviteModal && (
         <div className="card" style={{ marginBottom: '24px', border: '2px solid var(--accent-teal)' }}>
