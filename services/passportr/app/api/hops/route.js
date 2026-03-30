@@ -15,7 +15,7 @@ export async function GET(req) {
       FROM hops h
       WHERE organizer_user_id = $1
       ORDER BY created_at DESC`,
-      [user.userId]
+      [user.sub]
     );
 
     return Response.json({ hops: result.rows });
@@ -44,7 +44,7 @@ export async function POST(req) {
       `INSERT INTO hops (organizer_user_id, slug, name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, coupon_expiry_minutes, status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active')
       RETURNING *`,
-      [user.userId, slug, name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule || { type: 'all' }, coupon_expiry_minutes || 30]
+      [user.sub, slug, name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule || { type: 'all' }, coupon_expiry_minutes || 30]
     );
 
     return Response.json({ hop: result.rows[0] });

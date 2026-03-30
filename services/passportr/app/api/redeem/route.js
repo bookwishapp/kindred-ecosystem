@@ -61,7 +61,7 @@ export async function POST(req) {
     // Get participant
     const participantResult = await db.query(
       'SELECT * FROM participants WHERE hop_id = $1 AND user_id = $2',
-      [hop.id, user.userId]
+      [hop.id, user.sub]
     );
 
     if (participantResult.rows.length === 0) {

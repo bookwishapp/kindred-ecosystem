@@ -54,7 +54,7 @@ export async function POST(req, { params }) {
     }
 
     const hop = hopResult.rows[0];
-    if (hop.organizer_user_id !== user.userId) {
+    if (hop.organizer_user_id !== user.sub) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 

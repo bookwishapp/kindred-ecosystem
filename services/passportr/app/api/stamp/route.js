@@ -61,7 +61,7 @@ export async function POST(req) {
     // Get or create participant
     let participantResult = await db.query(
       'SELECT * FROM participants WHERE hop_id = $1 AND user_id = $2',
-      [hop.id, user.userId]
+      [hop.id, user.sub]
     );
 
     let participant;
@@ -69,7 +69,7 @@ export async function POST(req) {
       // Create participant
       const insertResult = await db.query(
         'INSERT INTO participants (hop_id, user_id, username) VALUES ($1, $2, $3) RETURNING *',
-        [hop.id, user.userId, user.username]
+        [hop.id, user.sub, user.username]
       );
       participant = insertResult.rows[0];
     } else {
