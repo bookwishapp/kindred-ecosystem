@@ -47,15 +47,9 @@ export default async function PublicHopLanding({ params }) {
   let mapUrl = null;
   if (apiKey && venuesWithAddresses.length > 0) {
     const markers = venuesWithAddresses
-      .map((v, index) => {
-        const address = v.address.trim();
-        return `&markers=color:red%7Clabel:${index + 1}%7C${encodeURIComponent(address)}`;
-      })
-      .join('');
-    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=700x350&zoom=12${markers}&key=${apiKey}`;
-    console.log('Map URL generated with', venuesWithAddresses.length, 'markers');
-  } else {
-    console.log('Map not generated:', { hasApiKey: !!apiKey, venueCount: venuesWithAddresses.length });
+      .map((v, index) => `markers=color:0x2AB8A0|label:${index + 1}|${encodeURIComponent(v.address.trim())}`)
+      .join('&');
+    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x320&${markers}&key=${apiKey}`;
   }
 
   return (
