@@ -47,7 +47,7 @@ export default async function PublicHopLanding({ params }) {
   let mapUrl = null;
   if (apiKey && venuesWithAddresses.length > 0) {
     const markers = venuesWithAddresses
-      .map(v => `markers=color:0x2AB8A0|label:${venues.indexOf(v) + 1}|${encodeURIComponent(v.address)}`)
+      .map((v, index) => `markers=color:0x2AB8A0|label:${index + 1}|${encodeURIComponent(v.address)}`)
       .join('&');
     mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=700x350&${markers}&key=${apiKey}`;
   }
