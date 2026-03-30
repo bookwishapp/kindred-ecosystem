@@ -27,7 +27,7 @@ export async function PUT(req, { params }) {
   try {
     const user = requireOrganizer(req);
     const { hopSlug } = params;
-    const { name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes } = await req.json();
+    const { name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes, banner_url, logo_url } = await req.json();
 
     // Verify ownership
     const hopResult = await db.query(
@@ -55,10 +55,12 @@ export async function PUT(req, { params }) {
           redeem_cutoff_date = COALESCE($6, redeem_cutoff_date),
           completion_rule = COALESCE($7, completion_rule),
           status = COALESCE($8, status),
-          coupon_expiry_minutes = COALESCE($9, coupon_expiry_minutes)
-      WHERE id = $10
+          coupon_expiry_minutes = COALESCE($9, coupon_expiry_minutes),
+          banner_url = COALESCE($10, banner_url),
+          logo_url = COALESCE($11, logo_url)
+      WHERE id = $12
       RETURNING *`,
-      [name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes, hop.id]
+      [name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes, banner_url, logo_url, hop.id]
     );
 
     return Response.json({ hop: result.rows[0] });
