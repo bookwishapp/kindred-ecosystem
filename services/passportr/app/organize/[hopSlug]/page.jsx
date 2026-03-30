@@ -339,7 +339,8 @@ export default function ManageHop({ params }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
               {/* Banner */}
               <div>
-                <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Banner</p>
+                <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>Banner</p>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Recommended: 1400×440px</p>
                 {hop.banner_url && (
                   <img
                     src={hop.banner_url}
@@ -365,7 +366,8 @@ export default function ManageHop({ params }) {
 
               {/* Logo */}
               <div>
-                <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Logo</p>
+                <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>Logo</p>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Recommended: 144×144px minimum</p>
                 {hop.logo_url && (
                   <img
                     src={hop.logo_url}
