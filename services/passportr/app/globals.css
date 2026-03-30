@@ -1,0 +1,96 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-warm: #F0EDE6;
+  --accent-teal: #2AB8A0;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --border-radius-card: 12px;
+  --border-radius-input: 8px;
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+body {
+  font-family: 'Lora', serif;
+  background-color: var(--bg-warm);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6, button, input, label {
+  font-family: 'Poppins', sans-serif;
+}
+
+button {
+  background-color: var(--accent-teal);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius-input);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input, textarea {
+  font-family: 'Poppins', sans-serif;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius-input);
+  font-size: 16px;
+  width: 100%;
+  background-color: white;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent-teal);
+}
+
+.card {
+  background: white;
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-subtle);
+  padding: 24px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+a {
+  color: var(--accent-teal);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+  .no-print {
+    display: none;
+  }
+  .print-page {
+    page-break-after: always;
+  }
+}

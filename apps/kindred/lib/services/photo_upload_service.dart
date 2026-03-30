@@ -87,9 +87,7 @@ class PhotoUploadService {
 
       final response = await _dio.post(
         '$baseUrl/upload-url',
-        data: {
-          'contentType': contentType,
-        },
+        data: {'contentType': contentType},
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',

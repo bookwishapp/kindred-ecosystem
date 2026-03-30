@@ -13,10 +13,7 @@ final router = GoRouter(
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => const KindredScreen(),
-        ),
+        GoRoute(path: '/', builder: (context, state) => const KindredScreen()),
       ],
     ),
   ],

@@ -12,10 +12,7 @@ import '../../providers/kin_provider.dart';
 class ProfilePreviewSheet extends StatefulWidget {
   final String username;
 
-  const ProfilePreviewSheet({
-    super.key,
-    required this.username,
-  });
+  const ProfilePreviewSheet({super.key, required this.username});
 
   @override
   State<ProfilePreviewSheet> createState() => _ProfilePreviewSheetState();
@@ -31,10 +28,7 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
   void initState() {
     super.initState();
     final storage = SecureStorageService();
-    _api = AuthApi(
-      baseUrl: 'https://auth.terryheath.com',
-      storage: storage,
-    );
+    _api = AuthApi(baseUrl: 'https://auth.terryheath.com', storage: storage);
     _loadProfile();
   }
 
@@ -60,8 +54,18 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
@@ -70,8 +74,8 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
     if (_profile == null) return false;
 
     // Check if any person in kin has this linkedProfileId
-    return kinProvider.kin.any((person) =>
-      person.linkedProfileId == _profile!['user_id']
+    return kinProvider.kin.any(
+      (person) => person.linkedProfileId == _profile!['user_id'],
     );
   }
 
@@ -85,10 +89,7 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
       ),
       child: ClipOval(
         child: photoUrl != null
-            ? CachedNetworkImage(
-                imageUrl: photoUrl,
-                fit: BoxFit.cover,
-              )
+            ? CachedNetworkImage(imageUrl: photoUrl, fit: BoxFit.cover)
             : Center(
                 child: Text(
                   name?.isNotEmpty == true ? name![0].toUpperCase() : '?',
@@ -104,9 +105,7 @@ class _ProfilePreviewSheetState extends State<ProfilePreviewSheet> {
   Widget _buildContent(KinProvider kinProvider) {
     if (_isLoading) {
       return Center(
-        child: CupertinoActivityIndicator(
-          color: AppTheme.colors.secondaryText,
-        ),
+        child: CupertinoActivityIndicator(color: AppTheme.colors.secondaryText),
       );
     }
 

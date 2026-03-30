@@ -60,8 +60,18 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
@@ -79,11 +89,43 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
 
     // Check against reserved words
     const reservedWords = [
-      'about', 'help', 'support', 'terms', 'privacy', 'login', 'logout', 'signup',
-      'register', 'admin', 'api', 'app', 'www', 'mail', 'email', 'contact', 'home',
-      'index', 'profile', 'user', 'users', 'account', 'accounts', 'settings',
-      'billing', 'pricing', 'press', 'blog', 'news', 'legal', 'security', 'status',
-      'download', 'downloads', 'install', 'kindred', 'fromkindred'
+      'about',
+      'help',
+      'support',
+      'terms',
+      'privacy',
+      'login',
+      'logout',
+      'signup',
+      'register',
+      'admin',
+      'api',
+      'app',
+      'www',
+      'mail',
+      'email',
+      'contact',
+      'home',
+      'index',
+      'profile',
+      'user',
+      'users',
+      'account',
+      'accounts',
+      'settings',
+      'billing',
+      'pricing',
+      'press',
+      'blog',
+      'news',
+      'legal',
+      'security',
+      'status',
+      'download',
+      'downloads',
+      'install',
+      'kindred',
+      'fromkindred',
     ];
 
     if (reservedWords.contains(value.toLowerCase())) {
@@ -252,23 +294,17 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                   ),
                 )
               : _localPhotoPath != null
-                  ? Image.file(
-                      File(_localPhotoPath!),
-                      fit: BoxFit.cover,
-                    )
-                  : photoUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: photoUrl,
-                          fit: BoxFit.cover,
-                        )
-                      : Center(
-                          child: Text(
-                            name?.isNotEmpty == true ? name![0].toUpperCase() : '?',
-                            style: AppTheme.text.heading.copyWith(
-                              color: AppTheme.colors.secondaryText,
-                            ),
-                          ),
-                        ),
+              ? Image.file(File(_localPhotoPath!), fit: BoxFit.cover)
+              : photoUrl != null
+              ? CachedNetworkImage(imageUrl: photoUrl, fit: BoxFit.cover)
+              : Center(
+                  child: Text(
+                    name?.isNotEmpty == true ? name![0].toUpperCase() : '?',
+                    style: AppTheme.text.heading.copyWith(
+                      color: AppTheme.colors.secondaryText,
+                    ),
+                  ),
+                ),
         ),
       ),
     );
@@ -279,10 +315,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
       return Column(
         children: [
           SizedBox(height: AppTheme.spacing.space6),
-          Text(
-            'Check your email.',
-            style: AppTheme.text.body,
-          ),
+          Text('Check your email.', style: AppTheme.text.body),
           SizedBox(height: AppTheme.spacing.space1),
           Text(
             'A link is on its way.',
@@ -344,27 +377,33 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           width: double.infinity,
           child: CupertinoButton(
             color: AppTheme.colors.accent,
-            onPressed: authService.isLoading ? null : () async {
-              if (_emailController.text.isNotEmpty) {
-                try {
-                  await authService.requestMagicLink(_emailController.text.trim());
-                  // Add setState after async call to ensure rebuild
-                  if (mounted) {
-                    setState(() {});
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    setState(() {}); // Force rebuild on error too
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to send magic link: ${e.toString()}'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              }
-            },
+            onPressed: authService.isLoading
+                ? null
+                : () async {
+                    if (_emailController.text.isNotEmpty) {
+                      try {
+                        await authService.requestMagicLink(
+                          _emailController.text.trim(),
+                        );
+                        // Add setState after async call to ensure rebuild
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          setState(() {}); // Force rebuild on error too
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Failed to send magic link: ${e.toString()}',
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
             child: Text(
               'Send',
               style: AppTheme.text.button.copyWith(
@@ -392,7 +431,9 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
   Widget _buildProfileCreationState(ProfileService profileService) {
     return Column(
       children: [
-        _buildAvatar(name: _nameController.text.isEmpty ? 'You' : _nameController.text),
+        _buildAvatar(
+          name: _nameController.text.isEmpty ? 'You' : _nameController.text,
+        ),
         SizedBox(height: AppTheme.spacing.space3),
 
         // Name field
@@ -446,7 +487,9 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                     padding: EdgeInsets.only(right: AppTheme.spacing.space2),
                     child: CupertinoActivityIndicator(radius: 8),
                   )
-                else if (_usernameAvailable == true && _usernameError == null && _usernameController.text.isNotEmpty)
+                else if (_usernameAvailable == true &&
+                    _usernameError == null &&
+                    _usernameController.text.isNotEmpty)
                   Padding(
                     padding: EdgeInsets.only(right: AppTheme.spacing.space2),
                     child: Icon(
@@ -460,23 +503,24 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
             if (_usernameError != null) ...[
               SizedBox(height: AppTheme.spacing.space1),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing.space2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing.space2,
+                ),
                 child: Text(
                   _usernameError!,
-                  style: AppTheme.text.caption.copyWith(
-                    color: Colors.red,
-                  ),
+                  style: AppTheme.text.caption.copyWith(color: Colors.red),
                 ),
               ),
-            ] else if (_usernameAvailable == false && _usernameController.text.isNotEmpty) ...[
+            ] else if (_usernameAvailable == false &&
+                _usernameController.text.isNotEmpty) ...[
               SizedBox(height: AppTheme.spacing.space1),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing.space2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing.space2,
+                ),
                 child: Text(
                   'Already taken',
-                  style: AppTheme.text.caption.copyWith(
-                    color: Colors.red,
-                  ),
+                  style: AppTheme.text.caption.copyWith(color: Colors.red),
                 ),
               ),
             ],
@@ -512,7 +556,8 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                     Expanded(
                       child: CupertinoDatePicker(
                         mode: CupertinoDatePickerMode.date,
-                        initialDateTime: _selectedBirthday ??
+                        initialDateTime:
+                            _selectedBirthday ??
                             DateTime(DateTime.now().year - 30, 1, 1),
                         minimumDate: DateTime(1900),
                         maximumDate: DateTime.now(),
@@ -572,9 +617,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
             padding: EdgeInsets.symmetric(vertical: AppTheme.spacing.space1),
             child: Text(
               '+ Add a wishlist link',
-              style: AppTheme.text.body.copyWith(
-                color: AppTheme.colors.accent,
-              ),
+              style: AppTheme.text.body.copyWith(color: AppTheme.colors.accent),
             ),
           ),
         ),
@@ -585,7 +628,11 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           width: double.infinity,
           child: CupertinoButton(
             color: AppTheme.colors.accent,
-            onPressed: (_isUploading || profileService.loading || _nameController.text.isEmpty || _usernameError != null)
+            onPressed:
+                (_isUploading ||
+                    profileService.loading ||
+                    _nameController.text.isEmpty ||
+                    _usernameError != null)
                 ? null
                 : () async {
                     try {
@@ -595,7 +642,9 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                       // Create profile with S3 URL
                       await profileService.saveProfile(
                         name: _nameController.text,
-                        username: _usernameController.text.isEmpty ? null : _usernameController.text,
+                        username: _usernameController.text.isEmpty
+                            ? null
+                            : _usernameController.text,
                         birthday: _selectedBirthday,
                         photoUrl: s3PhotoUrl,
                       );
@@ -603,7 +652,9 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Failed to create profile: ${e.toString()}'),
+                            content: Text(
+                              'Failed to create profile: ${e.toString()}',
+                            ),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -692,7 +743,9 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                       },
                       onSubmitted: (value) async {
                         if (_usernameError == null) {
-                          await profileService.saveProfile(username: value.isEmpty ? null : value);
+                          await profileService.saveProfile(
+                            username: value.isEmpty ? null : value,
+                          );
                           setState(() {
                             _isEditingUsername = false;
                           });
@@ -719,9 +772,13 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
                     });
                   },
                   child: Text(
-                    profile['username'] != null ? '@${profile['username']}' : '+ Add username',
+                    profile['username'] != null
+                        ? '@${profile['username']}'
+                        : '+ Add username',
                     style: AppTheme.text.body.copyWith(
-                      color: profile['username'] != null ? AppTheme.colors.secondaryText : AppTheme.colors.accent,
+                      color: profile['username'] != null
+                          ? AppTheme.colors.secondaryText
+                          : AppTheme.colors.accent,
                     ),
                   ),
                 ),
@@ -864,9 +921,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
           children: [
             Text(
               'Dates',
-              style: AppTheme.text.body.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTheme.text.body.copyWith(fontWeight: FontWeight.w600),
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
@@ -936,73 +991,73 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
               ),
               SizedBox(width: AppTheme.spacing.space2),
               GestureDetector(
-            onTap: () {
-              showCupertinoModalPopup(
-                context: context,
-                builder: (BuildContext context) => Container(
-                  height: 250,
-                  color: AppTheme.colors.warmWhite,
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                onTap: () {
+                  showCupertinoModalPopup(
+                    context: context,
+                    builder: (BuildContext context) => Container(
+                      height: 250,
+                      color: AppTheme.colors.warmWhite,
+                      child: Column(
                         children: [
-                          CupertinoButton(
-                            child: Text('Cancel'),
-                            onPressed: () => Navigator.pop(context),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              CupertinoButton(
+                                child: Text('Cancel'),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                              CupertinoButton(
+                                child: Text('Done'),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
                           ),
-                          CupertinoButton(
-                            child: Text('Done'),
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
+                          Expanded(
+                            child: CupertinoDatePicker(
+                              mode: CupertinoDatePickerMode.date,
+                              initialDateTime: _selectedDate ?? DateTime.now(),
+                              maximumDate: DateTime(DateTime.now().year + 10),
+                              onDateTimeChanged: (DateTime newDate) {
+                                setState(() {
+                                  _selectedDate = newDate;
+                                });
+                              },
+                            ),
                           ),
                         ],
                       ),
-                      Expanded(
-                        child: CupertinoDatePicker(
-                          mode: CupertinoDatePickerMode.date,
-                          initialDateTime: _selectedDate ?? DateTime.now(),
-                          maximumDate: DateTime(DateTime.now().year + 10),
-                          onDateTimeChanged: (DateTime newDate) {
-                            setState(() {
-                              _selectedDate = newDate;
-                            });
-                          },
-                        ),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing.space2,
+                    vertical: AppTheme.spacing.space1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.colors.surface,
+                    borderRadius: BorderRadius.circular(AppTheme.radius.sm),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _selectedDate != null
+                            ? _formatDate(_selectedDate!)
+                            : 'Select date',
+                        style: AppTheme.text.body,
+                      ),
+                      Icon(
+                        CupertinoIcons.calendar,
+                        size: 20,
+                        color: AppTheme.colors.tertiaryText,
                       ),
                     ],
                   ),
                 ),
-              );
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing.space2,
-                vertical: AppTheme.spacing.space1,
               ),
-              decoration: BoxDecoration(
-                color: AppTheme.colors.surface,
-                borderRadius: BorderRadius.circular(AppTheme.radius.sm),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _selectedDate != null
-                        ? _formatDate(_selectedDate!)
-                        : 'Select date',
-                    style: AppTheme.text.body,
-                  ),
-                  Icon(
-                    CupertinoIcons.calendar,
-                    size: 20,
-                    color: AppTheme.colors.tertiaryText,
-                  ),
-                ],
-              ),
-            ),
-          ),
             ],
           ),
           Row(
@@ -1011,7 +1066,8 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
               CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: () async {
-                  if (_dateLabelController.text.isNotEmpty && _selectedDate != null) {
+                  if (_dateLabelController.text.isNotEmpty &&
+                      _selectedDate != null) {
                     await profileService.addSharedDate(
                       _dateLabelController.text,
                       _selectedDate!,
@@ -1049,10 +1105,7 @@ class _ShowUpSheetState extends State<ShowUpSheet> {
         ],
         SizedBox(height: AppTheme.spacing.space3),
 
-        Divider(
-          color: AppTheme.colors.border,
-          height: AppTheme.spacing.space5,
-        ),
+        Divider(color: AppTheme.colors.border, height: AppTheme.spacing.space5),
 
         // Share button
         Center(

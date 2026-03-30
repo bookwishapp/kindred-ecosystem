@@ -28,9 +28,7 @@ class AddKinScreen extends StatelessWidget {
                 // TODO: Implement manual add flow
               },
               color: AppTheme.colors.accent,
-              padding: EdgeInsets.symmetric(
-                vertical: AppTheme.spacing.space2,
-              ),
+              padding: EdgeInsets.symmetric(vertical: AppTheme.spacing.space2),
               child: Text(
                 'Keep someone',
                 style: AppTheme.text.button.copyWith(

@@ -36,8 +36,18 @@ class _AddKinSheetState extends State<AddKinSheet> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
@@ -87,10 +97,7 @@ class _AddKinSheetState extends State<AddKinSheet> {
               SizedBox(height: AppTheme.spacing.space3),
 
               // Title
-              Text(
-                'Keep someone',
-                style: AppTheme.text.headingLarge,
-              ),
+              Text('Keep someone', style: AppTheme.text.headingLarge),
               SizedBox(height: AppTheme.spacing.space4),
 
               // Photo picker
@@ -176,7 +183,8 @@ class _AddKinSheetState extends State<AddKinSheet> {
                           Expanded(
                             child: CupertinoDatePicker(
                               mode: CupertinoDatePickerMode.date,
-                              initialDateTime: _selectedBirthday ??
+                              initialDateTime:
+                                  _selectedBirthday ??
                                   DateTime(DateTime.now().year - 30, 1, 1),
                               minimumDate: DateTime(1900),
                               maximumDate: DateTime.now(),
@@ -285,7 +293,8 @@ class _AddKinSheetState extends State<AddKinSheet> {
                             child: Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     CupertinoButton(
                                       child: Text('Cancel'),
@@ -302,7 +311,8 @@ class _AddKinSheetState extends State<AddKinSheet> {
                                 Expanded(
                                   child: CupertinoDatePicker(
                                     mode: CupertinoDatePickerMode.date,
-                                    initialDateTime: _selectedDate ?? DateTime.now(),
+                                    initialDateTime:
+                                        _selectedDate ?? DateTime.now(),
                                     minimumDate: DateTime(1900),
                                     maximumDate: DateTime(2100),
                                     onDateTimeChanged: (DateTime newDate) {
@@ -329,7 +339,8 @@ class _AddKinSheetState extends State<AddKinSheet> {
                     CupertinoButton(
                       padding: EdgeInsets.zero,
                       onPressed: () {
-                        if (_dateLabelController.text.isNotEmpty && _selectedDate != null) {
+                        if (_dateLabelController.text.isNotEmpty &&
+                            _selectedDate != null) {
                           setState(() {
                             _additionalDates.add({
                               'label': _dateLabelController.text,
@@ -373,7 +384,9 @@ class _AddKinSheetState extends State<AddKinSheet> {
                     });
                   },
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppTheme.spacing.space1),
+                    padding: EdgeInsets.symmetric(
+                      vertical: AppTheme.spacing.space1,
+                    ),
                     child: Icon(
                       CupertinoIcons.plus,
                       color: AppTheme.colors.accent,
@@ -422,63 +435,69 @@ class _AddKinSheetState extends State<AddKinSheet> {
                 width: double.infinity,
                 child: CupertinoButton(
                   color: AppTheme.colors.accent,
-                  onPressed: _isSaving ? null : () async {
-                    // Validate name
-                    if (_nameController.text.trim().isEmpty) {
-                      setState(() {
-                        _errorMessage = 'Please enter a name';
-                      });
-                      return;
-                    }
+                  onPressed: _isSaving
+                      ? null
+                      : () async {
+                          // Validate name
+                          if (_nameController.text.trim().isEmpty) {
+                            setState(() {
+                              _errorMessage = 'Please enter a name';
+                            });
+                            return;
+                          }
 
-                    setState(() {
-                      _isSaving = true;
-                      _errorMessage = null;
-                    });
+                          setState(() {
+                            _isSaving = true;
+                            _errorMessage = null;
+                          });
 
-                    try {
-                      final kinProvider = context.read<KinProvider>();
+                          try {
+                            final kinProvider = context.read<KinProvider>();
 
-                      // Add the kin person
-                      await kinProvider.addKinLocal(
-                        name: _nameController.text.trim(),
-                        photoUrl: _localPhotoPath,
-                        birthday: _selectedBirthday,
-                      );
+                            // Add the kin person
+                            await kinProvider.addKinLocal(
+                              name: _nameController.text.trim(),
+                              photoUrl: _localPhotoPath,
+                              birthday: _selectedBirthday,
+                            );
 
-                      // Get the newly added person's ID
-                      // The person should be the last one added to the list
-                      final newPerson = kinProvider.kin.lastWhere(
-                        (person) => person.name == _nameController.text.trim(),
-                        orElse: () => throw Exception('Could not find newly added person'),
-                      );
+                            // Get the newly added person's ID
+                            // The person should be the last one added to the list
+                            final newPerson = kinProvider.kin.lastWhere(
+                              (person) =>
+                                  person.name == _nameController.text.trim(),
+                              orElse: () => throw Exception(
+                                'Could not find newly added person',
+                              ),
+                            );
 
-                      // Add additional dates to LocalDb
-                      for (final date in _additionalDates) {
-                        await LocalDb.instance.addPrivateDate(
-                          newPerson.id,
-                          date['label'],
-                          date['date'],
-                          true, // recurs annually by default
-                        );
-                      }
+                            // Add additional dates to LocalDb
+                            for (final date in _additionalDates) {
+                              await LocalDb.instance.addPrivateDate(
+                                newPerson.id,
+                                date['label'],
+                                date['date'],
+                                true, // recurs annually by default
+                              );
+                            }
 
-                      // Reload kin to update dates
-                      await kinProvider.loadKin();
+                            // Reload kin to update dates
+                            await kinProvider.loadKin();
 
-                      // Dismiss sheet
-                      if (mounted) {
-                        Navigator.pop(context);
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        setState(() {
-                          _isSaving = false;
-                          _errorMessage = 'Failed to add person. Please try again.';
-                        });
-                      }
-                    }
-                  },
+                            // Dismiss sheet
+                            if (mounted) {
+                              Navigator.pop(context);
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              setState(() {
+                                _isSaving = false;
+                                _errorMessage =
+                                    'Failed to add person. Please try again.';
+                              });
+                            }
+                          }
+                        },
                   child: _isSaving
                       ? const CupertinoActivityIndicator(color: Colors.white)
                       : Text(

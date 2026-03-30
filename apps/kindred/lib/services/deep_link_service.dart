@@ -11,10 +11,7 @@ class DeepLinkService {
 
   StreamSubscription? _linkSubscription;
 
-  DeepLinkService({
-    required this.authService,
-    required this.navigatorKey,
-  });
+  DeepLinkService({required this.authService, required this.navigatorKey});
 
   /// Initialize deep link handling
   Future<void> initialize() async {
@@ -51,8 +48,12 @@ class DeepLinkService {
     debugPrint('Received deep link: $link');
 
     final uri = Uri.parse(link);
-    debugPrint('URI breakdown - scheme: ${uri.scheme}, host: ${uri.host}, path: ${uri.path}');
-    debugPrint('URI pathSegments: ${uri.pathSegments.join(" / ")} (count: ${uri.pathSegments.length})');
+    debugPrint(
+      'URI breakdown - scheme: ${uri.scheme}, host: ${uri.host}, path: ${uri.path}',
+    );
+    debugPrint(
+      'URI pathSegments: ${uri.pathSegments.join(" / ")} (count: ${uri.pathSegments.length})',
+    );
 
     // Check if this is a direct access token from auth redirect
     if (uri.scheme == 'kindred') {
@@ -69,7 +70,6 @@ class DeepLinkService {
     if (uri.scheme == 'kindred' &&
         uri.host == 'auth' &&
         uri.path == '/verify') {
-
       final token = uri.queryParameters['token'];
       if (token != null) {
         _handleAuthVerification(token);
@@ -82,7 +82,9 @@ class DeepLinkService {
         uri.pathSegments.length == 1 &&
         uri.pathSegments[0].isNotEmpty &&
         uri.pathSegments[0] != '.well-known') {
-      debugPrint('Handling Universal Link profile for username: ${uri.pathSegments[0]}');
+      debugPrint(
+        'Handling Universal Link profile for username: ${uri.pathSegments[0]}',
+      );
       _showProfilePreview(uri.pathSegments[0]);
       return;
     }
@@ -91,7 +93,9 @@ class DeepLinkService {
     if (uri.scheme == 'kindred' &&
         uri.host == 'profile' &&
         uri.pathSegments.isNotEmpty) {
-      debugPrint('Handling custom scheme profile for username: ${uri.pathSegments[0]}');
+      debugPrint(
+        'Handling custom scheme profile for username: ${uri.pathSegments[0]}',
+      );
       _showProfilePreview(uri.pathSegments[0]);
       return;
     }

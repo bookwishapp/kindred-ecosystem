@@ -21,11 +21,13 @@ class AuthService extends ChangeNotifier {
   Future<void> Function(String userId, String accessToken)? onAuthSuccess;
 
   AuthService({required SecureStorageService storage}) : _storage = storage {
-    _dio = Dio(BaseOptions(
-      baseUrl: authBaseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: authBaseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+      ),
+    );
     // Ensure baseUrl is set
     _dio.options.baseUrl = authBaseUrl;
   }
@@ -58,12 +60,17 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      debugPrint('Requesting magic link for: $email to $authBaseUrl/auth/request');
-      await _dio.post('/auth/request', data: {
-        'email': email,
-        'redirect_uri': 'kindred://auth/verify',
-        'app_name': 'Kindred',
-      });
+      debugPrint(
+        'Requesting magic link for: $email to $authBaseUrl/auth/request',
+      );
+      await _dio.post(
+        '/auth/request',
+        data: {
+          'email': email,
+          'redirect_uri': 'kindred://auth/verify',
+          'app_name': 'Kindred',
+        },
+      );
       debugPrint('Magic link request completed');
 
       _magicLinkSent = true;
@@ -89,9 +96,10 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _dio.get('/auth/verify', queryParameters: {
-        'token': token,
-      });
+      final response = await _dio.get(
+        '/auth/verify',
+        queryParameters: {'token': token},
+      );
 
       final data = response.data;
       if (data['access_token'] != null) {
@@ -179,9 +187,10 @@ class AuthService extends ChangeNotifier {
         return;
       }
 
-      final response = await _dio.post('/auth/refresh', data: {
-        'refresh_token': refreshToken,
-      });
+      final response = await _dio.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+      );
 
       final data = response.data;
       if (data['access_token'] != null) {

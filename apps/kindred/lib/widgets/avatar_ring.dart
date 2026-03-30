@@ -31,13 +31,9 @@ class _AvatarRingState extends State<AvatarRing>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.04,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.04).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     if (widget.person.ringIntensity > 0) {
       _pulseController.repeat(reverse: true);
@@ -49,7 +45,8 @@ class _AvatarRingState extends State<AvatarRing>
     super.didUpdateWidget(oldWidget);
     if (widget.person.ringIntensity > 0 && !_pulseController.isAnimating) {
       _pulseController.repeat(reverse: true);
-    } else if (widget.person.ringIntensity == 0 && _pulseController.isAnimating) {
+    } else if (widget.person.ringIntensity == 0 &&
+        _pulseController.isAnimating) {
       _pulseController.stop();
       _pulseController.value = 0;
     }
@@ -130,7 +127,9 @@ class _AvatarRingState extends State<AvatarRing>
           animation: _pulseAnimation,
           builder: (context, child) {
             return Transform.scale(
-              scale: widget.person.ringIntensity > 0 ? _pulseAnimation.value : 1.0,
+              scale: widget.person.ringIntensity > 0
+                  ? _pulseAnimation.value
+                  : 1.0,
               child: CustomPaint(
                 painter: RingPainter(
                   ringIntensity: widget.person.ringIntensity,
@@ -147,9 +146,7 @@ class _AvatarRingState extends State<AvatarRing>
                       shape: BoxShape.circle,
                     ),
                     child: widget.person.photoUrl != null
-                        ? ClipOval(
-                            child: _buildImage(widget.person.photoUrl!),
-                          )
+                        ? ClipOval(child: _buildImage(widget.person.photoUrl!))
                         : Center(
                             child: Text(
                               widget.person.name.isNotEmpty
@@ -175,10 +172,7 @@ class RingPainter extends CustomPainter {
   final double ringIntensity;
   final double amberIntensity;
 
-  RingPainter({
-    required this.ringIntensity,
-    required this.amberIntensity,
-  });
+  RingPainter({required this.ringIntensity, required this.amberIntensity});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -193,7 +187,9 @@ class RingPainter extends CustomPainter {
     if (ringIntensity > 0) {
       // Date-triggered ring (teal) - takes priority
       ringPaint = Paint()
-        ..color = AppTheme.colors.warmAccent.withValues(alpha: ringIntensity * 0.9)
+        ..color = AppTheme.colors.warmAccent.withValues(
+          alpha: ringIntensity * 0.9,
+        )
         ..style = PaintingStyle.stroke
         ..strokeWidth = ringWidth;
     } else if (amberIntensity > 0) {

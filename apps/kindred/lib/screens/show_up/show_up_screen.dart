@@ -11,18 +11,12 @@ class ShowUpScreen extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         automaticallyImplyLeading: false, // No back button for main tab
-        title: Text(
-          'Show Up',
-          style: AppTheme.text.heading,
-        ),
+        title: Text('Show Up', style: AppTheme.text.heading),
         backgroundColor: AppTheme.colors.warmWhite,
         elevation: 0,
       ),
       body: Center(
-        child: Text(
-          'Your Profile',
-          style: AppTheme.text.headingLarge,
-        ),
+        child: Text('Your Profile', style: AppTheme.text.headingLarge),
       ),
     );
   }

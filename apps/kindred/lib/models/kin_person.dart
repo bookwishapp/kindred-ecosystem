@@ -25,7 +25,9 @@ class KinPerson {
 
   // Factory constructor to create from JSON
   factory KinPerson.fromJson(Map<String, dynamic> json) {
-    final type = json['type'] == 'linked' ? KinPersonType.linked : KinPersonType.local;
+    final type = json['type'] == 'linked'
+        ? KinPersonType.linked
+        : KinPersonType.local;
 
     // Extract name and photo based on type
     String name;
@@ -68,7 +70,9 @@ class KinPerson {
       linkedProfileId: json['linked_profile_id'],
       positionOverride: json['position_override']?.toDouble(),
       birthday: birthday,
-      allDates: birthday != null ? [birthday] : [], // Initialize with birthday if present
+      allDates: birthday != null
+          ? [birthday]
+          : [], // Initialize with birthday if present
     );
   }
 
@@ -92,7 +96,9 @@ class KinPerson {
       photoUrl: photoUrl ?? this.photoUrl,
       type: type ?? this.type,
       linkedProfileId: linkedProfileId ?? this.linkedProfileId,
-      positionOverride: clearPositionOverride ? null : (positionOverride ?? this.positionOverride),
+      positionOverride: clearPositionOverride
+          ? null
+          : (positionOverride ?? this.positionOverride),
       birthday: birthday ?? this.birthday,
       allDates: allDates ?? this.allDates,
       wishlistLinks: wishlistLinks ?? this.wishlistLinks,

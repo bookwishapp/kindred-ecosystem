@@ -11,10 +11,10 @@ class AuthApi {
     Future<String?> Function()? tokenProvider,
     VoidCallback? onUnauthorized,
   }) : _apiClient = ApiClient(
-          baseUrl: baseUrl,
-          tokenProvider: tokenProvider ?? storage.getAuthToken,
-          onUnauthorized: onUnauthorized,
-        );
+         baseUrl: baseUrl,
+         tokenProvider: tokenProvider ?? storage.getAuthToken,
+         onUnauthorized: onUnauthorized,
+       );
 
   // Profile endpoints
   Future<Map<String, dynamic>> getMyProfile() async {
@@ -49,10 +49,13 @@ class AuthApi {
   }
 
   // Upload URL endpoint
-  Future<Map<String, dynamic>> getUploadUrl({String contentType = 'image/jpeg'}) async {
-    return await _apiClient.post('/upload-url', data: {
-      'contentType': contentType,
-    });
+  Future<Map<String, dynamic>> getUploadUrl({
+    String contentType = 'image/jpeg',
+  }) async {
+    return await _apiClient.post(
+      '/upload-url',
+      data: {'contentType': contentType},
+    );
   }
 
   // Wishlist link endpoints
@@ -60,10 +63,10 @@ class AuthApi {
     required String label,
     required String url,
   }) async {
-    return await _apiClient.post('/profile/links', data: {
-      'label': label,
-      'url': url,
-    });
+    return await _apiClient.post(
+      '/profile/links',
+      data: {'label': label, 'url': url},
+    );
   }
 
   Future<void> deleteWishlistLink(String linkId) async {
@@ -76,11 +79,10 @@ class AuthApi {
     required String date,
     bool recursAnnually = true,
   }) async {
-    return await _apiClient.post('/profile/dates', data: {
-      'label': label,
-      'date': date,
-      'recurs_annually': recursAnnually,
-    });
+    return await _apiClient.post(
+      '/profile/dates',
+      data: {'label': label, 'date': date, 'recurs_annually': recursAnnually},
+    );
   }
 
   Future<void> deleteSharedDate(String dateId) async {

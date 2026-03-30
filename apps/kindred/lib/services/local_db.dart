@@ -18,7 +18,7 @@ class LocalDb {
     final path = join(await getDatabasesPath(), 'kindred_local.db');
     return openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -75,6 +75,14 @@ class LocalDb {
         created_at TEXT NOT NULL
       )
     ''');
+
+    // Kin tombstones table for tracking deletions
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS kin_tombstones (
+        id TEXT PRIMARY KEY,
+        deleted_at TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -97,6 +105,15 @@ class LocalDb {
           birthday TEXT,
           position_override REAL,
           created_at TEXT NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      // Add kin_tombstones table in version 4
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS kin_tombstones (
+          id TEXT PRIMARY KEY,
+          deleted_at TEXT NOT NULL
         )
       ''');
     }
@@ -129,11 +146,7 @@ class LocalDb {
   /// Delete a note by ID
   Future<void> deleteNote(String id) async {
     final db = await database;
-    await db.delete(
-      'kin_notes',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('kin_notes', where: 'id = ?', whereArgs: [id]);
   }
 
   // ========== Private Dates Methods ==========
@@ -168,17 +181,15 @@ class LocalDb {
   /// Delete a private date by ID
   Future<void> deletePrivateDate(String id) async {
     final db = await database;
-    await db.delete(
-      'kin_private_dates',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('kin_private_dates', where: 'id = ?', whereArgs: [id]);
   }
 
   // ========== Private Wishlist Links Methods ==========
 
   /// Get all private wishlist links for a kin person
-  Future<List<Map<String, dynamic>>> getPrivateWishlistLinks(String kinRecordId) async {
+  Future<List<Map<String, dynamic>>> getPrivateWishlistLinks(
+    String kinRecordId,
+  ) async {
     final db = await database;
     return db.query(
       'kin_private_wishlist_links',
@@ -228,14 +239,10 @@ class LocalDb {
   /// Mark that the app has been launched
   Future<void> markLaunched() async {
     final db = await database;
-    await db.insert(
-      'app_settings',
-      {
-        'key': 'has_launched',
-        'value': 'true',
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('app_settings', {
+      'key': 'has_launched',
+      'value': 'true',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Get a setting value
@@ -255,24 +262,16 @@ class LocalDb {
   /// Set a setting value
   Future<void> setSetting(String key, String value) async {
     final db = await database;
-    await db.insert(
-      'app_settings',
-      {
-        'key': key,
-        'value': value,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('app_settings', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Remove a setting
   Future<void> removeSetting(String key) async {
     final db = await database;
-    await db.delete(
-      'app_settings',
-      where: 'key = ?',
-      whereArgs: [key],
-    );
+    await db.delete('app_settings', where: 'key = ?', whereArgs: [key]);
   }
 
   // ========== Kin People Methods ==========
@@ -302,11 +301,41 @@ class LocalDb {
   /// Update a local kin person's photo
   Future<void> updateKinPhoto(String id, String photoPath) async {
     final db = await database;
-    await db.update(
+    // Try to update existing record first
+    final count = await db.update(
       'kin_people',
       {'photo_url': photoPath},
       where: 'id = ?',
       whereArgs: [id],
     );
+    // If no row existed, insert a minimal record so the photo persists
+    if (count == 0) {
+      await db.insert('kin_people', {
+        'id': id,
+        'name': '',
+        'photo_url': photoPath,
+        'birthday': null,
+        'position_override': null,
+        'created_at': DateTime.now().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+
+  // ========== Tombstone Methods ==========
+
+  /// Add a tombstone record for a deleted kin
+  Future<void> addKinTombstone(String id) async {
+    final db = await database;
+    await db.insert('kin_tombstones', {
+      'id': id,
+      'deleted_at': DateTime.now().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// Get all deleted kin IDs
+  Future<List<String>> getDeletedKinIds() async {
+    final db = await database;
+    final results = await db.query('kin_tombstones');
+    return results.map((r) => r['id'] as String).toList();
   }
 }

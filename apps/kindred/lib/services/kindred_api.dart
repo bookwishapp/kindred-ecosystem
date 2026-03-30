@@ -12,10 +12,10 @@ class KindredApi {
     Future<String?> Function()? tokenProvider,
     VoidCallback? onUnauthorized,
   }) : _apiClient = ApiClient(
-          baseUrl: baseUrl,
-          tokenProvider: tokenProvider ?? storage.getAuthToken,
-          onUnauthorized: onUnauthorized,
-        );
+         baseUrl: baseUrl,
+         tokenProvider: tokenProvider ?? storage.getAuthToken,
+         onUnauthorized: onUnauthorized,
+       );
 
   // Profile endpoints
   Future<Map<String, dynamic>> getMyProfile() async {
@@ -28,12 +28,15 @@ class KindredApi {
     String? birthday,
     String? bio,
   }) async {
-    return await _apiClient.post('/profiles', data: {
-      'name': name,
-      if (photoUrl != null) 'photo_url': photoUrl,
-      if (birthday != null) 'birthday': birthday,
-      if (bio != null) 'bio': bio,
-    });
+    return await _apiClient.post(
+      '/profiles',
+      data: {
+        'name': name,
+        if (photoUrl != null) 'photo_url': photoUrl,
+        if (birthday != null) 'birthday': birthday,
+        if (bio != null) 'bio': bio,
+      },
+    );
   }
 
   Future<Map<String, dynamic>> updateProfile({
@@ -55,10 +58,10 @@ class KindredApi {
     required String label,
     required String url,
   }) async {
-    return await _apiClient.post('/profiles/me/wishlist-links', data: {
-      'label': label,
-      'url': url,
-    });
+    return await _apiClient.post(
+      '/profiles/me/wishlist-links',
+      data: {'label': label, 'url': url},
+    );
   }
 
   Future<void> deleteWishlistLink(String id) async {
@@ -70,11 +73,10 @@ class KindredApi {
     required String date,
     bool recursAnnually = true,
   }) async {
-    return await _apiClient.post('/profiles/me/dates', data: {
-      'label': label,
-      'date': date,
-      'recurs_annually': recursAnnually,
-    });
+    return await _apiClient.post(
+      '/profiles/me/dates',
+      data: {'label': label, 'date': date, 'recurs_annually': recursAnnually},
+    );
   }
 
   Future<void> deleteProfileDate(String id) async {
@@ -99,10 +101,10 @@ class KindredApi {
   Future<Map<String, dynamic>> addKinLinked({
     required String linkedProfileId,
   }) async {
-    return await _apiClient.post('/kin', data: {
-      'type': 'linked',
-      'linked_profile_id': linkedProfileId,
-    });
+    return await _apiClient.post(
+      '/kin',
+      data: {'type': 'linked', 'linked_profile_id': linkedProfileId},
+    );
   }
 
   Future<Map<String, dynamic>> addKinLocal({
@@ -110,12 +112,15 @@ class KindredApi {
     String? localPhotoUrl,
     String? localBirthday,
   }) async {
-    return await _apiClient.post('/kin', data: {
-      'type': 'local',
-      'local_name': localName,
-      if (localPhotoUrl != null) 'local_photo_url': localPhotoUrl,
-      if (localBirthday != null) 'local_birthday': localBirthday,
-    });
+    return await _apiClient.post(
+      '/kin',
+      data: {
+        'type': 'local',
+        'local_name': localName,
+        if (localPhotoUrl != null) 'local_photo_url': localPhotoUrl,
+        if (localBirthday != null) 'local_birthday': localBirthday,
+      },
+    );
   }
 
   Future<Map<String, dynamic>> updateKin({
@@ -144,11 +149,10 @@ class KindredApi {
     required String date,
     bool recursAnnually = true,
   }) async {
-    return await _apiClient.post('/kin/$kinId/dates', data: {
-      'label': label,
-      'date': date,
-      'recurs_annually': recursAnnually,
-    });
+    return await _apiClient.post(
+      '/kin/$kinId/dates',
+      data: {'label': label, 'date': date, 'recurs_annually': recursAnnually},
+    );
   }
 
   Future<void> deleteKinDate({
@@ -165,10 +169,10 @@ class KindredApi {
 
   // Backup endpoints
   Future<void> saveBackup({required String ciphertext}) async {
-    await _apiClient.post('/backup', data: {
-      'ciphertext': ciphertext,
-      'version': 1,
-    });
+    await _apiClient.post(
+      '/backup',
+      data: {'ciphertext': ciphertext, 'version': 1},
+    );
   }
 
   Future<Map<String, dynamic>?> getBackup() async {

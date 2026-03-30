@@ -26,10 +26,13 @@ class KinProvider extends ChangeNotifier {
   // Track the last known kin list to detect changes
   List<KinPerson>? _lastKinList;
 
-  KinProvider({required KindredApi api, AuthService? authService, AuthApi? authApi})
-      : _api = api,
-        _authService = authService,
-        _authApi = authApi {
+  KinProvider({
+    required KindredApi api,
+    AuthService? authService,
+    AuthApi? authApi,
+  }) : _api = api,
+       _authService = authService,
+       _authApi = authApi {
     // Load kin data on initialization
     loadKin();
   }
@@ -50,54 +53,85 @@ class KinProvider extends ChangeNotifier {
       final kinList = await _api.getKin();
 
       // For linked kin, fetch profile data from auth service
-      final kinWithProfiles = await Future.wait(kinList.map((person) async {
-        if (person.type == KinPersonType.linked && person.linkedProfileId != null) {
-          try {
-            // Fetch profile from auth service
-            final profile = await _authApi?.getPublicProfile(person.linkedProfileId!);
-            if (profile != null) {
-              // Update person with profile data
-              final profileData = profile['profile'] as Map<String, dynamic>?;
-              if (profileData != null) {
-                return person.copyWith(
-                  name: profileData['name'] ?? person.name,
-                  photoUrl: profileData['photo_url'],
-                  birthday: profileData['birthday'] != null
-                    ? DateTime.parse(profileData['birthday'])
-                    : person.birthday,
-                  wishlistLinks: List<Map<String, dynamic>>.from(profile['wishlist_links'] ?? []),
-                  sharedDates: List<Map<String, dynamic>>.from(profile['shared_dates'] ?? []),
-                );
+      final kinWithProfiles = await Future.wait(
+        kinList.map((person) async {
+          if (person.type == KinPersonType.linked &&
+              person.linkedProfileId != null) {
+            try {
+              // Fetch profile from auth service
+              final profile = await _authApi?.getPublicProfile(
+                person.linkedProfileId!,
+              );
+              if (profile != null) {
+                // Update person with profile data
+                final profileData = profile['profile'] as Map<String, dynamic>?;
+                if (profileData != null) {
+                  return person.copyWith(
+                    name: profileData['name'] ?? person.name,
+                    photoUrl: profileData['photo_url'],
+                    birthday: profileData['birthday'] != null
+                        ? DateTime.parse(profileData['birthday'])
+                        : person.birthday,
+                    wishlistLinks: List<Map<String, dynamic>>.from(
+                      profileData['wishlist_links'] ?? [],
+                    ),
+                    sharedDates: List<Map<String, dynamic>>.from(
+                      profileData['shared_dates'] ?? [],
+                    ),
+                  );
+                }
               }
+            } catch (e) {
+              debugPrint(
+                'Failed to fetch profile for ${person.linkedProfileId}: $e',
+              );
             }
-          } catch (e) {
-            debugPrint('Failed to fetch profile for ${person.linkedProfileId}: $e');
           }
-        }
-        return person;
-      }));
+          return person;
+        }),
+      );
 
       // Load private dates for each kin person and populate allDates
-      final kinWithDates = await Future.wait(kinWithProfiles.map((person) async {
-        final privateDates = await LocalDb.instance.getPrivateDates(person.id);
+      final kinWithDates = await Future.wait(
+        kinWithProfiles.map((person) async {
+          final privateDates = await LocalDb.instance.getPrivateDates(
+            person.id,
+          );
 
-        // Combine birthday with private dates
-        final allDates = <DateTime>[];
-        if (person.birthday != null) {
-          allDates.add(person.birthday!);
-        }
+          // Combine birthday with private dates
+          final allDates = <DateTime>[];
+          if (person.birthday != null) {
+            allDates.add(person.birthday!);
+          }
 
-        // Add private dates
-        for (final dateMap in privateDates) {
-          final dateStr = dateMap['date'] as String;
-          allDates.add(DateTime.parse(dateStr));
-        }
+          // Add private dates
+          for (final dateMap in privateDates) {
+            final dateStr = dateMap['date'] as String;
+            allDates.add(DateTime.parse(dateStr));
+          }
 
-        return person.copyWith(allDates: allDates);
-      }));
+          return person.copyWith(allDates: allDates);
+        }),
+      );
 
-      // First set the kin list with all dates populated
-      _kin = kinWithDates;
+      // Backfill photo_url from sqflite for kin whose server record has no photo
+      final kinWithPhotos = await Future.wait(
+        kinWithDates.map((person) async {
+          if (person.photoUrl != null) return person;
+          final localData = await LocalDb.instance.getLocalKin();
+          debugPrint(
+            'BACKFILL CHECK: person=${person.id}, localRecords=${localData.length}, match=${localData.where((d) => d['id'] == person.id).firstOrNull?['photo_url']}',
+          );
+          final match = localData
+              .where((d) => d['id'] == person.id)
+              .firstOrNull;
+          if (match != null && match['photo_url'] != null) {
+            return person.copyWith(photoUrl: match['photo_url'] as String);
+          }
+          return person;
+        }),
+      );
+      _kin = kinWithPhotos;
 
       // Calculate natural positions based on ring intensities (which depend on allDates)
       _updateNaturalPositions(_kin);
@@ -108,12 +142,12 @@ class KinProvider extends ChangeNotifier {
         if (override != null) {
           return person.copyWith(
             positionOverride: override,
-            allDates: person.allDates,  // Explicitly preserve dates
+            allDates: person.allDates, // Explicitly preserve dates
           );
         }
         return person.copyWith(
           clearPositionOverride: true,
-          allDates: person.allDates,  // Explicitly preserve dates
+          allDates: person.allDates, // Explicitly preserve dates
         );
       }).toList();
 
@@ -137,7 +171,9 @@ class KinProvider extends ChangeNotifier {
       for (final data in localKinData) {
         if (!existingIds.contains(data['id'])) {
           // Load private dates for local kin
-          final privateDates = await LocalDb.instance.getPrivateDates(data['id']);
+          final privateDates = await LocalDb.instance.getPrivateDates(
+            data['id'],
+          );
 
           // Combine birthday with private dates
           final allDates = <DateTime>[];
@@ -174,12 +210,12 @@ class KinProvider extends ChangeNotifier {
         if (override != null) {
           return person.copyWith(
             positionOverride: override,
-            allDates: person.allDates,  // Explicitly preserve dates
+            allDates: person.allDates, // Explicitly preserve dates
           );
         }
         return person.copyWith(
           clearPositionOverride: true,
-          allDates: person.allDates,  // Explicitly preserve dates
+          allDates: person.allDates, // Explicitly preserve dates
         );
       }).toList();
 
@@ -194,8 +230,11 @@ class KinProvider extends ChangeNotifier {
     // Only recalculate if the kin list has changed
     if (_lastKinList != null &&
         _lastKinList!.length == kinList.length &&
-        _lastKinList!.every((person) =>
-          kinList.any((p) => p.id == person.id && p.ringIntensity == person.ringIntensity))) {
+        _lastKinList!.every(
+          (person) => kinList.any(
+            (p) => p.id == person.id && p.ringIntensity == person.ringIntensity,
+          ),
+        )) {
       return; // No changes, keep existing natural positions
     }
 
@@ -204,7 +243,9 @@ class KinProvider extends ChangeNotifier {
 
     // Sort by ring intensity to determine natural positions
     final sortedByIntensity = List.from(kinList);
-    sortedByIntensity.sort((a, b) => b.ringIntensity.compareTo(a.ringIntensity));
+    sortedByIntensity.sort(
+      (a, b) => b.ringIntensity.compareTo(a.ringIntensity),
+    );
 
     // Assign natural positions based on intensity ranking
     for (int i = 0; i < sortedByIntensity.length; i++) {
@@ -232,11 +273,11 @@ class KinProvider extends ChangeNotifier {
   // Get the display position for an avatar (manual or natural)
   double getDisplayPosition(String id) {
     // Check if this person has a position override
-    final person = _kin.firstWhere((p) => p.id == id, orElse: () => KinPerson(
-      id: id,
-      name: 'Unknown',
-      type: KinPersonType.local,
-    ));
+    final person = _kin.firstWhere(
+      (p) => p.id == id,
+      orElse: () =>
+          KinPerson(id: id, name: 'Unknown', type: KinPersonType.local),
+    );
 
     return person.positionOverride ?? _naturalPositions[id] ?? 0.0;
   }
@@ -296,10 +337,7 @@ class KinProvider extends ChangeNotifier {
 
     // Save to API in the background
     try {
-      await _api.updateKin(
-        id: id,
-        positionOverride: finalPosition,
-      );
+      await _api.updateKin(id: id, positionOverride: finalPosition);
     } catch (e) {
       // Log error but don't disrupt the UI
       debugPrint('Failed to save position: $e');
@@ -323,10 +361,7 @@ class KinProvider extends ChangeNotifier {
 
     // Save to API in the background
     try {
-      await _api.updateKin(
-        id: id,
-        positionOverride: null,
-      );
+      await _api.updateKin(id: id, positionOverride: null);
     } catch (e) {
       debugPrint('Failed to release position: $e');
     }
@@ -352,59 +387,70 @@ class KinProvider extends ChangeNotifier {
     DateTime? birthday,
   }) async {
     try {
-      await _api.addKinLocal(
-        localName: name,
-        localPhotoUrl: photoUrl,
-        localBirthday: birthday?.toIso8601String(),
-      );
-      await loadKin(); // Reload the list
-      _triggerBackup(); // Backup after adding local kin
-    } catch (e) {
-      // If API fails (e.g., not authenticated), save locally only
-      debugPrint('API failed, adding to local state only: $e');
+      // Generate a temporary local ID first
+      final tempId = const Uuid().v4();
 
-      // Create a new local-only kin person with generated ID
-      final newPerson = KinPerson(
-        id: const Uuid().v4(), // Generate local ID
-        name: name,
-        photoUrl: photoUrl,
-        type: KinPersonType.local,
-        birthday: birthday,
-        allDates: birthday != null ? [birthday] : [],
-      );
-
-      // Add to local list
-      _kin = [..._kin, newPerson];
-
-      // Update natural positions for the new list
-      _updateNaturalPositions(_kin);
-
-      // Save to local database
+      // Save to sqflite immediately with temp ID
       await LocalDb.instance.saveLocalKin({
-        'id': newPerson.id,
-        'name': newPerson.name,
-        'photo_url': newPerson.photoUrl,
-        'birthday': newPerson.birthday?.toIso8601String(),
+        'id': tempId,
+        'name': name,
+        'photo_url': photoUrl,
+        'birthday': birthday?.toIso8601String(),
         'position_override': null,
         'created_at': DateTime.now().toIso8601String(),
       });
+      debugPrint(
+        'SQFLITE SAVE: tempId=$tempId, photo=${photoUrl != null ? "present" : "null"}',
+      );
 
-      notifyListeners();
-      _triggerBackup(); // Backup after saving local kin
-      // Don't rethrow - silently handle the error
+      // Try to sync to server
+      final response = await _api.addKinLocal(
+        localName: name,
+        localPhotoUrl: null,
+        localBirthday: birthday?.toIso8601String(),
+      );
+
+      final serverId = response['id'] as String;
+
+      // Re-save under server ID and remove temp record
+      await LocalDb.instance.saveLocalKin({
+        'id': serverId,
+        'name': name,
+        'photo_url': photoUrl,
+        'birthday': birthday?.toIso8601String(),
+        'position_override': null,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      await LocalDb.instance.deleteLocalKin(tempId);
+      debugPrint('SQFLITE UPDATE: serverId=$serverId, photo saved');
+
+      await loadKin();
+      _triggerBackup();
+    } catch (e) {
+      // API failed — sqflite record already saved with temp ID, just load
+      debugPrint('API failed, using local-only record: $e');
+      await loadKin();
+      _triggerBackup();
     }
   }
 
   // Delete a kin
   Future<void> deleteKin(String id) async {
+    // Always delete locally first
+    await LocalDb.instance.deleteLocalKin(id);
+    await LocalDb.instance.addKinTombstone(id);
+    _kin.removeWhere((p) => p.id == id);
+    _positionOverrides.remove(id);
+    _naturalPositions.remove(id);
+    _updateNaturalPositions(_kin);
+    notifyListeners();
+    _triggerBackup();
+
+    // Best-effort server delete — failure doesn't restore the person
     try {
       await _api.deleteKin(id);
-      await LocalDb.instance.deleteLocalKin(id);
-      await loadKin(); // Reload the list
     } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
+      debugPrint('Server delete failed (may be local-only kin): $e');
     }
   }
 
@@ -412,14 +458,12 @@ class KinProvider extends ChangeNotifier {
   Future<void> updateKinDetails({
     required String id,
     String? localName,
-    String? localPhotoUrl,
     DateTime? localBirthday,
   }) async {
     try {
       await _api.updateKin(
         id: id,
         localName: localName,
-        localPhotoUrl: localPhotoUrl,
         localBirthday: localBirthday?.toIso8601String(),
       );
       await loadKin(); // Reload the list
@@ -434,6 +478,7 @@ class KinProvider extends ChangeNotifier {
   Future<void> updateKinPhoto(String id, String photoPath) async {
     // Update in local database
     await LocalDb.instance.updateKinPhoto(id, photoPath);
+    debugPrint('PHOTO UPDATE: id=$id, path=$photoPath');
 
     // Update in memory
     _kin = _kin.map((person) {

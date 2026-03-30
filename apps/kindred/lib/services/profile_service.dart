@@ -145,7 +145,6 @@ class ProfileService extends ChangeNotifier {
     }
   }
 
-
   // Add wishlist link
   Future<void> addWishlistLink(String label, String url) async {
     try {
@@ -203,9 +202,7 @@ class ProfileService extends ChangeNotifier {
 
       // Update local profile with new date
       if (_profile != null) {
-        final dates = List<Map<String, dynamic>>.from(
-          _profile!['dates'] ?? [],
-        );
+        final dates = List<Map<String, dynamic>>.from(_profile!['dates'] ?? []);
         dates.add(dateData);
         _profile!['dates'] = dates;
         notifyListeners();
@@ -224,9 +221,7 @@ class ProfileService extends ChangeNotifier {
 
       // Update local profile
       if (_profile != null && _profile!['dates'] != null) {
-        final dates = List<Map<String, dynamic>>.from(
-          _profile!['dates'],
-        );
+        final dates = List<Map<String, dynamic>>.from(_profile!['dates']);
         dates.removeWhere((date) => date['id'] == dateId);
         _profile!['dates'] = dates;
         notifyListeners();

@@ -15,10 +15,7 @@ import '../../services/photo_service.dart';
 class KinSheet extends StatefulWidget {
   final KinPerson person;
 
-  const KinSheet({
-    super.key,
-    required this.person,
-  });
+  const KinSheet({super.key, required this.person});
 
   @override
   State<KinSheet> createState() => _KinSheetState();
@@ -43,6 +40,9 @@ class _KinSheetState extends State<KinSheet> {
   DateTime? _selectedDate;
   final TextEditingController _linkLabelController = TextEditingController();
   final TextEditingController _linkUrlController = TextEditingController();
+
+  // Local photo path for immediate preview
+  String? _localPhotoPath;
 
   @override
   void initState() {
@@ -78,8 +78,18 @@ class _KinSheetState extends State<KinSheet> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
@@ -87,9 +97,7 @@ class _KinSheetState extends State<KinSheet> {
   Widget _buildEmptyState(String text) {
     return Text(
       text,
-      style: AppTheme.text.body.copyWith(
-        color: AppTheme.colors.tertiaryText,
-      ),
+      style: AppTheme.text.body.copyWith(color: AppTheme.colors.tertiaryText),
     );
   }
 
@@ -109,7 +117,7 @@ class _KinSheetState extends State<KinSheet> {
   }
 
   Widget _buildAvatarImage() {
-    final photoUrl = widget.person.photoUrl!;
+    final photoUrl = _localPhotoPath ?? widget.person.photoUrl!;
     if (photoUrl.startsWith('/')) {
       // Local file path
       return Image.file(
@@ -121,16 +129,14 @@ class _KinSheetState extends State<KinSheet> {
       );
     } else {
       // Network URL
-      return CachedNetworkImage(
-        imageUrl: photoUrl,
-        fit: BoxFit.cover,
-      );
+      return CachedNetworkImage(imageUrl: photoUrl, fit: BoxFit.cover);
     }
   }
 
   List<Widget> _buildProfileSection() {
     // Check if anything is shared
-    final hasSharedContent = widget.person.birthday != null ||
+    final hasSharedContent =
+        widget.person.birthday != null ||
         widget.person.wishlistLinks.isNotEmpty ||
         widget.person.sharedDates.isNotEmpty;
 
@@ -175,7 +181,7 @@ class _KinSheetState extends State<KinSheet> {
             child: Text(
               link['label'] ?? 'Link',
               style: AppTheme.text.body.copyWith(
-                color: AppTheme.colors.primary,
+                color: AppTheme.colors.accent,
                 decoration: TextDecoration.underline,
               ),
             ),
@@ -212,10 +218,7 @@ class _KinSheetState extends State<KinSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      note['body'],
-                      style: AppTheme.text.body,
-                    ),
+                    child: Text(note['body'], style: AppTheme.text.body),
                   ),
                   SizedBox(width: AppTheme.spacing.space2),
                   GestureDetector(
@@ -256,7 +259,10 @@ class _KinSheetState extends State<KinSheet> {
                 padding: EdgeInsets.zero,
                 onPressed: () async {
                   if (_noteController.text.trim().isNotEmpty) {
-                    await _db.addNote(widget.person.id, _noteController.text.trim());
+                    await _db.addNote(
+                      widget.person.id,
+                      _noteController.text.trim(),
+                    );
                     _noteController.clear();
                     setState(() {
                       _isAddingNote = false;
@@ -376,7 +382,8 @@ class _KinSheetState extends State<KinSheet> {
                           child: Column(
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   CupertinoButton(
                                     child: Text('Cancel'),
@@ -393,7 +400,8 @@ class _KinSheetState extends State<KinSheet> {
                               Expanded(
                                 child: CupertinoDatePicker(
                                   mode: CupertinoDatePickerMode.date,
-                                  initialDateTime: _selectedDate ?? DateTime.now(),
+                                  initialDateTime:
+                                      _selectedDate ?? DateTime.now(),
                                   minimumDate: DateTime(1900),
                                   maximumDate: DateTime(2100),
                                   onDateTimeChanged: (DateTime newDate) {
@@ -410,8 +418,8 @@ class _KinSheetState extends State<KinSheet> {
                     },
                     child: Text(
                       _selectedDate != null
-                        ? _formatDate(_selectedDate!)
-                        : 'Select date',
+                          ? _formatDate(_selectedDate!)
+                          : 'Select date',
                       style: AppTheme.text.body.copyWith(
                         color: AppTheme.colors.accent,
                       ),
@@ -425,7 +433,8 @@ class _KinSheetState extends State<KinSheet> {
                   CupertinoButton(
                     padding: EdgeInsets.zero,
                     onPressed: () async {
-                      if (_dateLabelController.text.trim().isNotEmpty && _selectedDate != null) {
+                      if (_dateLabelController.text.trim().isNotEmpty &&
+                          _selectedDate != null) {
                         await _db.addPrivateDate(
                           widget.person.id,
                           _dateLabelController.text.trim(),
@@ -506,7 +515,10 @@ class _KinSheetState extends State<KinSheet> {
                       onTap: () async {
                         final uri = Uri.tryParse(link['url']);
                         if (uri != null) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
                         }
                       },
                       child: Text(
@@ -671,10 +683,16 @@ class _KinSheetState extends State<KinSheet> {
                 child: GestureDetector(
                   onTap: widget.person.type == KinPersonType.local
                       ? () async {
-                          final photoPath = await PhotoService.pickPhoto(context);
+                          final photoPath = await PhotoService.pickPhoto(
+                            context,
+                          );
                           if (photoPath != null && mounted) {
+                            setState(() => _localPhotoPath = photoPath);
                             final kinProvider = context.read<KinProvider>();
-                            await kinProvider.updateKinPhoto(widget.person.id, photoPath);
+                            await kinProvider.updateKinPhoto(
+                              widget.person.id,
+                              photoPath,
+                            );
                           }
                         }
                       : null,
@@ -692,10 +710,10 @@ class _KinSheetState extends State<KinSheet> {
                             )
                           : null,
                     ),
-                    child: widget.person.photoUrl != null
-                        ? ClipOval(
-                            child: _buildAvatarImage(),
-                          )
+                    child:
+                        (_localPhotoPath != null ||
+                            widget.person.photoUrl != null)
+                        ? ClipOval(child: _buildAvatarImage())
                         : Center(
                             child: Text(
                               widget.person.name.isNotEmpty
@@ -726,7 +744,9 @@ class _KinSheetState extends State<KinSheet> {
                 Center(
                   child: GestureDetector(
                     onTap: () {
-                      context.read<KinProvider>().releasePosition(widget.person.id);
+                      context.read<KinProvider>().releasePosition(
+                        widget.person.id,
+                      );
                       Navigator.pop(context);
                     },
                     child: Text(
@@ -821,7 +841,12 @@ class _KinSheetState extends State<KinSheet> {
                                 CupertinoDialogAction(
                                   onPressed: () {
                                     Navigator.pop(context); // Close dialog
-                                    Navigator.of(context, rootNavigator: true).pop('delete'); // Return result to parent using root navigator
+                                    Navigator.of(
+                                      context,
+                                      rootNavigator: true,
+                                    ).pop(
+                                      'delete',
+                                    ); // Return result to parent using root navigator
                                   },
                                   isDestructiveAction: true,
                                   child: const Text('Let go'),

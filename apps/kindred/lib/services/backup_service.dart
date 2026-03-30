@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
@@ -112,10 +111,13 @@ class BackupService {
         };
       }
 
-      // Include metadata
+      // Collect deleted IDs from a tombstone table (to be created)
+      final deletedIds = await db.getDeletedKinIds();
+
       final fullBackup = {
         'version': 1,
         'created_at': DateTime.now().toIso8601String(),
+        'deleted_ids': deletedIds,
         'data': backup,
       };
 
@@ -191,10 +193,7 @@ class BackupService {
           final exists = existingNotes.any((n) => n['id'] == noteData['id']);
           if (!exists) {
             // Add note with the same content but new ID (LocalDb generates it)
-            await db.addNote(
-              kinId,
-              noteData['body'] as String,
-            );
+            await db.addNote(kinId, noteData['body'] as String);
           }
         }
 
@@ -228,6 +227,16 @@ class BackupService {
             );
           }
         }
+      }
+
+      // Honor deletions from backup
+      final deletedIds =
+          (fullBackup['deleted_ids'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [];
+      for (final id in deletedIds) {
+        await db.deleteLocalKin(id);
       }
 
       debugPrint('Restore completed successfully');

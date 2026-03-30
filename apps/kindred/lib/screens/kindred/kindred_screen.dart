@@ -9,7 +9,6 @@ import 'package:dio/dio.dart';
 import '../kin/kin_sheet.dart';
 import '../show_up/show_up_sheet.dart';
 import '../../providers/kin_provider.dart';
-import '../../models/kin_person.dart';
 import '../../services/auth_service.dart';
 import '../../services/auth_api.dart';
 import '../../services/profile_service.dart';
@@ -68,10 +67,7 @@ class _KindredScreenState extends State<KindredScreen> {
     try {
       final response = await _dio.post(
         'https://terryheath.com/api/subscribe',
-        data: {
-          'email': email.trim(),
-          'source': 'kindred',
-        },
+        data: {'email': email.trim(), 'source': 'kindred'},
         options: Options(
           headers: {'Content-Type': 'application/json'},
           validateStatus: (status) => status! < 500,
@@ -89,9 +85,7 @@ class _KindredScreenState extends State<KindredScreen> {
     try {
       final response = await _dio.post(
         'https://terryheath.com/api/unsubscribe',
-        data: {
-          'email': email.trim(),
-        },
+        data: {'email': email.trim()},
         options: Options(
           headers: {'Content-Type': 'application/json'},
           validateStatus: (status) => status! < 500,
@@ -217,7 +211,9 @@ class _KindredScreenState extends State<KindredScreen> {
                   child: Text(
                     profileService.name?.isNotEmpty == true
                         ? profileService.name![0].toUpperCase()
-                        : authService.isAuthenticated ? 'Y' : '?',
+                        : authService.isAuthenticated
+                        ? 'Y'
+                        : '?',
                     style: AppTheme.text.caption.copyWith(
                       color: AppTheme.colors.accent,
                       fontWeight: FontWeight.w600,
@@ -260,10 +256,7 @@ class _KindredScreenState extends State<KindredScreen> {
                       onTap: _showShowUpSheet,
                       child: Padding(
                         padding: EdgeInsets.all(AppTheme.spacing.space2),
-                        child: Text(
-                          'Show Up',
-                          style: AppTheme.text.body,
-                        ),
+                        child: Text('Show Up', style: AppTheme.text.body),
                       ),
                     ),
                     const Divider(height: 1),
@@ -280,14 +273,20 @@ class _KindredScreenState extends State<KindredScreen> {
 
                             // If toggling off and we have an email, unsubscribe
                             if (!newValue && _emailController.text.isNotEmpty) {
-                              final success = await _unsubscribeFromNewsletter(_emailController.text);
+                              final success = await _unsubscribeFromNewsletter(
+                                _emailController.text,
+                              );
                               if (success) {
                                 // Clear local cache
-                                await LocalDb.instance.removeSetting('newsletter_email');
+                                await LocalDb.instance.removeSetting(
+                                  'newsletter_email',
+                                );
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: const Text('Unsubscribed from updates'),
+                                      content: const Text(
+                                        'Unsubscribed from updates',
+                                      ),
                                       backgroundColor: AppTheme.colors.accent,
                                       duration: const Duration(seconds: 1),
                                     ),
@@ -314,17 +313,30 @@ class _KindredScreenState extends State<KindredScreen> {
                                     });
 
                                     // If toggling off and we have an email, unsubscribe
-                                    if (!value && _emailController.text.isNotEmpty) {
-                                      final success = await _unsubscribeFromNewsletter(_emailController.text);
+                                    if (!value &&
+                                        _emailController.text.isNotEmpty) {
+                                      final success =
+                                          await _unsubscribeFromNewsletter(
+                                            _emailController.text,
+                                          );
                                       if (success) {
                                         // Clear local cache
-                                        await LocalDb.instance.removeSetting('newsletter_email');
+                                        await LocalDb.instance.removeSetting(
+                                          'newsletter_email',
+                                        );
                                         if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
-                                              content: const Text('Unsubscribed from updates'),
-                                              backgroundColor: AppTheme.colors.accent,
-                                              duration: const Duration(seconds: 1),
+                                              content: const Text(
+                                                'Unsubscribed from updates',
+                                              ),
+                                              backgroundColor:
+                                                  AppTheme.colors.accent,
+                                              duration: const Duration(
+                                                seconds: 1,
+                                              ),
                                             ),
                                           );
                                         }
@@ -348,9 +360,10 @@ class _KindredScreenState extends State<KindredScreen> {
                                   child: CupertinoTextField(
                                     controller: _emailController,
                                     placeholder: 'Enter email',
-                                    placeholderStyle: AppTheme.text.caption.copyWith(
-                                      color: AppTheme.colors.tertiaryText,
-                                    ),
+                                    placeholderStyle: AppTheme.text.caption
+                                        .copyWith(
+                                          color: AppTheme.colors.tertiaryText,
+                                        ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                       vertical: 8,
@@ -376,10 +389,12 @@ class _KindredScreenState extends State<KindredScreen> {
                                   ),
                                   onPressed: () async {
                                     if (_emailController.text.isNotEmpty) {
-                                      final email = _emailController.text.trim();
+                                      final email = _emailController.text
+                                          .trim();
 
                                       // Call subscribe API
-                                      final success = await _subscribeToNewsletter(email);
+                                      final success =
+                                          await _subscribeToNewsletter(email);
 
                                       if (success) {
                                         // Save to local cache for UI state
@@ -389,19 +404,30 @@ class _KindredScreenState extends State<KindredScreen> {
                                         );
 
                                         if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
-                                              content: const Text('Subscribed to updates!'),
-                                              backgroundColor: AppTheme.colors.accent,
-                                              duration: const Duration(seconds: 2),
+                                              content: const Text(
+                                                'Subscribed to updates!',
+                                              ),
+                                              backgroundColor:
+                                                  AppTheme.colors.accent,
+                                              duration: const Duration(
+                                                seconds: 2,
+                                              ),
                                             ),
                                           );
                                         }
                                       } else {
                                         if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             const SnackBar(
-                                              content: Text('Failed to subscribe. Please try again.'),
+                                              content: Text(
+                                                'Failed to subscribe. Please try again.',
+                                              ),
                                               backgroundColor: Colors.red,
                                               duration: Duration(seconds: 2),
                                             ),
@@ -424,18 +450,13 @@ class _KindredScreenState extends State<KindredScreen> {
                         final uri = Uri(
                           scheme: 'mailto',
                           path: 'terry@terryheath.com',
-                          queryParameters: {
-                            'subject': 'Kindred Support',
-                          },
+                          queryParameters: {'subject': 'Kindred Support'},
                         );
                         await launchUrl(uri);
                       },
                       child: Padding(
                         padding: EdgeInsets.all(AppTheme.spacing.space2),
-                        child: Text(
-                          'Support',
-                          style: AppTheme.text.body,
-                        ),
+                        child: Text('Support', style: AppTheme.text.body),
                       ),
                     ),
                     const Divider(height: 1),
@@ -450,10 +471,7 @@ class _KindredScreenState extends State<KindredScreen> {
                       },
                       child: Padding(
                         padding: EdgeInsets.all(AppTheme.spacing.space2),
-                        child: Text(
-                          'Settings',
-                          style: AppTheme.text.body,
-                        ),
+                        child: Text('Settings', style: AppTheme.text.body),
                       ),
                     ),
 
@@ -467,7 +485,9 @@ class _KindredScreenState extends State<KindredScreen> {
                             setState(() {
                               _showSettingsDropdown = false;
                             });
-                            await launchUrl(Uri.parse('https://fromkindred.com/privacy'));
+                            await launchUrl(
+                              Uri.parse('https://fromkindred.com/privacy'),
+                            );
                           },
                           child: Padding(
                             padding: EdgeInsets.symmetric(
@@ -495,7 +515,9 @@ class _KindredScreenState extends State<KindredScreen> {
                             setState(() {
                               _showSettingsDropdown = false;
                             });
-                            await launchUrl(Uri.parse('https://fromkindred.com/terms'));
+                            await launchUrl(
+                              Uri.parse('https://fromkindred.com/terms'),
+                            );
                           },
                           child: Padding(
                             padding: EdgeInsets.symmetric(
@@ -562,7 +584,6 @@ class _KindredScreenState extends State<KindredScreen> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -640,14 +661,7 @@ class _KindredScreenState extends State<KindredScreen> {
                     );
 
                     if (result == 'delete' && mounted) {
-                      final provider = context.read<KinProvider>();
-                      if (person.type == KinPersonType.local) {
-                        // For local kin, delete from local database only
-                        provider.deleteLocalKin(person.id);
-                      } else {
-                        // For linked kin, delete from server via API
-                        provider.deleteKin(person.id);
-                      }
+                      context.read<KinProvider>().deleteKin(person.id);
                     }
                   },
                 );

@@ -25,10 +25,7 @@ class BottomSheetVisibilityNotifier extends ChangeNotifier {
 class AppShell extends StatelessWidget {
   final Widget child;
 
-  const AppShell({
-    super.key,
-    required this.child,
-  });
+  const AppShell({super.key, required this.child});
 
   void _dismissAllSheets(BuildContext context) {
     // Dismiss any open bottom sheets
@@ -61,10 +58,7 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: _buildBottomNav(context),
-    );
+    return Scaffold(body: child, bottomNavigationBar: _buildBottomNav(context));
   }
 
   Widget _buildBottomNav(BuildContext context) {
@@ -159,11 +153,7 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            Icon(icon, color: color, size: 24),
             const SizedBox(height: 4),
             Text(
               label,
