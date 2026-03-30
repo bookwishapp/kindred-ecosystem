@@ -129,8 +129,9 @@ async function verifyMagicLink(req, res) {
 
     // Check for Flutter deep link redirect
     const redirectUri = req.query.redirect_uri;
-    if (redirectUri && redirectUri.startsWith('kindred://')) {
-      return res.redirect(`${redirectUri}?access_token=${accessToken}`);
+    if (redirectUri) {
+      const separator = redirectUri.includes('?') ? '&' : '?';
+      return res.redirect(`${redirectUri}${separator}access_token=${accessToken}`);
     }
 
     res.json({
