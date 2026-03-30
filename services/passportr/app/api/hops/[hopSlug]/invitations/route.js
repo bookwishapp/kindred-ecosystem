@@ -3,9 +3,17 @@ export const runtime = 'nodejs';
 const db = require('../../../../../lib/db');
 const { requireOrganizer } = require('../../../../../lib/auth');
 const { randomBytes } = require('crypto');
-const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+const nodemailer = require('nodemailer');
 
-const ses = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const transporter = nodemailer.createTransport({
+  host: process.env.SES_SMTP_HOST,
+  port: parseInt(process.env.SES_SMTP_PORT),
+  secure: false,
+  auth: {
+    user: process.env.SES_SMTP_USERNAME,
+    pass: process.env.SES_SMTP_PASSWORD,
+  },
+});
 
 export async function GET(req, { params }) {
   try {
@@ -57,18 +65,12 @@ export async function POST(req, { params }) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://passportr.io';
     const setupUrl = `${baseUrl}/venue/setup/${token}`;
 
-    await ses.send(new SendEmailCommand({
-      Source: 'noreply@passportr.io',
-      Destination: { ToAddresses: [email] },
-      Message: {
-        Subject: { Data: `You're invited to join ${hop.name} on Passportr` },
-        Body: {
-          Text: {
-            Data: `Hi,\n\nYou've been invited to participate in "${hop.name}" on Passportr as a venue.\n\nVenue name: ${venue_name}\n\nClick the link below to set up your venue:\n${setupUrl}\n\nThis link is unique to your venue — don't share it.\n\nPassportr`
-          }
-        }
-      }
-    }));
+    await transporter.sendMail({
+      from: process.env.SES_FROM_EMAIL,
+      to: email,
+      subject: `You're invited to join ${hop.name} on Passportr`,
+      text: `Hi,\n\nYou've been invited to participate in "${hop.name}" on Passportr as a venue.\n\nVenue name: ${venue_name}\n\nClick the link below to set up your venue:\n${setupUrl}\n\nThis link is unique to your venue — don't share it.\n\nPassportr`,
+    });
 
     return Response.json({ success: true });
   } catch (error) {
