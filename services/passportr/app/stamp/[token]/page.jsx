@@ -82,12 +82,13 @@ export default function StampPage({ params }) {
 
               // Request magic link from auth service
               try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_BASE_URL || 'https://auth.terryheath.com'}/auth/request`, {
+                const response = await fetch('/api/auth/request', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     email,
-                    redirect_url: `${window.location.origin}/stamp/${token}`
+                    redirect_uri: `${window.location.origin}/stamp/${token}`,
+                    app_name: 'Passportr'
                   })
                 });
 

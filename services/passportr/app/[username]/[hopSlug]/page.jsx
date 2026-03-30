@@ -46,6 +46,20 @@ export default async function PassportPage({ params }) {
   const isCompleted = participant.completed_at !== null;
   const stampedCount = stampedVenueIds.length;
 
+  function getCompletionText(rule, totalVenues) {
+    if (rule.type === 'all') {
+      return `Visit all ${totalVenues} venues and earn rewards at each one.`;
+    }
+    if (rule.type === 'percentage' || rule.type === 'minimum') {
+      const required = rule.type === 'percentage'
+        ? Math.ceil(totalVenues * (rule.percent / 100))
+        : rule.count;
+      return `Visit ${required} of ${totalVenues} venues to earn rewards at each visited.`;
+    }
+  }
+  const completionRule = hop.completion_rule || { type: 'all' };
+  const completionText = getCompletionText(completionRule, venues.length);
+
   return (
     <div className="container" style={{ maxWidth: '600px', paddingTop: '40px' }}>
       <div style={{ marginBottom: '32px' }}>
@@ -137,7 +151,7 @@ export default async function PassportPage({ params }) {
             You've completed the hop! 🎉
           </h2>
           <p style={{ marginBottom: '16px' }}>Redeem your rewards at these venues:</p>
-          {venues.map(venue => (
+          {venues.filter(venue => stampedVenueIds.includes(venue.id)).map(venue => (
             venue.reward_description && (
               <div key={venue.id} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #ddd' }}>
                 <h3 style={{ fontSize: '16px', marginBottom: '4px' }}>{venue.name}</h3>
@@ -158,7 +172,7 @@ export default async function PassportPage({ params }) {
       {!isCompleted && (
         <div className="card" style={{ backgroundColor: '#f9f9f9', textAlign: 'center' }}>
           <p style={{ color: 'var(--text-secondary)' }}>
-            Visit all {venues.length} venues to complete the hop and unlock rewards.
+            {completionText}
           </p>
         </div>
       )}

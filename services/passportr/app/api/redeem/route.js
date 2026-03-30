@@ -88,12 +88,16 @@ export async function POST(req) {
       const expiresAt = new Date(Date.now() + (hop.coupon_expiry_minutes * 60 * 1000));
 
       const insertResult = await db.query(
-        'INSERT INTO redemptions (participant_id, venue_id, coupon_code, expires_at) VALUES ($1, $2, $3, $4) RETURNING *',
+        'INSERT INTO redemptions (participant_id, venue_id, coupon_code, expires_at, generated_at, redeemed_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *',
         [participant.id, venue.id, couponCode, expiresAt]
       );
       redemption = insertResult.rows[0];
     } else {
       redemption = redemptionResult.rows[0];
+      // If already redeemed, return 409
+      if (redemption.redeemed_at) {
+        return Response.json({ error: 'Reward already redeemed' }, { status: 409 });
+      }
     }
 
     return Response.json({
