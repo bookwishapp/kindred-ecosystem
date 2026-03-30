@@ -14,7 +14,7 @@ export default function OrganizerLogin() {
     try {
       const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || window.location.origin}/organize/callback`;
 
-      const response = await fetch('https://auth.terryheath.com/auth/request', {
+      const response = await fetch('/api/auth/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
