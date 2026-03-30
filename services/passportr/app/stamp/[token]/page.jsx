@@ -87,7 +87,7 @@ export default function StampPage({ params }) {
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     email,
-                    redirect_uri: `${window.location.origin}/stamp/${token}`,
+                    redirect_uri: `${window.location.origin}/api/auth/callback?return_to=${encodeURIComponent(`/stamp/${token}`)}`,
                     app_name: 'Passportr'
                   })
                 });

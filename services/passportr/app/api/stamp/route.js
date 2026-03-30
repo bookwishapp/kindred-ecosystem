@@ -68,8 +68,8 @@ export async function POST(req) {
     if (participantResult.rows.length === 0) {
       // Create participant
       const insertResult = await db.query(
-        'INSERT INTO participants (hop_id, user_id, username) VALUES ($1, $2, $3) RETURNING *',
-        [hop.id, user.sub, user.username]
+        'INSERT INTO participants (hop_id, user_id) VALUES ($1, $2) RETURNING *',
+        [hop.id, user.sub]
       );
       participant = insertResult.rows[0];
     } else {
@@ -106,7 +106,7 @@ export async function POST(req) {
       );
     }
 
-    const passportUrl = `/${user.username}/${hop.slug}`;
+    const passportUrl = `/${user.sub}/${hop.slug}`;
 
     return Response.json({
       stamped: true,

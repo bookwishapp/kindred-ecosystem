@@ -3,7 +3,7 @@ export const runtime = 'nodejs';
 const db = require('../../../lib/db');
 
 export default async function PassportPage({ params }) {
-  const { username, hopSlug } = params;
+  const { userId, hopSlug } = params;
 
   // Get hop
   const hopResult = await db.query(
@@ -19,8 +19,8 @@ export default async function PassportPage({ params }) {
 
   // Get participant
   const participantResult = await db.query(
-    'SELECT * FROM participants WHERE hop_id = $1 AND username = $2',
-    [hop.id, username]
+    'SELECT * FROM participants WHERE hop_id = $1 AND user_id = $2',
+    [hop.id, userId]
   );
 
   if (participantResult.rows.length === 0) {
