@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function ManageHop({ params }) {
@@ -21,6 +21,10 @@ export default function ManageHop({ params }) {
   const [inviteForm, setInviteForm] = useState({ email: '', venue_name: '' });
   const [inviting, setInviting] = useState(false);
   const [showDeleteHop, setShowDeleteHop] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const bannerInputRef = useRef(null);
+  const logoInputRef = useRef(null);
 
   useEffect(() => {
     loadAll();
@@ -170,6 +174,46 @@ export default function ManageHop({ params }) {
     setInviting(false);
   }
 
+  async function uploadHopImage(file, field, setUploading) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const presignRes = await fetch('/api/upload/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          content_type: file.type,
+          folder: field === 'banner_url' ? 'hop-banners' : 'hop-logos',
+        }),
+      });
+      const { presigned_url, public_url } = await presignRes.json();
+
+      await fetch(presigned_url, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+
+      const updateRes = await fetch(`/api/hops/${hopSlug}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ [field]: public_url }),
+      });
+
+      if (updateRes.ok) {
+        const d = await updateRes.json();
+        setHop(d.hop);
+      } else {
+        alert('Failed to save image');
+      }
+    } catch {
+      alert('Upload failed');
+    }
+    setUploading(false);
+  }
+
   if (loading) return <div className="container" style={{ paddingTop: '80px' }}><p>Loading...</p></div>;
   if (accessDenied) return (
     <div className="container" style={{ paddingTop: '80px' }}>
@@ -287,6 +331,64 @@ export default function ManageHop({ params }) {
             <div><strong>Stamp Cutoff:</strong> {new Date(hop.stamp_cutoff_date).toLocaleDateString()}</div>
             <div><strong>Redeem Cutoff:</strong> {new Date(hop.redeem_cutoff_date).toLocaleDateString()}</div>
             <div><strong>Coupon Expiry:</strong> {hop.coupon_expiry_minutes} minutes</div>
+          </div>
+
+          <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+            <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Images</h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              {/* Banner */}
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Banner</p>
+                {hop.banner_url && (
+                  <img
+                    src={hop.banner_url}
+                    alt="Hop banner"
+                    style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px' }}
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={bannerInputRef}
+                  style={{ display: 'none' }}
+                  onChange={e => uploadHopImage(e.target.files[0], 'banner_url', setUploadingBanner)}
+                />
+                <button
+                  onClick={() => bannerInputRef.current.click()}
+                  disabled={uploadingBanner}
+                  style={{ fontSize: '13px', padding: '6px 14px', backgroundColor: 'var(--text-secondary)' }}
+                >
+                  {uploadingBanner ? 'Uploading...' : hop.banner_url ? 'Change Banner' : 'Upload Banner'}
+                </button>
+              </div>
+
+              {/* Logo */}
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Logo</p>
+                {hop.logo_url && (
+                  <img
+                    src={hop.logo_url}
+                    alt="Hop logo"
+                    style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px', display: 'block' }}
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={logoInputRef}
+                  style={{ display: 'none' }}
+                  onChange={e => uploadHopImage(e.target.files[0], 'logo_url', setUploadingLogo)}
+                />
+                <button
+                  onClick={() => logoInputRef.current.click()}
+                  disabled={uploadingLogo}
+                  style={{ fontSize: '13px', padding: '6px 14px', backgroundColor: 'var(--text-secondary)' }}
+                >
+                  {uploadingLogo ? 'Uploading...' : hop.logo_url ? 'Change Logo' : 'Upload Logo'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -54,7 +54,24 @@ export default async function PublicHopLanding({ params }) {
 
   return (
     <div className="container" style={{ paddingTop: '60px', maxWidth: '700px' }}>
+      {hop.banner_url && (
+        <div style={{ margin: '-60px -24px 40px', overflow: 'hidden', borderRadius: '0 0 16px 16px' }}>
+          <img
+            src={hop.banner_url}
+            alt={hop.name}
+            style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
+          />
+        </div>
+      )}
+
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+        {hop.logo_url && (
+          <img
+            src={hop.logo_url}
+            alt={`${hop.name} logo`}
+            style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '12px', marginBottom: '16px' }}
+          />
+        )}
         <h1 style={{ fontSize: '40px', marginBottom: '16px' }}>{hop.name}</h1>
         <p style={{ fontSize: '18px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
           {new Date(hop.start_date).toLocaleDateString()} - {new Date(hop.end_date).toLocaleDateString()}
