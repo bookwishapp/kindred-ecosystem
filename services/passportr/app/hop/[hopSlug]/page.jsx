@@ -25,6 +25,25 @@ export default async function PublicHopLanding({ params }) {
 
   const venues = venuesResult.rows;
 
+  // Generate dynamic completion text based on rule
+  const completionRule = hop.completion_rule || { type: 'all' };
+  let completionText = '';
+
+  if (completionRule.type === 'all') {
+    completionText = `Visit all ${venues.length} venues and earn rewards at each one.`;
+  } else if (completionRule.type === 'percentage') {
+    const required = Math.ceil(venues.length * (completionRule.percent / 100));
+    completionText = `Visit ${required} of ${venues.length} venues and earn rewards at each one.`;
+  } else if (completionRule.type === 'minimum') {
+    completionText = `Visit any ${completionRule.count} of ${venues.length} venues and earn rewards at each one.`;
+  } else if (completionRule.type === 'required_plus') {
+    const requiredCount = completionRule.required?.length || 0;
+    const optionalCount = completionRule.minimum_optional || 0;
+    completionText = `Visit ${requiredCount + optionalCount} venues (${requiredCount} required) and earn rewards at each one.`;
+  } else {
+    completionText = `Visit ${venues.length} venues, collect stamps, and earn rewards!`;
+  }
+
   return (
     <div className="container" style={{ paddingTop: '60px', maxWidth: '700px' }}>
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
@@ -44,7 +63,7 @@ export default async function PublicHopLanding({ params }) {
           Join the Hop
         </h2>
         <p style={{ marginBottom: '24px' }}>
-          Visit {venues.length} venues, collect stamps, and earn rewards!
+          {completionText}
         </p>
         <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
           Scan QR codes at each venue to get started. You'll create your passport when you collect your first stamp.

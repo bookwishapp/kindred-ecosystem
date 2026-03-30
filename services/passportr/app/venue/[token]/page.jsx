@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 
 const db = require('../../../lib/db');
 const QRCode = require('qrcode');
+import PrintButton from '../PrintButton';
 
 export default async function VenuePage({ params }) {
   const { token } = params;
@@ -97,9 +98,7 @@ export default async function VenuePage({ params }) {
         )}
 
         <div className="no-print" style={{ textAlign: 'center' }}>
-          <button onClick={() => window.print()}>
-            Print This Page
-          </button>
+          <PrintButton />
         </div>
       </div>
   );
