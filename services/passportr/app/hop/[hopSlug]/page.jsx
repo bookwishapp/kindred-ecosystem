@@ -69,7 +69,7 @@ export default async function PublicHopLanding({ params }) {
           <img
             src={hop.logo_url}
             alt={`${hop.name} logo`}
-            style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '12px', marginBottom: '16px' }}
+            style={{ width: '108px', height: '108px', objectFit: 'cover', borderRadius: '12px', marginBottom: '16px' }}
           />
         )}
         <h1 style={{ fontSize: '40px', marginBottom: '16px' }}>{hop.name}</h1>

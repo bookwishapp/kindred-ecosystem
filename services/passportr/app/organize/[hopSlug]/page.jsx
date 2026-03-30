@@ -367,12 +367,12 @@ export default function ManageHop({ params }) {
               {/* Logo */}
               <div>
                 <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>Logo</p>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Recommended: 144×144px minimum</p>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Recommended: 216×216px minimum</p>
                 {hop.logo_url && (
                   <img
                     src={hop.logo_url}
                     alt="Hop logo"
-                    style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px', display: 'block' }}
+                    style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px', display: 'block' }}
                   />
                 )}
                 <input
