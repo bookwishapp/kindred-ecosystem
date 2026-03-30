@@ -42,6 +42,16 @@ export default async function PublicHopLanding({ params }) {
   const completionRule = hop.completion_rule || { type: 'all' };
   const completionText = getCompletionText(completionRule, venues.length);
 
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const venuesWithAddresses = venues.filter(v => v.address);
+  let mapUrl = null;
+  if (apiKey && venuesWithAddresses.length > 0) {
+    const markers = venuesWithAddresses
+      .map(v => `markers=color:0x2AB8A0|label:${venues.indexOf(v) + 1}|${encodeURIComponent(v.address)}`)
+      .join('&');
+    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=700x350&${markers}&key=${apiKey}`;
+  }
+
   return (
     <div className="container" style={{ paddingTop: '60px', maxWidth: '700px' }}>
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
@@ -67,6 +77,16 @@ export default async function PublicHopLanding({ params }) {
           Scan QR codes at each venue to get started. You'll create your passport when you collect your first stamp.
         </p>
       </div>
+
+      {mapUrl && (
+        <div style={{ marginBottom: '32px', borderRadius: '12px', overflow: 'hidden' }}>
+          <img
+            src={mapUrl}
+            alt="Venue locations map"
+            style={{ width: '100%', display: 'block' }}
+          />
+        </div>
+      )}
 
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Participating Venues</h2>

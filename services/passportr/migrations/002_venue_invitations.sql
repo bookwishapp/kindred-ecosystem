@@ -1,0 +1,14 @@
+ALTER TABLE venues ADD COLUMN IF NOT EXISTS logo_url TEXT;
+ALTER TABLE hops ADD COLUMN IF NOT EXISTS banner_url TEXT;
+ALTER TABLE hops ADD COLUMN IF NOT EXISTS logo_url TEXT;
+
+CREATE TABLE IF NOT EXISTS venue_invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  hop_id UUID NOT NULL REFERENCES hops(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  venue_name TEXT NOT NULL,
+  token VARCHAR(40) UNIQUE NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  invited_at TIMESTAMPTZ DEFAULT NOW(),
+  accepted_at TIMESTAMPTZ
+);

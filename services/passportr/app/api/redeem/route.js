@@ -94,10 +94,15 @@ export async function POST(req) {
       redemption = insertResult.rows[0];
     } else {
       redemption = redemptionResult.rows[0];
-      // If already redeemed, return 409
       if (redemption.redeemed_at) {
-        return Response.json({ error: 'Reward already redeemed' }, { status: 409 });
+        return Response.json({ error: 'Already redeemed' }, { status: 409 });
       }
+      // Edge case: coupon exists but redeemed_at was never set — mark it now
+      const updateResult = await db.query(
+        'UPDATE redemptions SET redeemed_at = NOW() WHERE id = $1 RETURNING *',
+        [redemption.id]
+      );
+      redemption = updateResult.rows[0];
     }
 
     return Response.json({
