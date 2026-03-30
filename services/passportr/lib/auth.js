@@ -9,9 +9,20 @@ function verifyToken(token) {
 }
 
 function getAuthUser(req) {
+  // Try Authorization header first
   const authHeader = req.headers?.get?.('authorization') || req.headers?.authorization;
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  return verifyToken(authHeader.slice(7));
+  if (authHeader?.startsWith('Bearer ')) {
+    return verifyToken(authHeader.slice(7));
+  }
+
+  // Fall back to cookie
+  const cookieHeader = req.headers?.get?.('cookie') || req.headers?.cookie || '';
+  const match = cookieHeader.match(/passportr_token=([^;]+)/);
+  if (match) {
+    return verifyToken(decodeURIComponent(match[1]));
+  }
+
+  return null;
 }
 
 function requireAuth(req) {
