@@ -9,6 +9,8 @@ export default function ManageHop({ params }) {
   const [hop, setHop] = useState(null);
   const [venues, setVenues] = useState([]);
   const [invitations, setInvitations] = useState([]);
+  const [participants, setParticipants] = useState([]);
+  const [showParticipants, setShowParticipants] = useState(false);
   const [loading, setLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [editingHop, setEditingHop] = useState(false);
@@ -63,6 +65,12 @@ export default function ManageHop({ params }) {
       if (invRes.ok) {
         const d = await invRes.json();
         setInvitations(d.invitations);
+      }
+
+      const participantsRes = await fetch(`/api/hops/${hopSlug}/participants`, { credentials: 'include' });
+      if (participantsRes.ok) {
+        const d = await participantsRes.json();
+        setParticipants(d.participants);
       }
     } catch (err) {
       console.error('Load error:', err);
@@ -172,6 +180,43 @@ export default function ManageHop({ params }) {
       }
     } catch { alert('Network error'); }
     setInviting(false);
+  }
+
+  async function deleteParticipant(participantId) {
+    if (!confirm('Remove this participant? This deletes all their stamps and redemptions for this hop.')) return;
+    try {
+      const res = await fetch(`/api/hops/${hopSlug}/participants/${participantId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) loadAll();
+      else alert('Failed to remove participant');
+    } catch { alert('Network error'); }
+  }
+
+  async function deleteInvitation(invitationId) {
+    if (!confirm('Delete this invitation?')) return;
+    try {
+      const res = await fetch(`/api/hops/${hopSlug}/invitations/${invitationId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) loadAll();
+      else alert('Failed to delete invitation');
+    } catch { alert('Network error'); }
+  }
+
+  async function cancelInvitation(invitationId) {
+    try {
+      const res = await fetch(`/api/hops/${hopSlug}/invitations/${invitationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+      if (res.ok) loadAll();
+      else alert('Failed to cancel invitation');
+    } catch { alert('Network error'); }
   }
 
   async function uploadHopImage(file, field, setUploading) {
@@ -436,18 +481,34 @@ export default function ManageHop({ params }) {
           {invitations.map(inv => (
             <div
               key={inv.id}
-              style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', padding: '8px 0', borderBottom: '1px solid #eee' }}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '8px 0', borderBottom: '1px solid #eee' }}
             >
               <span><strong>{inv.venue_name}</strong> — {inv.email}</span>
-              <span style={{
-                padding: '2px 10px',
-                borderRadius: '10px',
-                fontSize: '12px',
-                backgroundColor: inv.status === 'accepted' ? '#E8F7F4' : '#fff3cd',
-                color: inv.status === 'accepted' ? 'var(--accent-teal)' : '#856404',
-              }}>
-                {inv.status}
-              </span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{
+                  padding: '2px 10px',
+                  borderRadius: '10px',
+                  fontSize: '12px',
+                  backgroundColor: inv.status === 'accepted' ? '#E8F7F4' : inv.status === 'cancelled' ? '#f5f5f5' : '#fff3cd',
+                  color: inv.status === 'accepted' ? 'var(--accent-teal)' : inv.status === 'cancelled' ? '#999' : '#856404',
+                }}>
+                  {inv.status}
+                </span>
+                {inv.status === 'pending' && (
+                  <button
+                    onClick={() => cancelInvitation(inv.id)}
+                    style={{ fontSize: '11px', padding: '2px 8px', backgroundColor: 'var(--text-secondary)' }}
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  onClick={() => deleteInvitation(inv.id)}
+                  style={{ fontSize: '11px', padding: '2px 8px', backgroundColor: '#e55' }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -583,6 +644,57 @@ export default function ManageHop({ params }) {
           ))}
         </div>
       )}
+
+      <div style={{ marginTop: '48px' }}>
+        <div
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', cursor: 'pointer' }}
+          onClick={() => setShowParticipants(!showParticipants)}
+        >
+          <h2 style={{ fontSize: '24px' }}>Participants ({participants.length})</h2>
+          <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+            {showParticipants ? 'Hide ▲' : 'Show ▼'}
+          </span>
+        </div>
+
+        {showParticipants && (
+          participants.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '32px' }}>
+              <p style={{ color: 'var(--text-secondary)' }}>No participants yet.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: '8px' }}>
+              {participants.map(p => (
+                <div
+                  key={p.id}
+                  className="card"
+                  style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <div style={{ fontSize: '14px' }}>
+                    <div style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>
+                      {p.user_id}
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <span>{p.stamp_count} stamps</span>
+                      {p.completed_at && (
+                        <span style={{ color: 'var(--accent-teal)', fontWeight: '500' }}>✓ Completed</span>
+                      )}
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        Joined {new Date(p.joined_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => deleteParticipant(p.id)}
+                    style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: '#e55', flexShrink: 0 }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 }
