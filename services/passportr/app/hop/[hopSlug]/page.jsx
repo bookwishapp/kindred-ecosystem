@@ -43,13 +43,19 @@ export default async function PublicHopLanding({ params }) {
   const completionText = getCompletionText(completionRule, venues.length);
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  const venuesWithAddresses = venues.filter(v => v.address);
+  const venuesWithAddresses = venues.filter(v => v.address && v.address.trim());
   let mapUrl = null;
   if (apiKey && venuesWithAddresses.length > 0) {
     const markers = venuesWithAddresses
-      .map((v, index) => `markers=color:0x2AB8A0|label:${index + 1}|${encodeURIComponent(v.address)}`)
-      .join('&');
-    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=700x350&${markers}&key=${apiKey}`;
+      .map((v, index) => {
+        const address = v.address.trim();
+        return `&markers=color:red%7Clabel:${index + 1}%7C${encodeURIComponent(address)}`;
+      })
+      .join('');
+    mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=700x350&zoom=12${markers}&key=${apiKey}`;
+    console.log('Map URL generated with', venuesWithAddresses.length, 'markers');
+  } else {
+    console.log('Map not generated:', { hasApiKey: !!apiKey, venueCount: venuesWithAddresses.length });
   }
 
   return (
@@ -111,20 +117,34 @@ export default async function PublicHopLanding({ params }) {
           {venues.map((venue, index) => (
             <div key={venue.id} className="card">
               <div style={{ display: 'flex', gap: '16px', alignItems: 'start' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--accent-teal)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: '600',
-                  flexShrink: 0
-                }}>
-                  {index + 1}
-                </div>
+                {venue.logo_url ? (
+                  <img
+                    src={venue.logo_url}
+                    alt={`${venue.name} logo`}
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '8px',
+                      objectFit: 'cover',
+                      flexShrink: 0
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--accent-teal)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '600',
+                    flexShrink: 0
+                  }}>
+                    {index + 1}
+                  </div>
+                )}
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontSize: '18px', marginBottom: '4px' }}>{venue.name}</h3>
                   {venue.address && (
