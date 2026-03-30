@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function OrganizerCallback() {
+function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState(false);
@@ -55,5 +55,19 @@ export default function OrganizerCallback() {
         <p style={{ fontSize: '18px' }}>Signing you in...</p>
       </div>
     </div>
+  );
+}
+
+export default function OrganizerCallback() {
+  return (
+    <Suspense fallback={
+      <div className="container" style={{ paddingTop: '80px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '18px' }}>Loading...</p>
+        </div>
+      </div>
+    }>
+      <CallbackContent />
+    </Suspense>
   );
 }
