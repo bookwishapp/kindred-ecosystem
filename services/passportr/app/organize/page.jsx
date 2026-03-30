@@ -23,12 +23,15 @@ export default function OrganizeDashboard() {
       if (response.ok) {
         const data = await response.json();
         setHops(data.hops);
+      } else if (response.status === 401) {
+        // Not authenticated - redirect to login
+        router.push('/organize/login');
+        return;
       } else if (response.status === 403) {
         // Organizer access denied
         setAccessDenied(true);
       } else {
-        // Not authenticated or other error
-        // For now, just show empty state
+        // Other error - show empty state
       }
       setLoading(false);
     } catch (err) {
