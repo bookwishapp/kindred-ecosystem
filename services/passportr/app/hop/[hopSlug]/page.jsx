@@ -26,23 +26,21 @@ export default async function PublicHopLanding({ params }) {
   const venues = venuesResult.rows;
 
   // Generate dynamic completion text based on rule
-  const completionRule = hop.completion_rule || { type: 'all' };
-  let completionText = '';
+  function getCompletionText(rule, totalVenues) {
+    const required = rule.type === 'percentage'
+      ? Math.ceil(totalVenues * (rule.percent / 100))
+      : rule.type === 'minimum' ? rule.count : totalVenues;
 
-  if (completionRule.type === 'all') {
-    completionText = `Visit all ${venues.length} venues and earn rewards at each one.`;
-  } else if (completionRule.type === 'percentage') {
-    const required = Math.ceil(venues.length * (completionRule.percent / 100));
-    completionText = `Visit ${required} of ${venues.length} venues and earn rewards at each one.`;
-  } else if (completionRule.type === 'minimum') {
-    completionText = `Visit any ${completionRule.count} of ${venues.length} venues and earn rewards at each one.`;
-  } else if (completionRule.type === 'required_plus') {
-    const requiredCount = completionRule.required?.length || 0;
-    const optionalCount = completionRule.minimum_optional || 0;
-    completionText = `Visit ${requiredCount + optionalCount} venues (${requiredCount} required) and earn rewards at each one.`;
-  } else {
-    completionText = `Visit ${venues.length} venues, collect stamps, and earn rewards!`;
+    if (rule.type === 'all') {
+      return `Visit all ${totalVenues} venues and earn rewards at each one.`;
+    }
+    if (rule.type === 'percentage' || rule.type === 'minimum') {
+      return `Visit ${required} of ${totalVenues} venues to earn rewards at each visited.`;
+    }
   }
+
+  const completionRule = hop.completion_rule || { type: 'all' };
+  const completionText = getCompletionText(completionRule, venues.length);
 
   return (
     <div className="container" style={{ paddingTop: '60px', maxWidth: '700px' }}>
