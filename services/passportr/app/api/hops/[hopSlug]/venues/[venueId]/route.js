@@ -39,7 +39,7 @@ export async function PUT(req, { params }) {
     const access = await verifyVenueAccess(req, hopSlug, venueId);
     if (access.error) return Response.json({ error: access.error }, { status: access.status });
 
-    const { name, address, description, reward_description, required, sort_order, logo_url } = await req.json();
+    const { name, address, description, reward_description, hours, required, sort_order, logo_url } = await req.json();
 
     const result = await db.query(
       `UPDATE venues
@@ -47,12 +47,13 @@ export async function PUT(req, { params }) {
            address = COALESCE($2, address),
            description = COALESCE($3, description),
            reward_description = COALESCE($4, reward_description),
-           required = COALESCE($5, required),
-           sort_order = COALESCE($6, sort_order),
-           logo_url = COALESCE($7, logo_url)
-       WHERE id = $8
+           hours = COALESCE($5, hours),
+           required = COALESCE($6, required),
+           sort_order = COALESCE($7, sort_order),
+           logo_url = COALESCE($8, logo_url)
+       WHERE id = $9
        RETURNING *`,
-      [name, address, description, reward_description, required, sort_order, logo_url, venueId]
+      [name, address, description, reward_description, hours, required, sort_order, logo_url, venueId]
     );
 
     return Response.json({ venue: result.rows[0] });

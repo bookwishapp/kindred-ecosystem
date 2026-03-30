@@ -112,6 +112,7 @@ export default function ManageHop({ params }) {
           address: fd.get('address'),
           description: fd.get('description'),
           reward_description: fd.get('reward_description'),
+          hours: fd.get('hours'),
           required: fd.get('required') === 'on',
           sort_order: venues.length,
         }),
@@ -369,6 +370,12 @@ export default function ManageHop({ params }) {
               <input type="text" name="reward_description" placeholder="e.g., Free appetizer" />
             </div>
             <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                Store Hours <span style={{ color: 'var(--text-secondary)', fontWeight: '400' }}>(optional)</span>
+              </label>
+              <input type="text" name="hours" placeholder="e.g., Mon–Sat 10am–6pm, Sun 12–5pm" />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input type="checkbox" name="required" defaultChecked />
                 <span style={{ fontSize: '14px' }}>Required venue</span>
@@ -404,6 +411,17 @@ export default function ManageHop({ params }) {
                   <div style={{ marginBottom: '12px' }}>
                     <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Reward Description</label>
                     <input type="text" value={venueForm.reward_description || ''} onChange={e => setVenueForm({ ...venueForm, reward_description: e.target.value })} />
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                      Store Hours <span style={{ color: 'var(--text-secondary)', fontWeight: '400' }}>(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={venueForm.hours || ''}
+                      onChange={e => setVenueForm({ ...venueForm, hours: e.target.value })}
+                      placeholder="e.g., Mon–Sat 10am–6pm, Sun 12–5pm"
+                    />
                   </div>
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <button type="submit" style={{ fontSize: '14px', padding: '8px 16px' }}>Save</button>
@@ -441,6 +459,7 @@ export default function ManageHop({ params }) {
                           address: venue.address,
                           description: venue.description,
                           reward_description: venue.reward_description,
+                          hours: venue.hours || '',
                         });
                       }}
                       style={{ fontSize: '13px', padding: '6px 12px' }}

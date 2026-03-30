@@ -15,6 +15,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+function getCompletionText(rule) {
+  if (!rule) return 'Visit all participating venues';
+  if (rule.type === 'all') return 'Visit all participating venues';
+  if (rule.type === 'percentage') return `Visit ${rule.percent}% of participating venues`;
+  if (rule.type === 'minimum') return `Visit at least ${rule.count} participating venues`;
+  if (rule.type === 'required_plus') return `Visit all required venues plus at least ${rule.minimum_optional || 0} optional venues`;
+  return 'Visit all participating venues';
+}
+
 export async function GET(req, { params }) {
   try {
     const user = requireOrganizer(req);
@@ -69,7 +78,28 @@ export async function POST(req, { params }) {
       from: process.env.SES_FROM_EMAIL,
       to: email,
       subject: `You're invited to join ${hop.name} on Passportr`,
-      text: `Hi,\n\nYou've been invited to participate in "${hop.name}" on Passportr as a venue.\n\nVenue name: ${venue_name}\n\nClick the link below to set up your venue:\n${setupUrl}\n\nThis link is unique to your venue — don't share it.\n\nPassportr`,
+      text: [
+        `Hi,`,
+        ``,
+        `You've been invited to participate in "${hop.name}" on Passportr as a venue.`,
+        ``,
+        `Venue name: ${venue_name}`,
+        ``,
+        `── Hop Details ──────────────────────`,
+        `Event dates: ${new Date(hop.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} – ${new Date(hop.end_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+        `Stamp cutoff: ${new Date(hop.stamp_cutoff_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+        `Reward redemption deadline: ${new Date(hop.redeem_cutoff_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+        `Completion requirement: ${getCompletionText(hop.completion_rule)}`,
+        `Coupon expiry: ${hop.coupon_expiry_minutes} minutes after scanning`,
+        `────────────────────────────────────`,
+        ``,
+        `Click the link below to set up your venue:`,
+        `${setupUrl}`,
+        ``,
+        `This link is unique to your venue — don't share it.`,
+        ``,
+        `Passportr`,
+      ].join('\n'),
     });
 
     return Response.json({ success: true });

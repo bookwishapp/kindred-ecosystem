@@ -5,7 +5,7 @@ const { generateToken } = require('../../../../lib/tokens');
 
 export async function POST(req) {
   try {
-    const { token, name, address, description, reward_description } = await req.json();
+    const { token, name, address, description, reward_description, hours } = await req.json();
 
     if (!token || !name) return Response.json({ error: 'token and name required' }, { status: 400 });
 
@@ -29,9 +29,9 @@ export async function POST(req) {
     const sortOrder = parseInt(countResult.rows[0].c);
 
     await db.query(
-      `INSERT INTO venues (hop_id, name, address, description, reward_description, stamp_token, redeem_token, required, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, false, $8)`,
-      [invitation.hop_id, name, address, description, reward_description, stampToken, redeemToken, sortOrder]
+      `INSERT INTO venues (hop_id, name, address, description, reward_description, hours, stamp_token, redeem_token, required, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false, $9)`,
+      [invitation.hop_id, name, address, description, reward_description, hours, stampToken, redeemToken, sortOrder]
     );
 
     await db.query(

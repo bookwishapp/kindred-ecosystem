@@ -11,7 +11,7 @@ export default function VenueSetupPage({ params }) {
   const [invalid, setInvalid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [form, setForm] = useState({ name: '', address: '', description: '', reward_description: '' });
+  const [form, setForm] = useState({ name: '', address: '', description: '', reward_description: '', hours: '' });
 
   useEffect(() => {
     async function loadInvitation() {
@@ -84,6 +84,17 @@ export default function VenueSetupPage({ params }) {
               value={form.reward_description}
               onChange={e => setForm({ ...form, reward_description: e.target.value })}
               placeholder="e.g., 10% off your purchase"
+            />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+              Store Hours <span style={{ color: 'var(--text-secondary)', fontWeight: '400' }}>(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={form.hours}
+              onChange={e => setForm({ ...form, hours: e.target.value })}
+              placeholder="e.g., Mon–Sat 10am–6pm, Sun 12–5pm"
             />
           </div>
           {error && <p style={{ color: 'red', marginBottom: '12px' }}>{error}</p>}

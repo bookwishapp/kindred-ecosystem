@@ -37,7 +37,7 @@ export async function POST(req, { params }) {
   try {
     const user = requireOrganizer(req);
     const { hopSlug } = params;
-    const { name, address, description, reward_description, required, sort_order } = await req.json();
+    const { name, address, description, reward_description, hours, required, sort_order } = await req.json();
 
     if (!name) {
       return Response.json({ error: 'Missing venue name' }, { status: 400 });
@@ -64,10 +64,10 @@ export async function POST(req, { params }) {
 
     // Insert venue
     const result = await db.query(
-      `INSERT INTO venues (hop_id, name, address, description, reward_description, stamp_token, redeem_token, required, sort_order)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO venues (hop_id, name, address, description, reward_description, hours, stamp_token, redeem_token, required, sort_order)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *`,
-      [hop.id, name, address, description, reward_description, stampToken, redeemToken, required !== false, sort_order || 0]
+      [hop.id, name, address, description, reward_description, hours, stampToken, redeemToken, required !== false, sort_order || 0]
     );
 
     return Response.json({ venue: result.rows[0] });

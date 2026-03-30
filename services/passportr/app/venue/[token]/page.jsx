@@ -37,6 +37,7 @@ export default function VenuePage({ params }) {
         address: data.venue.address || '',
         description: data.venue.description || '',
         reward_description: data.venue.reward_description || '',
+        hours: data.venue.hours || '',
       });
     } catch {
       setNotFound(true);
@@ -218,6 +219,17 @@ export default function VenuePage({ params }) {
                 onChange={e => setForm({ ...form, reward_description: e.target.value })}
               />
             </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                Store Hours <span style={{ color: 'var(--text-secondary)', fontWeight: '400' }}>(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={form.hours}
+                onChange={e => setForm({ ...form, hours: e.target.value })}
+                placeholder="e.g., Mon–Sat 10am–6pm, Sun 12–5pm"
+              />
+            </div>
             {saveError && <p style={{ color: 'red', marginBottom: '12px' }}>{saveError}</p>}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
@@ -235,6 +247,7 @@ export default function VenuePage({ params }) {
             {venue.address && <div><strong>Address:</strong> {venue.address}</div>}
             {venue.description && <div><strong>Description:</strong> {venue.description}</div>}
             {venue.reward_description && <div><strong>Reward:</strong> {venue.reward_description}</div>}
+            {venue.hours && <div><strong>Hours:</strong> {venue.hours}</div>}
           </div>
         )}
       </div>

@@ -111,8 +111,13 @@ export default async function PublicHopLanding({ params }) {
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontSize: '18px', marginBottom: '4px' }}>{venue.name}</h3>
                   {venue.address && (
-                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                       {venue.address}
+                    </p>
+                  )}
+                  {venue.hours && (
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                      🕐 {venue.hours}
                     </p>
                   )}
                   {venue.description && (

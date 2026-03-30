@@ -133,6 +133,11 @@ export default async function PassportPage({ params }) {
                       {venue.address}
                     </p>
                   )}
+                  {venue.hours && (
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                      🕐 {venue.hours}
+                    </p>
+                  )}
                   {isStamped && (
                     <p style={{ fontSize: '14px', color: 'var(--accent-teal)', fontWeight: '500' }}>
                       Stamped ✓
