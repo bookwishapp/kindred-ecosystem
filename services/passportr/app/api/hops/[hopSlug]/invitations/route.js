@@ -63,6 +63,21 @@ export async function POST(req, { params }) {
     const hop = hopResult.rows[0];
     if (hop.organizer_user_id !== user.sub) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
+    // Tier 1: max 10 venues per hop
+    if (profile.tier === 1) {
+      const venueCount = await db.query(
+        'SELECT COUNT(*) as count FROM venues WHERE hop_id = $1',
+        [hop.id]
+      );
+      if (parseInt(venueCount.rows[0].count) >= 10) {
+        return Response.json({
+          error: 'Venue limit reached for your plan',
+          code: 'VENUE_LIMIT_REACHED',
+          tier: profile.tier,
+        }, { status: 403 });
+      }
+    }
+
     const token = randomBytes(20).toString('hex');
 
     await db.query(

@@ -40,7 +40,15 @@ export default function VenueSetupPage({ params }) {
         body: JSON.stringify({ token, ...form }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Failed to create venue'); setSubmitting(false); return; }
+      if (!res.ok) {
+        if (data.error === 'venue_limit_reached') {
+          setError(data.message);
+        } else {
+          setError(data.error || 'Failed to create venue');
+        }
+        setSubmitting(false);
+        return;
+      }
       router.push(`/venue/${data.stamp_token}`);
     } catch {
       setError('Network error');

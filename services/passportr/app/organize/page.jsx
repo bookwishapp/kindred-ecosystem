@@ -3,11 +3,95 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+function PaywallModal({ profile, onClose }) {
+  const [loading, setLoading] = useState(false);
+
+  async function selectPlan(priceKey) {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ price_key: priceKey }),
+      });
+      const d = await res.json();
+      if (d.url) window.location.href = d.url;
+    } catch { setLoading(false); }
+  }
+
+  const creditAmount = profile?.plan === 'single' && !profile?.single_hop_credited
+    ? (profile.tier === 1 ? 49 : 79)
+    : null;
+
+  const upgradePlans = profile?.plan === 'single' ? [
+    { key: `tier${profile.tier}_occasional`, name: 'Occasional', price: profile.tier === 1 ? 79 : 129, hops: 'Up to 3 hops/year' },
+    { key: `tier${profile.tier}_regular`,    name: 'Regular',    price: profile.tier === 1 ? 129 : 189, hops: 'Up to 12 hops/year' },
+    { key: `tier${profile.tier}_unlimited`,  name: 'Unlimited',  price: profile.tier === 1 ? 179 : 249, hops: 'Unlimited hops' },
+  ] : profile?.plan === 'occasional' ? [
+    { key: `tier${profile.tier}_regular`,   name: 'Regular',   price: profile.tier === 1 ? 129 : 189, hops: 'Up to 12 hops/year' },
+    { key: `tier${profile.tier}_unlimited`, name: 'Unlimited', price: profile.tier === 1 ? 179 : 249, hops: 'Unlimited hops' },
+  ] : [
+    { key: `tier${profile.tier}_unlimited`, name: 'Unlimited', price: profile.tier === 1 ? 179 : 249, hops: 'Unlimited hops' },
+  ];
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+    }}>
+      <div className="card" style={{ maxWidth: '500px', width: '90%', padding: '40px' }}>
+        <h2 style={{ fontSize: '24px', marginBottom: '8px' }}>Hop Limit Reached</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
+          You've used all {profile?.plan === 'single' ? '1' : profile?.plan === 'occasional' ? '3' : '12'} hop{profile?.plan !== 'single' ? 's' : ''} included in your current plan. Upgrade to create more hops.
+        </p>
+
+        {creditAmount && (
+          <div style={{ backgroundColor: '#E8F7F4', borderRadius: '8px', padding: '12px', marginBottom: '24px' }}>
+            <p style={{ color: 'var(--accent-teal)', fontSize: '14px', fontWeight: '500' }}>
+              Your ${creditAmount} single hop credit will be applied automatically.
+            </p>
+          </div>
+        )}
+
+        <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+          {upgradePlans.map(plan => (
+            <div key={plan.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #eee', borderRadius: '8px' }}>
+              <div>
+                <p style={{ fontWeight: '500', marginBottom: '2px' }}>{plan.name}</p>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{plan.hops}</p>
+                {creditAmount && (
+                  <p style={{ fontSize: '12px', color: 'var(--accent-teal)' }}>
+                    After credit: ${plan.price - creditAmount}/first year
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => selectPlan(plan.key)}
+                disabled={loading}
+                style={{ fontSize: '14px', padding: '8px 20px' }}
+              >
+                ${plan.price}/yr
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={onClose} style={{ width: '100%', backgroundColor: 'var(--text-secondary)' }}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function OrganizeDashboard() {
   const [hops, setHops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [organizerProfile, setOrganizerProfile] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,6 +107,13 @@ export default function OrganizeDashboard() {
       if (response.ok) {
         const data = await response.json();
         setHops(data.hops);
+
+        // Fetch organizer profile for paywall
+        const profileRes = await fetch('/api/organizer/profile', { credentials: 'include' });
+        if (profileRes.ok) {
+          const pd = await profileRes.json();
+          setOrganizerProfile(pd.profile);
+        }
       } else if (response.status === 401) {
         // Not authenticated - redirect to login
         router.push('/organize/login');
@@ -66,7 +157,12 @@ export default function OrganizeDashboard() {
         setShowCreateForm(false);
         router.push(`/organize/${data.hop.slug}`);
       } else {
-        alert('Failed to create hop');
+        const errData = await response.json();
+        if (errData.code === 'HOP_LIMIT_REACHED') {
+          setShowPaywall(true);
+        } else {
+          alert('Failed to create hop');
+        }
       }
     } catch (err) {
       console.error('Failed to create hop:', err);
@@ -220,6 +316,13 @@ export default function OrganizeDashboard() {
             </a>
           ))}
         </div>
+      )}
+
+      {showPaywall && (
+        <PaywallModal
+          profile={organizerProfile}
+          onClose={() => setShowPaywall(false)}
+        />
       )}
     </div>
   );

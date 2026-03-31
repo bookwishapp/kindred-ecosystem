@@ -40,11 +40,30 @@ export async function POST(req) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Enforce hop limits
+    const hopLimit = profile.max_hops;
+    if (hopLimit !== null && profile.hops_used_this_period >= hopLimit) {
+      return Response.json({
+        error: 'Hop limit reached',
+        code: 'HOP_LIMIT_REACHED',
+        plan: profile.plan,
+        tier: profile.tier,
+        hops_used: profile.hops_used_this_period,
+        hop_limit: hopLimit,
+      }, { status: 403 });
+    }
+
     const result = await db.query(
       `INSERT INTO hops (organizer_user_id, slug, name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, coupon_expiry_minutes, status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active')
       RETURNING *`,
       [user.sub, slug, name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule || { type: 'all' }, coupon_expiry_minutes || 30]
+    );
+
+    // Increment hops_used_this_period
+    await db.query(
+      'UPDATE organizer_profiles SET hops_used_this_period = hops_used_this_period + 1 WHERE user_id = $1',
+      [user.sub]
     );
 
     return Response.json({ hop: result.rows[0] });
