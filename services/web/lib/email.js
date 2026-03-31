@@ -112,7 +112,7 @@ function getEmailTemplate(content, unsubscribeUrl) {
 
 async function sendEmail({ to, subject, content, isNewsletter = false }) {
   const transport = getTransporter();
-  const fromEmail = process.env.SES_FROM_EMAIL || 'terry@terryheath.com';
+  const fromEmail = process.env.SES_FROM_EMAIL || 'newsletter@terryheath.com';
 
   const unsubscribeUrl = isNewsletter ? getUnsubscribeUrl(to) : null;
   const htmlContent = isNewsletter ? getEmailTemplate(content, unsubscribeUrl) : content;
