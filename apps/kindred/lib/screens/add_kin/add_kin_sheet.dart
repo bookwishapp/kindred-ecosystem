@@ -491,9 +491,13 @@ class _AddKinSheetState extends State<AddKinSheet> {
                           } catch (e) {
                             if (mounted) {
                               setState(() {
+                                _errorMessage = 'That didn\'t work. Try again.';
+                              });
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() {
                                 _isSaving = false;
-                                _errorMessage =
-                                    'Failed to add person. Please try again.';
                               });
                             }
                           }

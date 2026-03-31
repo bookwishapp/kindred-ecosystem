@@ -179,6 +179,20 @@ class KindredApi {
     final response = await _apiClient.get('/backup');
     return response['backup'] as Map<String, dynamic>?;
   }
+
+  // Email preferences endpoints
+  Future<Map<String, dynamic>> getEmailPreferences() async {
+    return await _apiClient.get('/email-preferences');
+  }
+
+  Future<Map<String, dynamic>> updateEmailPreferences({
+    required bool subscribed,
+  }) async {
+    return await _apiClient.put(
+      '/email-preferences',
+      data: {'subscribed': subscribed},
+    );
+  }
 }
 
 /// Factory for creating KindredApi instances

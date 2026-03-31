@@ -5,13 +5,13 @@ import 'package:ui_kit/ui_kit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:dio/dio.dart';
 import '../kin/kin_sheet.dart';
 import '../show_up/show_up_sheet.dart';
 import '../../providers/kin_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/auth_api.dart';
 import '../../services/profile_service.dart';
+import '../../services/kindred_api.dart';
 import '../../services/local_db.dart';
 import 'package:core/core.dart';
 import '../../widgets/kindred_grid.dart';
@@ -27,20 +27,15 @@ class _KindredScreenState extends State<KindredScreen> {
   bool _showSettingsDropdown = false;
   bool _isFirstLaunch = false;
   bool _emailUpdatesEnabled = false;
-  final TextEditingController _emailController = TextEditingController();
-  final Dio _dio = Dio();
 
   @override
   void initState() {
     super.initState();
     _checkFirstLaunch();
-    _loadNewsletterEmail();
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _dio.close();
     super.dispose();
   }
 
@@ -53,49 +48,45 @@ class _KindredScreenState extends State<KindredScreen> {
     }
   }
 
-  Future<void> _loadNewsletterEmail() async {
-    final email = await LocalDb.instance.getSetting('newsletter_email');
-    if (email != null && mounted) {
-      setState(() {
-        _emailController.text = email;
-        _emailUpdatesEnabled = true;
-      });
+  Future<void> _loadEmailPreferences() async {
+    try {
+      final kindredApi = context.read<KindredApi>();
+      final prefs = await kindredApi.getEmailPreferences();
+      if (mounted) {
+        setState(() {
+          _emailUpdatesEnabled = prefs['subscribed'] ?? false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load email preferences: $e');
+      // Silently fail, keep toggle at false
     }
   }
 
-  Future<bool> _subscribeToNewsletter(String email) async {
-    try {
-      final response = await _dio.post(
-        'https://terryheath.com/api/subscribe',
-        data: {'email': email.trim(), 'source': 'kindred'},
-        options: Options(
-          headers: {'Content-Type': 'application/json'},
-          validateStatus: (status) => status! < 500,
-        ),
-      );
+  Future<void> _updateEmailPreferences(bool newValue) async {
+    final previousValue = _emailUpdatesEnabled;
+    setState(() {
+      _emailUpdatesEnabled = newValue;
+    });
 
-      return response.statusCode == 200 && response.data['success'] == true;
+    try {
+      final kindredApi = context.read<KindredApi>();
+      await kindredApi.updateEmailPreferences(subscribed: newValue);
     } catch (e) {
-      debugPrint('Subscribe error: $e');
-      return false;
+      debugPrint('Failed to update email preferences: $e');
+      // Silently revert on failure
+      if (mounted) {
+        setState(() {
+          _emailUpdatesEnabled = previousValue;
+        });
+      }
     }
   }
 
-  Future<bool> _unsubscribeFromNewsletter(String email) async {
-    try {
-      final response = await _dio.post(
-        'https://terryheath.com/api/unsubscribe',
-        data: {'email': email.trim()},
-        options: Options(
-          headers: {'Content-Type': 'application/json'},
-          validateStatus: (status) => status! < 500,
-        ),
-      );
-
-      return response.statusCode == 200 && response.data['success'] == true;
-    } catch (e) {
-      debugPrint('Unsubscribe error: $e');
-      return false;
+  void _onDropdownOpen() {
+    final authService = context.read<AuthService>();
+    if (authService.isAuthenticated) {
+      _loadEmailPreferences();
     }
   }
 
@@ -192,6 +183,9 @@ class _KindredScreenState extends State<KindredScreen> {
       onTap: () {
         setState(() {
           _showSettingsDropdown = !_showSettingsDropdown;
+          if (_showSettingsDropdown) {
+            _onDropdownOpen();
+          }
         });
       },
       child: Container(
@@ -261,188 +255,33 @@ class _KindredScreenState extends State<KindredScreen> {
                     ),
                     const Divider(height: 1),
 
-                    // Email updates toggle with inline email field
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () async {
-                            final newValue = !_emailUpdatesEnabled;
-                            setState(() {
-                              _emailUpdatesEnabled = newValue;
-                            });
 
-                            // If toggling off and we have an email, unsubscribe
-                            if (!newValue && _emailController.text.isNotEmpty) {
-                              final success = await _unsubscribeFromNewsletter(
-                                _emailController.text,
-                              );
-                              if (success) {
-                                // Clear local cache
-                                await LocalDb.instance.removeSetting(
-                                  'newsletter_email',
-                                );
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'Unsubscribed from updates',
-                                      ),
-                                      backgroundColor: AppTheme.colors.accent,
-                                      duration: const Duration(seconds: 1),
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.all(AppTheme.spacing.space2),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Email updates',
-                                  style: AppTheme.text.body,
-                                ),
-                                CupertinoSwitch(
-                                  value: _emailUpdatesEnabled,
-                                  activeTrackColor: AppTheme.colors.accent,
-                                  onChanged: (value) async {
-                                    setState(() {
-                                      _emailUpdatesEnabled = value;
-                                    });
-
-                                    // If toggling off and we have an email, unsubscribe
-                                    if (!value &&
-                                        _emailController.text.isNotEmpty) {
-                                      final success =
-                                          await _unsubscribeFromNewsletter(
-                                            _emailController.text,
-                                          );
-                                      if (success) {
-                                        // Clear local cache
-                                        await LocalDb.instance.removeSetting(
-                                          'newsletter_email',
-                                        );
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: const Text(
-                                                'Unsubscribed from updates',
-                                              ),
-                                              backgroundColor:
-                                                  AppTheme.colors.accent,
-                                              duration: const Duration(
-                                                seconds: 1,
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
+                    // Email updates toggle (only when authenticated)
+                    if (authService.isAuthenticated) ...[
+                      InkWell(
+                        onTap: () {
+                          _updateEmailPreferences(!_emailUpdatesEnabled);
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.all(AppTheme.spacing.space2),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Email updates',
+                                style: AppTheme.text.body,
+                              ),
+                              CupertinoSwitch(
+                                value: _emailUpdatesEnabled,
+                                activeTrackColor: AppTheme.colors.accent,
+                                onChanged: _updateEmailPreferences,
+                              ),
+                            ],
                           ),
                         ),
-                        if (_emailUpdatesEnabled)
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: AppTheme.spacing.space2,
-                              vertical: AppTheme.spacing.space1,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: CupertinoTextField(
-                                    controller: _emailController,
-                                    placeholder: 'Enter email',
-                                    placeholderStyle: AppTheme.text.caption
-                                        .copyWith(
-                                          color: AppTheme.colors.tertiaryText,
-                                        ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.colors.surface,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: AppTheme.spacing.space2),
-                                CupertinoButton(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: AppTheme.spacing.space2,
-                                    vertical: AppTheme.spacing.space1,
-                                  ),
-                                  color: AppTheme.colors.accent,
-                                  child: Text(
-                                    'Save',
-                                    style: AppTheme.text.caption.copyWith(
-                                      color: AppTheme.colors.warmWhite,
-                                    ),
-                                  ),
-                                  onPressed: () async {
-                                    if (_emailController.text.isNotEmpty) {
-                                      final email = _emailController.text
-                                          .trim();
-
-                                      // Call subscribe API
-                                      final success =
-                                          await _subscribeToNewsletter(email);
-
-                                      if (success) {
-                                        // Save to local cache for UI state
-                                        await LocalDb.instance.setSetting(
-                                          'newsletter_email',
-                                          email,
-                                        );
-
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: const Text(
-                                                'Subscribed to updates!',
-                                              ),
-                                              backgroundColor:
-                                                  AppTheme.colors.accent,
-                                              duration: const Duration(
-                                                seconds: 2,
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      } else {
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Failed to subscribe. Please try again.',
-                                              ),
-                                              backgroundColor: Colors.red,
-                                              duration: Duration(seconds: 2),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                    const Divider(height: 1),
+                      ),
+                      const Divider(height: 1),
+                    ],
 
                     // Support
                     InkWell(

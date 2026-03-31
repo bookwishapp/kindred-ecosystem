@@ -57,13 +57,11 @@
 			</dict>
 		</array>
 		<key>NSCameraUsageDescription</key>
-		<string>To take a photo for someone in your Kin</string>
+		<string>Kindred uses your camera so you can take a photo for your profile or for someone you are adding to your Kin. For example, when keeping a new person, you can tap the photo circle and take a photo of them.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>To choose a photo for someone in your Kin</string>
+		<string>Kindred uses your photo library to add a photo to your profile or to someone in your Kin. For example, when keeping a new person, you can select an existing photo from your library to use as their avatar.</string>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
-		<key>NSPrivacyUsageDescription</key>
-		<string>Photos you take or choose are stored on your device and only shared if you create a profile.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

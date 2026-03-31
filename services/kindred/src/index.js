@@ -14,6 +14,11 @@ const {
   deleteKinDate
 } = require('./kin');
 const { saveBackup, getBackup } = require('./backup');
+const {
+  getEmailPreferences,
+  updateEmailPreferences,
+  unsubscribe,
+} = require('./email-preferences');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -68,6 +73,11 @@ app.delete('/kin/:id/dates/:dateId', authenticate, deleteKinDate);
 // Backup routes
 app.post('/backup', authenticate, saveBackup);
 app.get('/backup', authenticate, getBackup);
+
+// Email preferences routes
+app.get('/email-preferences', authenticate, getEmailPreferences);
+app.put('/email-preferences', authenticate, updateEmailPreferences);
+app.post('/email-preferences/unsubscribe', unsubscribe);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
