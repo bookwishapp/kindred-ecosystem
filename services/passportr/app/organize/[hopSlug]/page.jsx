@@ -31,6 +31,9 @@ export default function ManageHop({ params }) {
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [downloadingQR, setDownloadingQR] = useState(false);
+  const [drawing, setDrawing] = useState(null);
+  const [drawingLoading, setDrawingLoading] = useState(false);
+  const [notifying, setNotifying] = useState(false);
   const bannerInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
@@ -60,6 +63,10 @@ export default function ManageHop({ params }) {
           redeem_cutoff_date: d.hop.redeem_cutoff_date?.split('T')[0],
           coupon_expiry_minutes: d.hop.coupon_expiry_minutes,
           status: d.hop.status,
+          rewards_enabled: d.hop.rewards_enabled !== false,
+          drawing_enabled: d.hop.drawing_enabled || false,
+          drawing_winners_count: d.hop.drawing_winners_count || 1,
+          prizes: [],
         });
       }
       if (venuesRes.ok) {
@@ -77,6 +84,12 @@ export default function ManageHop({ params }) {
       if (participantsRes.ok) {
         const d = await participantsRes.json();
         setParticipants(d.participants);
+      }
+
+      const drawingRes = await fetch(`/api/hops/${hopSlug}/drawing`, { credentials: 'include' });
+      if (drawingRes.ok) {
+        const d = await drawingRes.json();
+        setDrawing(d);
       }
 
       const allHopsRes = await fetch('/api/hops', { credentials: 'include' });
@@ -104,6 +117,14 @@ export default function ManageHop({ params }) {
       if (res.ok) {
         const d = await res.json();
         setHop(d.hop);
+        if (hopForm.drawing_enabled && hopForm.prizes?.length > 0) {
+          await fetch(`/api/hops/${hopSlug}/drawing/prizes`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ prizes: hopForm.prizes }),
+          });
+        }
         setEditingHop(false);
         if (d.hop.slug !== hopSlug) router.push(`/organize/${d.hop.slug}`);
       } else {
@@ -273,6 +294,42 @@ export default function ManageHop({ params }) {
     setDownloadingQR(false);
   }
 
+  async function runDrawing() {
+    if (!confirm(`Draw ${hop.drawing_winners_count} winner(s) from ${drawing?.eligible_count || 0} eligible participants? This cannot be undone.`)) return;
+    setDrawingLoading(true);
+    try {
+      const res = await fetch(`/api/hops/${hopSlug}/drawing`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setDrawing(prev => ({ ...prev, winners: d.winners, drawn: true }));
+      } else {
+        alert(d.error || 'Failed to run drawing');
+      }
+    } catch { alert('Network error'); }
+    setDrawingLoading(false);
+  }
+
+  async function notifyWinners() {
+    setNotifying(true);
+    try {
+      const res = await fetch(`/api/hops/${hopSlug}/drawing/notify`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const d = await res.json();
+      if (res.ok) {
+        alert(`${d.notified} winner email(s) sent.`);
+        loadAll();
+      } else {
+        alert(d.error || 'Failed to send notifications');
+      }
+    } catch { alert('Network error'); }
+    setNotifying(false);
+  }
+
   async function uploadHopImage(file, field, setUploading) {
     if (!file) return;
     setUploading(true);
@@ -413,6 +470,59 @@ export default function ManageHop({ params }) {
                   <option value="ended">Ended</option>
                 </select>
               </div>
+            </div>
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #eee' }}>
+              <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Rewards & Drawing</h3>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={hopForm.rewards_enabled}
+                    onChange={e => setHopForm({ ...hopForm, rewards_enabled: e.target.checked })}
+                  />
+                  <span style={{ fontSize: '14px' }}>Venue rewards (participants redeem coupons at each venue)</span>
+                </label>
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={hopForm.drawing_enabled}
+                    onChange={e => setHopForm({ ...hopForm, drawing_enabled: e.target.checked })}
+                  />
+                  <span style={{ fontSize: '14px' }}>Prize drawing (completers entered in a drawing)</span>
+                </label>
+              </div>
+              {hopForm.drawing_enabled && (
+                <div style={{ marginLeft: '24px' }}>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                      Number of winners
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={hopForm.drawing_winners_count}
+                      onChange={e => setHopForm({ ...hopForm, drawing_winners_count: parseInt(e.target.value) })}
+                      style={{ width: '80px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                      Prize labels <span style={{ color: 'var(--text-secondary)', fontWeight: '400' }}>(one per line, in order)</span>
+                    </label>
+                    <textarea
+                      rows="3"
+                      placeholder="1st Prize — $100 gift card&#10;2nd Prize — $50 gift card"
+                      value={(hopForm.prizes || []).map(p => p.label).join('\n')}
+                      onChange={e => setHopForm({
+                        ...hopForm,
+                        prizes: e.target.value.split('\n').filter(l => l.trim()).map((label, i) => ({ label: label.trim(), sort_order: i }))
+                      })}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button type="submit" disabled={savingHop}>{savingHop ? 'Saving...' : 'Save Changes'}</button>
@@ -820,6 +930,69 @@ export default function ManageHop({ params }) {
           )
         )}
       </div>
+
+      {hop.drawing_enabled && drawing && (
+        <div style={{ marginTop: '48px' }}>
+          <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Drawing</h2>
+
+          <div className="card">
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              {drawing.eligible_count} completed participant{drawing.eligible_count !== 1 ? 's' : ''} eligible.
+              {hop.drawing_winners_count} winner{hop.drawing_winners_count !== 1 ? 's' : ''} will be selected.
+            </p>
+
+            {!drawing.drawn ? (
+              <div>
+                {new Date() > new Date(hop.stamp_cutoff_date) ? (
+                  <button
+                    onClick={runDrawing}
+                    disabled={drawingLoading || drawing.eligible_count === 0}
+                  >
+                    {drawingLoading ? 'Drawing...' : 'Draw Winners'}
+                  </button>
+                ) : (
+                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                    Drawing available after stamp cutoff: {new Date(hop.stamp_cutoff_date).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div>
+                <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Winners</h3>
+                <div style={{ display: 'grid', gap: '8px', marginBottom: '16px' }}>
+                  {drawing.winners.map((w, i) => (
+                    <div
+                      key={w.id}
+                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', padding: '8px 12px', backgroundColor: '#E8F7F4', borderRadius: '8px' }}
+                    >
+                      <span style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        {w.user_id}
+                      </span>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        {w.prize_label && <span style={{ fontWeight: '500' }}>{w.prize_label}</span>}
+                        {w.notified_at
+                          ? <span style={{ fontSize: '12px', color: 'var(--accent-teal)' }}>✓ Notified</span>
+                          : <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Not notified</span>
+                        }
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {drawing.winners.some(w => !w.notified_at) && (
+                  <button onClick={notifyWinners} disabled={notifying}>
+                    {notifying ? 'Sending...' : 'Send Winner Emails'}
+                  </button>
+                )}
+                {drawing.winners.every(w => w.notified_at) && (
+                  <p style={{ fontSize: '14px', color: 'var(--accent-teal)', fontWeight: '500' }}>
+                    All winners notified ✓
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

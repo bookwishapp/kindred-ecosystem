@@ -27,7 +27,7 @@ export async function PUT(req, { params }) {
   try {
     const { user, profile } = await requireOrganizer(req);
     const { hopSlug } = params;
-    const { name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes, banner_url, logo_url } = await req.json();
+    const { name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes, rewards_enabled, drawing_enabled, drawing_winners_count, banner_url, logo_url } = await req.json();
 
     // Verify ownership
     const hopResult = await db.query(
@@ -57,10 +57,13 @@ export async function PUT(req, { params }) {
           status = COALESCE($8, status),
           coupon_expiry_minutes = COALESCE($9, coupon_expiry_minutes),
           banner_url = COALESCE($10, banner_url),
-          logo_url = COALESCE($11, logo_url)
-      WHERE id = $12
+          logo_url = COALESCE($11, logo_url),
+          rewards_enabled = COALESCE($12, rewards_enabled),
+          drawing_enabled = COALESCE($13, drawing_enabled),
+          drawing_winners_count = COALESCE($14, drawing_winners_count)
+      WHERE id = $15
       RETURNING *`,
-      [name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes, banner_url, logo_url, hop.id]
+      [name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes, banner_url, logo_url, rewards_enabled, drawing_enabled, drawing_winners_count, hop.id]
     );
 
     return Response.json({ hop: result.rows[0] });

@@ -68,8 +68,8 @@ export async function POST(req) {
     if (participantResult.rows.length === 0) {
       // Create participant
       const insertResult = await db.query(
-        'INSERT INTO participants (hop_id, user_id) VALUES ($1, $2) RETURNING *',
-        [hop.id, user.sub]
+        'INSERT INTO participants (hop_id, user_id, email) VALUES ($1, $2, $3) RETURNING *',
+        [hop.id, user.sub, user.email]
       );
       participant = insertResult.rows[0];
     } else {

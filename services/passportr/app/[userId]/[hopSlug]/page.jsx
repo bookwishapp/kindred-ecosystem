@@ -49,6 +49,20 @@ export default async function PassportPage({ params }) {
   );
   const redeemedVenueIds = redemptionsResult.rows.map(r => r.venue_id);
 
+  let isDrawingWinner = false;
+  if (hop.drawing_enabled) {
+    const winnerResult = await db.query(
+      `SELECT dw.*, dp.label as prize_label
+       FROM drawing_winners dw
+       LEFT JOIN drawing_prizes dp ON dp.id = dw.prize_id
+       WHERE dw.hop_id = $1 AND dw.participant_id = $2`,
+      [hop.id, participant.id]
+    );
+    if (winnerResult.rows.length > 0) {
+      isDrawingWinner = winnerResult.rows[0];
+    }
+  }
+
   const isCompleted = participant.completed_at !== null;
   const stampedCount = stampedVenueIds.length;
 
@@ -166,28 +180,59 @@ export default async function PassportPage({ params }) {
           <h2 style={{ fontSize: '20px', marginBottom: '16px', color: 'var(--accent-teal)' }}>
             You've completed the hop! 🎉
           </h2>
-          <p style={{ marginBottom: '16px' }}>Redeem your rewards at these venues:</p>
-          {venues.filter(venue => stampedVenueIds.includes(venue.id)).map(venue => (
-            venue.reward_description && (
-              <div key={venue.id} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #ddd' }}>
-                <h3 style={{ fontSize: '16px', marginBottom: '4px' }}>{venue.name}</h3>
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                  {venue.reward_description}
-                </p>
-                {redeemedVenueIds.includes(venue.id) ? (
-                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>
-                    Redeemed ✓
+          {hop.rewards_enabled !== false && (
+            <>
+              <p style={{ marginBottom: '16px' }}>Redeem your rewards at these venues:</p>
+              {venues.filter(venue => stampedVenueIds.includes(venue.id)).map(venue => (
+                venue.reward_description && (
+                  <div key={venue.id} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #ddd' }}>
+                    <h3 style={{ fontSize: '16px', marginBottom: '4px' }}>{venue.name}</h3>
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                      {venue.reward_description}
+                    </p>
+                    {redeemedVenueIds.includes(venue.id) ? (
+                      <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                        Redeemed ✓
+                      </p>
+                    ) : (
+                      <a href={`/redeem/${venue.redeem_token}`}>
+                        <button style={{ padding: '8px 16px', fontSize: '14px' }}>
+                          Redeem
+                        </button>
+                      </a>
+                    )}
+                  </div>
+                )
+              ))}
+            </>
+          )}
+          {hop.drawing_enabled && (
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+              {isDrawingWinner ? (
+                <div>
+                  <h3 style={{ fontSize: '18px', marginBottom: '8px', color: 'var(--accent-teal)' }}>
+                    🎉 You won the drawing!
+                  </h3>
+                  {isDrawingWinner.prize_label && (
+                    <p style={{ fontSize: '16px', marginBottom: '8px', fontWeight: '500' }}>
+                      {isDrawingWinner.prize_label}
+                    </p>
+                  )}
+                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                    The organizer will be in touch with details.
                   </p>
-                ) : (
-                  <a href={`/redeem/${venue.redeem_token}`}>
-                    <button style={{ padding: '8px 16px', fontSize: '14px' }}>
-                      Redeem
-                    </button>
-                  </a>
-                )}
-              </div>
-            )
-          ))}
+                </div>
+              ) : (
+                <div>
+                  <h3 style={{ fontSize: '16px', marginBottom: '8px' }}>🎟 Prize Drawing</h3>
+                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                    You've been entered in the drawing. The organizer will announce winners after{' '}
+                    {new Date(hop.stamp_cutoff_date).toLocaleDateString()}.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
