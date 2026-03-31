@@ -86,11 +86,14 @@ export default function OrganizeDashboard() {
     return (
       <div className="container" style={{ paddingTop: '80px' }}>
         <div className="card" style={{ textAlign: 'center', padding: '64px 32px', maxWidth: '500px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '28px', marginBottom: '16px' }}>Organizer Access Required</h1>
-          <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-            This area is currently available to authorized organizers only.
-            If you believe you should have access, please contact support.
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗺️</div>
+          <h1 style={{ fontSize: '28px', marginBottom: '16px' }}>Start Running Hops</h1>
+          <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '32px' }}>
+            Replace paper passports with digital ones. No app required for participants — they just scan and go.
           </p>
+          <a href="/organize/signup">
+            <button style={{ width: '100%' }}>Get Started →</button>
+          </a>
         </div>
       </div>
     );
