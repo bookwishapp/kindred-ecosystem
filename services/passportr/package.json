@@ -13,6 +13,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1020.0",
     "cookie": "^0.6.0",
     "jsonwebtoken": "^9.0.2",
+    "jszip": "^3.10.1",
     "next": "^14.2.35",
     "nodemailer": "^8.0.4",
     "pg": "^8.12.0",

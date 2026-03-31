@@ -30,6 +30,7 @@ export default function ManageHop({ params }) {
   const [showDeleteHop, setShowDeleteHop] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [downloadingQR, setDownloadingQR] = useState(false);
   const bannerInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
@@ -252,6 +253,24 @@ export default function ManageHop({ params }) {
       }
     } catch { alert('Network error'); }
     setImporting(false);
+  }
+
+  async function downloadQRCodes() {
+    setDownloadingQR(true);
+    try {
+      const res = await fetch(`/api/hops/${hopSlug}/qr-codes`, {
+        credentials: 'include',
+      });
+      if (!res.ok) { alert('Failed to generate QR codes'); setDownloadingQR(false); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${hopSlug}-qr-codes.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { alert('Network error'); }
+    setDownloadingQR(false);
   }
 
   async function uploadHopImage(file, field, setUploading) {
@@ -478,6 +497,15 @@ export default function ManageHop({ params }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h2 style={{ fontSize: '24px' }}>Venues ({venues.length})</h2>
         <div style={{ display: 'flex', gap: '12px' }}>
+          {venues.length > 0 && (
+            <button
+              onClick={downloadQRCodes}
+              disabled={downloadingQR}
+              style={{ fontSize: '14px', padding: '8px 16px', backgroundColor: 'var(--text-secondary)' }}
+            >
+              {downloadingQR ? 'Generating...' : 'Download All QR Codes'}
+            </button>
+          )}
           {allHops.length > 0 && (
             <button
               onClick={() => { setShowImportModal(true); setImportResult(null); }}

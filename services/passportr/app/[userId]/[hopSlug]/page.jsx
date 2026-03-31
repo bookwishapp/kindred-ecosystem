@@ -43,6 +43,12 @@ export default async function PassportPage({ params }) {
   );
   const stampedVenueIds = stampsResult.rows.map(s => s.venue_id);
 
+  const redemptionsResult = await db.query(
+    'SELECT venue_id FROM redemptions WHERE participant_id = $1 AND redeemed_at IS NOT NULL',
+    [participant.id]
+  );
+  const redeemedVenueIds = redemptionsResult.rows.map(r => r.venue_id);
+
   const isCompleted = participant.completed_at !== null;
   const stampedCount = stampedVenueIds.length;
 
@@ -138,9 +144,14 @@ export default async function PassportPage({ params }) {
                       🕐 {venue.hours}
                     </p>
                   )}
-                  {isStamped && (
+                  {isStamped && !redeemedVenueIds.includes(venue.id) && (
                     <p style={{ fontSize: '14px', color: 'var(--accent-teal)', fontWeight: '500' }}>
                       Stamped ✓
+                    </p>
+                  )}
+                  {redeemedVenueIds.includes(venue.id) && (
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                      Redeemed ✓
                     </p>
                   )}
                 </div>
@@ -163,11 +174,17 @@ export default async function PassportPage({ params }) {
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                   {venue.reward_description}
                 </p>
-                <a href={`/redeem/${venue.redeem_token}`}>
-                  <button style={{ padding: '8px 16px', fontSize: '14px' }}>
-                    Redeem
-                  </button>
-                </a>
+                {redeemedVenueIds.includes(venue.id) ? (
+                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                    Redeemed ✓
+                  </p>
+                ) : (
+                  <a href={`/redeem/${venue.redeem_token}`}>
+                    <button style={{ padding: '8px 16px', fontSize: '14px' }}>
+                      Redeem
+                    </button>
+                  </a>
+                )}
               </div>
             )
           ))}
