@@ -1,9 +1,33 @@
 export const runtime = 'nodejs';
 
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import FindMyPassportForm from './FindMyPassportForm';
+const jwt = require('jsonwebtoken');
 const db = require('../../../lib/db');
 
 export default async function PublicHopLanding({ params }) {
   const { hopSlug } = params;
+
+  // If user has a valid cookie and is already a participant, redirect to their passport
+  const cookieStore = cookies();
+  const authToken = cookieStore.get('passportr_token')?.value;
+  if (authToken) {
+    try {
+      const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+      const existingParticipant = await db.query(
+        `SELECT p.user_id FROM participants p
+         JOIN hops h ON h.id = p.hop_id
+         WHERE h.slug = $1 AND p.user_id = $2`,
+        [hopSlug, decoded.sub]
+      );
+      if (existingParticipant.rows.length > 0) {
+        redirect(`/${decoded.sub}/${hopSlug}`);
+      }
+    } catch {
+      // invalid token, continue rendering normally
+    }
+  }
 
   // Get hop
   const hopResult = await db.query(
@@ -94,6 +118,8 @@ export default async function PublicHopLanding({ params }) {
           Scan QR codes at each venue to get started. You'll create your passport when you collect your first stamp.
         </p>
       </div>
+
+      <FindMyPassportForm hopSlug={hopSlug} />
 
       {mapUrl && (
         <div style={{ marginBottom: '32px', borderRadius: '12px', overflow: 'hidden' }}>
