@@ -1,6 +1,7 @@
 export const runtime = 'nodejs';
 
 const db = require('../../../lib/db');
+import PassportWithOptIn from './PassportWithOptIn';
 
 export default async function PassportPage({ params }) {
   const { userId, hopSlug } = params;
@@ -49,6 +50,14 @@ export default async function PassportPage({ params }) {
   );
   const redeemedVenueIds = redemptionsResult.rows.map(r => r.venue_id);
 
+  // Check if this is first stamp (for opt-in overlay)
+  const prefResult = await db.query(
+    'SELECT id FROM participant_preferences WHERE user_id = $1',
+    [userId]
+  );
+  const hasOptInDecision = prefResult.rows.length > 0;
+  const isFirstStamp = stampedVenueIds.length === 1 && !hasOptInDecision;
+
   let isDrawingWinner = false;
   if (hop.drawing_enabled) {
     const winnerResult = await db.query(
@@ -81,7 +90,8 @@ export default async function PassportPage({ params }) {
   const completionText = getCompletionText(completionRule, venues.length);
 
   return (
-    <div className="container" style={{ maxWidth: '600px', paddingTop: '40px' }}>
+    <PassportWithOptIn userId={userId} hopId={hop.id} isFirstStamp={isFirstStamp}>
+      <div className="container" style={{ maxWidth: '600px', paddingTop: '40px' }}>
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>{hop.name}</h1>
         <p style={{ color: 'var(--text-secondary)' }}>
@@ -243,6 +253,7 @@ export default async function PassportPage({ params }) {
           </p>
         </div>
       )}
-    </div>
+      </div>
+    </PassportWithOptIn>
   );
 }

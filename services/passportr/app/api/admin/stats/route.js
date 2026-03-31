@@ -3,8 +3,8 @@ export const runtime = 'nodejs';
 const db = require('../../../../lib/db');
 
 function verifyAdminSecret(req) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || authHeader !== `Bearer ${process.env.PASSPORTR_ADMIN_SECRET}`) {
+  const secret = req.headers.get('x-admin-secret');
+  if (!secret || secret !== process.env.PASSPORTR_ADMIN_SECRET) {
     throw new Error('Unauthorized');
   }
 }
@@ -25,6 +25,10 @@ export async function GET(req) {
       'SELECT COUNT(*) as count FROM organizer_profiles WHERE nonprofit_pending = true AND nonprofit_verified = false'
     );
 
+    const optins = await db.query(
+      'SELECT COUNT(*) as count FROM participant_preferences WHERE opt_in = true'
+    );
+
     return Response.json({
       active_organizers: parseInt(organizers.rows[0].count),
       total_hops: parseInt(hops.rows[0].count),
@@ -32,6 +36,7 @@ export async function GET(req) {
       total_stamps: parseInt(stamps.rows[0].count),
       total_redemptions: parseInt(redemptions.rows[0].count),
       pending_nonprofit_verifications: parseInt(nonprofit.rows[0].count),
+      total_optins: parseInt(optins.rows[0].count),
     });
   } catch (error) {
     if (error.message === 'Unauthorized') return Response.json({ error: 'Unauthorized' }, { status: 401 });

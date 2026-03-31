@@ -10,12 +10,7 @@ export default function AdminLayout({ children }) {
     return children;
   }
 
-  const isActive = (path) => {
-    if (path === '/admin/posts') {
-      return pathname === '/admin' || pathname === '/admin/posts' || pathname.startsWith('/admin/posts/');
-    }
-    return pathname.startsWith(path);
-  };
+  const isActive = (path) => pathname.startsWith(path);
 
   return (
     <>
@@ -23,20 +18,17 @@ export default function AdminLayout({ children }) {
         <div className="admin-header-content">
           <h1>Admin</h1>
           <nav className="admin-nav">
-            <Link href="/admin/posts" className={isActive('/admin/posts') ? 'active' : ''}>
-              Posts
+            <Link href="/admin/overview" className={isActive('/admin/overview') ? 'active' : ''}>
+              Overview
             </Link>
-            <Link href="/admin/subscribers" className={isActive('/admin/subscribers') ? 'active' : ''}>
-              Subscribers
+            <Link href="/admin/small-things/posts" className={isActive('/admin/small-things') ? 'active' : ''}>
+              Small Things
             </Link>
-            <Link href="/admin/suppressions" className={isActive('/admin/suppressions') ? 'active' : ''}>
-              Suppressions
-            </Link>
-            <Link href="/admin/sends" className={isActive('/admin/sends') ? 'active' : ''}>
-              Sends
-            </Link>
-            <Link href="/admin/passportr" className={isActive('/admin/passportr') ? 'active' : ''}>
+            <Link href="/admin/passportr/organizers" className={isActive('/admin/passportr') ? 'active' : ''}>
               Passportr
+            </Link>
+            <Link href="/admin/kindred" className={isActive('/admin/kindred') ? 'active' : ''}>
+              Kindred
             </Link>
             <form action="/api/admin/logout" method="POST" style={{ display: 'inline' }}>
               <button type="submit" className="logout-btn">Logout</button>
