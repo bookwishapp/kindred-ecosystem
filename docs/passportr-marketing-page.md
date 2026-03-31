@@ -1,3 +1,64 @@
+# Passportr — Marketing Landing Page
+
+## Ground Rules
+
+- Read every file before touching it.
+- No scope creep. Only change what is specified.
+- Verify after changes before declaring done.
+- No other files modified outside this list.
+
+---
+
+## Context
+
+Read `docs/ARCHITECTURE.md` and `docs/CLAUDE.md` before starting.
+
+The root `app/page.jsx` is currently a stub. Replace it entirely with the marketing landing page. The layout and globals.css are already correct — do not modify them.
+
+Fonts already loaded: Poppins (300, 400, 500, 600) and Lora (400, italic). Use only these.
+
+CSS variables already defined:
+- `--bg-warm: #F0EDE6`
+- `--accent-teal: #2AB8A0`
+- `--text-primary: #1A1A1A`
+- `--text-secondary: #6B6B6B`
+
+---
+
+## Task A — Update layout.jsx metadata
+
+Read `services/passportr/app/layout.jsx`.
+
+Replace the metadata block:
+
+```js
+export const metadata = {
+  title: 'Passportr',
+  description: 'Digital event passports',
+  openGraph: {
+    title: 'Passportr — Digital event passports',
+    description: 'Replace paper passports with digital ones. No app required. Built for hops, crawls, and multi-venue events.',
+    images: [
+      {
+        url: 'https://passportr.io/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Passportr — Digital event passports',
+      },
+    ],
+  },
+}
+```
+
+Also add `font-display: swap` to the Google Fonts URL by appending `&display=swap` if not already present. No other changes to this file.
+
+---
+
+## Task B — Replace app/page.jsx
+
+Read `services/passportr/app/page.jsx`. Replace entirely with:
+
+```jsx
 export default function Home() {
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", background: '#F0EDE6', color: '#1A1A1A', maxWidth: '720px', margin: '0 auto' }}>
@@ -124,11 +185,11 @@ export default function Home() {
           What you can see
         </p>
         <h2 style={{ fontSize: '42px', fontWeight: '600', lineHeight: '1.15', marginBottom: '44px', letterSpacing: '-0.01em', color: '#F0EDE6' }}>
-          You can see what&rsquo;s<br />happening as it happens.
+          You can see what's<br />happening as it happens.
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: '#2e2e2e', border: '1px solid #2e2e2e', borderRadius: '14px', overflow: 'hidden' }}>
           {[
-            { title: "Who's participating", body: 'Real-time count. See who joined and when.' },
+            { title: 'Who's participating', body: 'Real-time count. See who joined and when.' },
             { title: 'Which stops they visit', body: 'Stamp activity across every venue, live.' },
             { title: 'When they finish', body: 'Completion detected automatically. No guessing.' },
             { title: 'Prize drawings', body: 'Optional. Draw winners from completers after the hop ends.' },
@@ -245,3 +306,17 @@ export default function Home() {
     </div>
   )
 }
+```
+
+---
+
+## Verification Checklist
+
+- [ ] `app/page.jsx` replaced entirely — stub is gone
+- [ ] `app/layout.jsx` metadata updated with description and OG block
+- [ ] Page renders correctly at `passportr.io/`
+- [ ] "Get Started" links to `/organize/signup`
+- [ ] "See how it works" anchor-links to `#how-it-works` section
+- [ ] Fonts load correctly (Poppins and Lora)
+- [ ] No changes to `globals.css`
+- [ ] No other files modified

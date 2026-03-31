@@ -3,6 +3,18 @@ import './globals.css'
 export const metadata = {
   title: 'Passportr',
   description: 'Digital event passports',
+  openGraph: {
+    title: 'Passportr — Digital event passports',
+    description: 'Replace paper passports with digital ones. No app required. Built for hops, crawls, and multi-venue events.',
+    images: [
+      {
+        url: 'https://passportr.io/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Passportr — Digital event passports',
+      },
+    ],
+  },
 }
 
 export default function RootLayout({ children }) {
