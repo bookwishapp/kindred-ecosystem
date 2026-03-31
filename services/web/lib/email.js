@@ -118,7 +118,7 @@ async function sendEmail({ to, subject, content, isNewsletter = false }) {
   const htmlContent = isNewsletter ? getEmailTemplate(content, unsubscribeUrl) : content;
 
   const mailOptions = {
-    from: `Sinclair Inlet Book Co. <${fromEmail}>`,
+    from: `Terry @ Sinclair Inlet Book Co. <${fromEmail}>`,
     to,
     subject,
     html: htmlContent,
