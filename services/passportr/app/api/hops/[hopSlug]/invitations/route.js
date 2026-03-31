@@ -90,7 +90,7 @@ export async function POST(req, { params }) {
     const setupUrl = `${baseUrl}/venue/setup/${token}`;
 
     await transporter.sendMail({
-      from: process.env.SES_FROM_EMAIL,
+      from: `${profile.organization ? `${profile.organization}, ` : ''}${profile.name || 'Passportr'} <${process.env.SES_FROM_EMAIL}>`,
       to: email,
       subject: `You're invited to join ${hop.name} on Passportr`,
       text: [
