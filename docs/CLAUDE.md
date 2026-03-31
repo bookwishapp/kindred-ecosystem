@@ -9,7 +9,7 @@ Claude MUST follow these rules when generating code or plans for this repository
 This is a monorepo at `kindred-ecosystem/` containing:
 - `/apps` — Flutter apps (kindred, analoglist)
 - `/packages` — Shared Flutter packages (ui_kit, core)
-- `/services` — Backend services (auth, web)
+- `/services` — Backend services (auth, web, kindred, kindred-web, passportr)
 - `/docs` — Architecture docs, guidelines, prompts
 
 ---
@@ -46,10 +46,12 @@ Claude MUST NOT:
 ### 3. One admin
 All admin functionality belongs in `services/web` at terryheath.com/admin.
 Claude MUST NOT suggest building separate admin interfaces for individual apps or features.
+Each service exposes `/api/admin/*` endpoints secured with a shared secret. terryheath.com proxies to them.
 
 ### 4. Auth is central
 All authenticated requests go through `services/auth` at auth.terryheath.com.
 Claude MUST NOT suggest building app-specific auth systems.
+Claude MUST NOT call the auth service directly from the browser — always proxy through the service's own `/api/auth/request`.
 
 ---
 
@@ -149,7 +151,7 @@ Claude MUST NOT:
 - Make private notes visible to the person they describe
 - Suggest syncing or sharing private notes
 
-### "let go" 
+### "let go"
 When a person has a manual position override (`positionOverride != null`), the Kin sheet shows a small quiet "let go" option at the bottom. Tapping it releases the override and returns the person to date-driven positioning. Only visible when override is active.
 
 ### Home screen (Your Kin)
@@ -162,12 +164,73 @@ When a person has a manual position override (`positionOverride != null`), the K
 
 ---
 
+## Passportr Rules (services/passportr)
+
+Passportr replaces paper event passports with digital ones. Participants scan QR codes to collect stamps, complete hops, and earn rewards or drawing entries.
+
+### Identity
+- Participant passport URL is always `/{user.sub}/{hop-slug}` — permanent UUID, never a username
+- `user.sub` is the only identifier used for participants across all Passportr data
+- Username is never stored, never used, never referenced in Passportr
+- `fromkindred.com/{username}` handles vanity URLs for the ecosystem — Passportr does not
+
+### Auth patterns
+- Magic links for participants use `/api/auth/request` proxy (never call auth service directly from browser)
+- After magic link: auth service redirects to `/api/auth/callback?return_to=...` which sets `passportr_token` cookie
+- Organizers: authenticated via `passportr_token` cookie
+- Venues: authenticated via `stamp_token` in the URL — no login required
+- Venue self-service routes: authenticated via `X-Venue-Token` header containing the venue's `stamp_token`
+
+### requireOrganizer
+- `requireOrganizer(req)` is async — always `await` it
+- Returns `{ user, profile }` — not just `user`
+- Queries `organizer_profiles` table — NOT the `ORGANIZER_EMAILS` env var (which no longer exists)
+- Throws `'Unauthorized'` if no JWT, `'Forbidden'` if no active organizer profile
+
+### Organizer roles
+- Organizer role lives in Passportr's `organizer_profiles` table
+- Auth service does NOT know about organizer status
+- Subscription managed via Stripe — `subscription_status` in `organizer_profiles`
+- Nonprofit verified flag set manually via terryheath.com/admin
+
+### Styling
+- Poppins (headings/UI) + Lora (body)
+- `#F0EDE6` warm off-white background
+- `#2AB8A0` teal accent
+- CSS variables: `var(--accent-teal)`, `var(--text-secondary)`
+
+### Conventions
+- `export const runtime = 'nodejs'` on all API routes that use pg
+- No TypeScript — plain JavaScript
+- No ORM — use pg directly
+- Never hardcode URLs — use `process.env.NEXT_PUBLIC_BASE_URL`
+- S3 uploads via presigned URLs — never upload through the server
+- Email via Nodemailer SMTP — never via AWS SDK directly
+
+---
+
 ## Next.js / services/web Rules
 
-### terryheath.com/admin
+### terryheath.com/admin structure
 - Protected by ADMIN_PASSWORD env var
 - Single admin user (Terry)
-- This is the admin for the ENTIRE ecosystem — build all admin here
+- Tab structure:
+  - `/admin/overview` — ecosystem dashboard
+  - `/admin/small-things/*` — newsletter posts, subscribers, sends
+  - `/admin/passportr/*` — organizers, subscribers, send
+  - `/admin/kindred/*` — when Kindred opt-in is live
+- Each service tab proxies to that service's `/api/admin/*` endpoints via `lib/{service}-admin.js`
+- Shared secret passed as `x-admin-secret` header on all proxied requests
+
+### Admin API contract
+Every service exposes these endpoints, secured with `x-admin-secret`:
+```
+GET  /api/admin/stats
+GET  /api/admin/subscribers
+POST /api/admin/send
+GET  /api/admin/sends
+```
+Additional service-specific endpoints follow the same auth pattern.
 
 ### Runtime
 - All routes using `pg` MUST have `export const runtime = 'nodejs'`
@@ -175,10 +238,11 @@ When a person has a manual position override (`positionOverride != null`), the K
 - Middleware checks cookie existence only — full validation happens in route handlers
 
 ### Email
-- All email via AWS SES SMTP
+- All email via AWS SES SMTP using Nodemailer
 - Port 587, secure: false, STARTTLS
 - Newsletter sends: terry@terryheath.com
-- Transactional (magic links): noreply@terryheath.com
+- Transactional (magic links, invitations): noreply@terryheath.com
+- Env vars: `SES_SMTP_HOST`, `SES_SMTP_PORT`, `SES_SMTP_USERNAME`, `SES_SMTP_PASSWORD`, `SES_FROM_EMAIL`
 
 ---
 
@@ -189,6 +253,8 @@ When a person has a manual position override (`positionOverride != null`), the K
 - CORS applies to `/auth/*` routes only — never to `/admin/*` routes
 - Magic links: single-use, 15 minute expiry
 - JWTs: 30 day access token, 30 day refresh token
+- JWT contains only `sub` (user UUID) and `email` — no username, no role
+- `redirect_uri` in magic link request: auth service redirects to it with `?access_token=` appended after verification
 
 ---
 
@@ -229,8 +295,14 @@ Claude MUST NOT:
 - "Let's add a social feed"
 - "I'll fix that and push it" (without showing the change first)
 - "The fix has been deployed" (without verifying it worked)
-- "join" — never use join. Users "show up" or "keep" someone.
+- "join" — never use this word in Kindred. Users "show up" or "keep" someone.
 - "/profile/" in URLs — profile links are fromkindred.com/{username} not /profile/{username}
+- Calling auth service directly from browser — always proxy through the service's `/api/auth/request`
+- Using `user.username` from JWT — it doesn't exist. Use `user.sub`.
+- Storing username in Passportr participants — use `user.sub` permanently
+- Making `requireOrganizer` synchronous — it is async and returns `{ user, profile }`
+- Checking `ORGANIZER_EMAILS` env var — that pattern is retired, use `organizer_profiles` table
+- Building admin UI inside individual services — all admin lives at terryheath.com/admin
 
 ---
 

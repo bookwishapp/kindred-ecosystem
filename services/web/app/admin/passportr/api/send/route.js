@@ -1,5 +1,5 @@
-import passportrAdmin from '../../../../../../lib/passportr-admin';
-import adminAuth from '../../../../../../lib/admin-auth';
+import passportrAdmin from '../../../../../lib/passportr-admin';
+import adminAuth from '../../../../../lib/admin-auth';
 
 export const runtime = 'nodejs';
 

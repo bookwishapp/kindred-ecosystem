@@ -26,6 +26,7 @@ kindred-ecosystem/
     web/              → terryheath.com — blog, newsletter, ecosystem admin (Next.js)
     kindred/          → Kindred API backend (Node/Express) — api.fromkindred.com
     kindred-web/      → fromkindred.com — profile pages, marketing, App Store redirect (Next.js)
+    passportr/        → passportr.io — digital event passports (Next.js) — in development
   docs/               → Architecture, guidelines, prompts
   melos.yaml
 ```
@@ -77,9 +78,9 @@ Central authentication for the entire ecosystem.
 - Magic link only (no passwords)
 - Issues JWTs (30 day access token, 30 day refresh token)
 - Single identity works across all apps
+- JWT contains: `sub` (user UUID — permanent, never changes), `email`
+- No username in JWT — username lives in each app's own profiles table
 - Node/Express, Postgres on Railway
-- Admin at auth.terryheath.com/admin
-- Pending: deferred deep linking page for browser fallback
 
 #### /services/web — terryheath.com
 The hub. Does three things:
@@ -89,39 +90,63 @@ The hub. Does three things:
 
 Next.js, Postgres on Railway.
 
-Current status: deployed, admin working, newsletter send requires SES SMTP credential verification, subscribers tab and cron job pending fixes.
-
 #### /services/kindred — api.fromkindred.com
 The Kindred API backend.
 - All Kindred app data: profiles, kin records, dates, wishlist links
 - JWT verification via shared JWT_SECRET with auth service
 - Presigned S3 URLs for photo uploads
 - Node/Express, Postgres on Railway
-- Old domain kindred.terryheath.com to be retired once Flutter app updated
 
 #### /services/kindred-web — fromkindred.com
 The public face of Kindred.
 - Profile landing pages at `/{username}` — shown when someone shares their Kindred profile
+- Accepts both UUID and username — `fromkindred.com/{uuid}` and `fromkindred.com/{username}` both resolve
 - Deep link redirect to app (`kindred://profile/{username}`)
 - App Store redirect when app not installed
-- Marketing site (future)
 
-Next.js, no database, separate Railway service. Fetches profile data from api.fromkindred.com.
+Next.js, no database, separate Railway service.
+
+#### /services/passportr — passportr.io
+Digital event passport platform. Replaces paper passports with QR-based digital ones.
+- Organizers create hops (multi-venue events)
+- Participants scan QR codes at venues to collect stamps
+- Complete enough venues → earn rewards and/or enter a drawing
+- No app required for participants — fully web-based
+- Next.js 14 (App Router), single service handles everything
+- Postgres on Railway (dedicated database)
+- Railway service name: `outstanding-dedication`
+
+Key concepts:
+- **Hop** — a multi-venue event with a completion rule and reward structure
+- **Venue** — a participating location with stamp and redeem QR codes
+- **Stamp** — collected by participant scanning venue's stamp QR
+- **Passport** — a participant's record for a specific hop (`/{user.sub}/{hop-slug}`)
+- **Participant** — identified by `user.sub` (UUID) permanently — never by username
+
+Auth pattern:
+- Organizers: authenticated via `passportr_token` cookie (JWT from central auth)
+- Participants: same cookie, set after magic link via `/api/auth/callback`
+- Venues: access via `stamp_token` URL — no login required
+- Venue self-service: authenticated via `X-Venue-Token` header (stamp_token value)
+- `requireOrganizer()` is async, queries `organizer_profiles` table, returns `{ user, profile }`
+
+Organizer roles:
+- Organizer role lives in Passportr's `organizer_profiles` table — NOT in auth service
+- Subscription managed via Stripe — plans are tier-based (venue count) × frequency (hop count)
+- Nonprofit verified flag set manually by Terry via terryheath.com/admin
 
 ---
 
 ## Satellite Products
 
-These are connected thematically, not technically — for now.
-
 ### North Star Postal (northstarpostal.com)
-Custom letters to children from beloved characters (Santa, Easter Bunny, Tooth Fairy, etc.). Currently marketed on Etsy. Will eventually be brought into the ecosystem technically — likely as a section of terryheath.com/admin and a natural touchpoint inside Kindred (child's birthday → letter suggestion).
+Custom letters to children from beloved characters (Santa, Easter Bunny, Tooth Fairy, etc.). Will eventually surface in terryheath.com/admin and integrate with Kindred.
 
 ### Sinclair Inlet Book Co.
-Physical bookstore in Port Orchard, WA. 501c3 nonprofit. Source of raw material for the Small Things newsletter. Home of Paper Street Thrift (weekly Saturday swap events).
+Physical bookstore in Port Orchard, WA. 501c3 nonprofit. Source of raw material for the Small Things newsletter. Home of Paper Street Thrift.
 
 ### Gone Goat
-Card game (originally developed as Graze Expectations). No technical component currently. When it does have one, it lives in terryheath.com, not in a separate service.
+Card game. No technical component currently. When it does, it lives in terryheath.com.
 
 ---
 
@@ -129,26 +154,50 @@ Card game (originally developed as Graze Expectations). No technical component c
 
 **terryheath.com/admin is the one and only admin interface.**
 
-This is where Terry manages:
-- Newsletter posts and sends
-- Subscriber list and suppressions
-- Auth service users and sessions (via auth.terryheath.com/admin for now, eventually unified)
-- Future: North Star Postal orders and templates
-- Future: Any other backend needs across the ecosystem
+Tab structure:
+```
+terryheath.com/admin
+  /admin/overview              → ecosystem-wide stats dashboard
+  /admin/small-things/...      → newsletter posts, subscribers, sends
+  /admin/passportr/...         → organizers, hop participants, notifications
+  /admin/kindred/...           → when Kindred opt-in is live
+  /admin/users/...             → auth service user management (future)
+```
 
-Do not build separate admin interfaces for individual apps. Anything that needs admin attention surfaces in terryheath.com/admin.
+Each service exposes an admin API that terryheath.com proxies to. terryheath.com never stores cross-service data — it reads and triggers via API calls only.
+
+Do not build separate admin interfaces for individual apps or services.
+
+---
+
+## Admin API Contract
+
+Every service that surfaces in terryheath.com/admin exposes these endpoints, secured with a shared secret (`x-admin-secret` header):
+
+```
+GET  /api/admin/stats          → overview numbers for the ecosystem dashboard
+GET  /api/admin/subscribers    → paginated opt-in list with filters
+POST /api/admin/send           → trigger a notification send to a segment
+GET  /api/admin/sends          → send history
+```
+
+Additional service-specific endpoints are allowed but must follow the same auth pattern.
+
+The shared secret is stored as `{SERVICE}_ADMIN_SECRET` in both the service's Railway env vars and in terryheath.com's Railway env vars. terryheath.com sends it as `x-admin-secret` on every proxied request.
 
 ---
 
 ## Authentication Flow
 
-1. User requests magic link → hits `POST auth.terryheath.com/auth/request`
-2. SES sends email with link
-3. User clicks link → `GET auth.terryheath.com/auth/verify?token=TOKEN`
-4. Auth service returns JWT access token + sets refresh token cookie
-5. Flutter apps store JWT in Flutter Secure Storage
-6. Every API request sends `Authorization: Bearer <token>`
-7. On 401, ApiClient calls auth service refresh endpoint automatically
+1. User requests magic link → hits `POST auth.terryheath.com/auth/request` (never called directly from browser — proxy through each service's `/api/auth/request`)
+2. SES sends email with link containing `redirect_uri`
+3. User clicks link → `GET auth.terryheath.com/auth/verify?token=TOKEN&redirect_uri=...`
+4. Auth service verifies token, redirects to `redirect_uri?access_token=TOKEN`
+5. Web services: callback route sets cookie, redirects to `return_to`
+6. Flutter apps: deep link (`kindred://`) intercepted by OS, app handles token
+7. Flutter stores JWT in Flutter Secure Storage
+8. Every API request sends `Authorization: Bearer <token>`
+9. On 401, ApiClient calls auth service refresh endpoint automatically
 
 Local-only Kindred users (no profile, no account) do not need auth.
 
@@ -161,6 +210,7 @@ Local-only Kindred users (no profile, no account) do not need auth.
 - terryheath.com has its own Railway Postgres database
 - No shared databases
 - No cross-service queries
+- Cross-service data access happens only via admin API calls from terryheath.com
 
 ---
 
@@ -170,11 +220,19 @@ Local-only Kindred users (no profile, no account) do not need auth.
 - **Email:** AWS SES — one account, one verified domain (terryheath.com)
   - Auth service: magic links from noreply@terryheath.com
   - terryheath.com: newsletter from terry@terryheath.com
-  - All services share the same SES SMTP credentials
+  - Passportr: invitations and notifications from noreply@terryheath.com (passportr.io pending SES verification)
+  - All services share the same SES SMTP credentials via env vars: `SES_SMTP_HOST`, `SES_SMTP_PORT`, `SES_SMTP_USERNAME`, `SES_SMTP_PASSWORD`, `SES_FROM_EMAIL`
   - SMTP: port 587, STARTTLS, host email-smtp.us-east-1.amazonaws.com
-- **Storage:** AWS S3 (per-app buckets: kindred-uploads, analoglist-assets)
+- **Storage:** AWS S3 (per-app buckets)
+  - `kindred-uploads` — Kindred profile photos
+  - `analoglist-assets` — AnalogList media
+  - `passportr-images` — hop banners, logos, venue logos (public-read)
+  - All buckets use presigned URLs — never upload through the server
+- **Payments:** Stripe (one account, ecosystem-wide)
+  - Passportr: subscription billing via Stripe Billing
+  - RevenueCat for Flutter in-app purchases (future)
 - **DNS:** Cloudflare
-- **Domains:** terryheath.com, auth.terryheath.com, api.fromkindred.com, fromkindred.com
+- **Domains:** terryheath.com, auth.terryheath.com, api.fromkindred.com, fromkindred.com, passportr.io
 
 ---
 
@@ -183,9 +241,10 @@ Local-only Kindred users (no profile, no account) do not need auth.
 1. ✅ Auth service (services/auth)
 2. ✅ terryheath.com (services/web)
 3. ✅ Monorepo scaffold + ui_kit + core (packages/)
-4. 🔄 Kindred Flutter app (apps/kindred) — Sessions 1, 2, 3a, 3b, 4 (partial) complete
-5. ⬜ AnalogList rebuild (apps/analoglist)
-6. ⬜ North Star Postal integration (TBD)
+4. 🔄 Kindred Flutter app (apps/kindred) — Sessions 1–4 complete, ongoing
+5. 🔄 Passportr (services/passportr) — core features complete, monetization in progress
+6. ⬜ AnalogList rebuild (apps/analoglist)
+7. ⬜ North Star Postal integration (TBD)
 
 ---
 
@@ -204,6 +263,7 @@ Local-only Kindred users (no profile, no account) do not need auth.
 ### One admin
 - terryheath.com/admin handles everything
 - Do not build secondary admin interfaces
+- Each service exposes an admin API; terryheath.com proxies to it
 
 ### No over-engineering
 - No Redis, no message queues, no API gateways
@@ -225,10 +285,12 @@ Local-only Kindred users (no profile, no account) do not need auth.
 - One RevenueCat project for the entire ecosystem
 - AnalogList and Kindred both offer a one-time power-user purchase (non-consumable)
 - Entitlement checking logic lives in `packages/core` as a thin RevenueCat wrapper
-- Both apps share the same entitlement check — one purchase unlocks both apps (TBD on exact product structure)
-- North Star Postal: if it becomes a Flutter app, it joins the same RevenueCat project
 - Do not add RevenueCat until the first app is otherwise complete
-- Monetization is voluntary — no paywalls, no feature gating, quiet support option in Show Up screen
+- Monetization is voluntary — no paywalls, no feature gating
+
+**Stripe** handles web subscription billing.
+- Passportr organizer subscriptions via Stripe Billing
+- One Stripe account, ecosystem-wide
 
 ---
 
@@ -243,3 +305,6 @@ Do NOT:
 - Build separate admin UIs for individual features
 - Add Firebase, RevenueCat, or other heavy SDKs without explicit decision
 - "Future-proof" anything prematurely
+- Call auth service directly from the browser — always proxy through the service's own `/api/auth/request`
+- Store username in JWT or use it as a permanent identifier — use `user.sub` (UUID)
+- Build organizer role logic into the auth service — each app owns its own roles

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-const PostEditor = dynamic(() => import('../../../../../../components/PostEditor'), {
+const PostEditor = dynamic(() => import('../../../../../components/PostEditor'), {
   ssr: false,
 });
 

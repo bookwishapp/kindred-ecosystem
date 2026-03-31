@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import db from '../../../../../lib/db';
-import DeleteButton from '../../../../../components/admin/DeleteButton';
+import db from '../../../../lib/db';
+import DeleteButton from '../../../../components/admin/DeleteButton';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
