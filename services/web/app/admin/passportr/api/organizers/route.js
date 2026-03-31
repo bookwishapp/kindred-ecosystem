@@ -1,12 +1,13 @@
 export const runtime = 'nodejs';
 
-const { getOrganizers } = require('../../../../../../lib/passportr-admin');
-const { requireAdmin } = require('../../../../../../lib/admin-auth');
+const { passportrAdminRequest } = require('../../../../../../lib/passportr-admin');
+const { requireAdminAuth } = require('../../../../../../lib/admin-auth');
 
 export async function GET(req) {
   try {
-    requireAdmin(req);
-    const data = await getOrganizers();
+    requireAdminAuth(req);
+    const res = await passportrAdminRequest('/api/admin/organizers');
+    const data = await res.json();
     return Response.json(data);
   } catch (error) {
     if (error.message === 'Unauthorized') return Response.json({ error: 'Unauthorized' }, { status: 401 });
