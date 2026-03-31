@@ -199,9 +199,14 @@ export default function OrganizeDashboard() {
     <div className="container" style={{ paddingTop: '40px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <h1 style={{ fontSize: '32px' }}>Your Hops</h1>
-        <button onClick={() => setShowCreateForm(!showCreateForm)}>
-          {showCreateForm ? 'Cancel' : 'Create New Hop'}
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <a href="/organize/billing" style={{ fontSize: '14px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+            Billing
+          </a>
+          <button onClick={() => setShowCreateForm(!showCreateForm)}>
+            {showCreateForm ? 'Cancel' : 'Create New Hop'}
+          </button>
+        </div>
       </div>
 
       {showCreateForm && (
