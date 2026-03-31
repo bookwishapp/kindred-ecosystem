@@ -4,17 +4,25 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const PLAN_LABELS = {
-  single:     'Single Hop',
-  occasional: 'Occasional',
-  regular:    'Regular',
-  unlimited:  'Unlimited',
+  single_tier1:     'Single Hop',
+  single_tier2:     'Single Hop',
+  occasional_tier1: 'Occasional',
+  occasional_tier2: 'Occasional',
+  regular_tier1:    'Regular',
+  regular_tier2:    'Regular',
+  unlimited_tier1:  'Unlimited',
+  unlimited_tier2:  'Unlimited',
 };
 
 const HOP_LIMITS = {
-  single:     1,
-  occasional: 3,
-  regular:    12,
-  unlimited:  null,
+  single_tier1:     1,
+  single_tier2:     1,
+  occasional_tier1: 3,
+  occasional_tier2: 3,
+  regular_tier1:    12,
+  regular_tier2:    12,
+  unlimited_tier1:  null,
+  unlimited_tier2:  null,
 };
 
 export default function BillingPage() {
@@ -57,7 +65,7 @@ export default function BillingPage() {
   const hopLimit = HOP_LIMITS[profile.plan];
   const hopsRemaining = hopLimit !== null ? hopLimit - (profile.hops_used_this_period || 0) : null;
 
-  const singleExpired = profile.plan === 'single' &&
+  const singleExpired = profile.plan?.startsWith('single') &&
     profile.single_hop_expires_at &&
     new Date(profile.single_hop_expires_at) < new Date();
 
@@ -82,13 +90,13 @@ export default function BillingPage() {
             <span style={{ color: 'var(--text-secondary)' }}>Status</span>
             <span style={{
               fontWeight: '500',
-              color: profile.status === 'active' ? 'var(--accent-teal)'
-                : profile.status === 'past_due' ? '#e55'
+              color: profile.subscription_status === 'active' ? 'var(--accent-teal)'
+                : profile.subscription_status === 'past_due' ? '#e55'
                 : 'var(--text-secondary)'
             }}>
-              {profile.status === 'active' ? 'Active'
-                : profile.status === 'past_due' ? 'Past Due'
-                : profile.status === 'cancelled' ? 'Cancelled'
+              {profile.subscription_status === 'active' ? 'Active'
+                : profile.subscription_status === 'past_due' ? 'Past Due'
+                : profile.subscription_status === 'canceled' ? 'Canceled'
                 : 'Inactive'}
             </span>
           </div>
@@ -111,7 +119,7 @@ export default function BillingPage() {
               </span>
             </div>
           )}
-          {profile.plan === 'single' && profile.single_hop_expires_at && (
+          {profile.plan?.startsWith('single') && profile.single_hop_expires_at && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Expires</span>
               <span style={{ fontWeight: '500', color: singleExpired ? '#e55' : undefined }}>
@@ -120,7 +128,7 @@ export default function BillingPage() {
               </span>
             </div>
           )}
-          {profile.period_start && profile.plan !== 'single' && (
+          {profile.period_start && !profile.plan?.startsWith('single') && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Period started</span>
               <span style={{ fontWeight: '500' }}>
@@ -155,11 +163,11 @@ export default function BillingPage() {
         </div>
       )}
 
-      {(profile.status !== 'active' || profile.plan === 'single') && (
+      {(profile.subscription_status !== 'active' || profile.plan?.startsWith('single')) && (
         <div className="card">
           <h2 style={{ fontSize: '18px', marginBottom: '8px' }}>Upgrade Plan</h2>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            {profile.plan === 'single'
+            {profile.plan?.startsWith('single')
               ? 'Subscribe to run more hops. Your single hop purchase will be credited.'
               : 'Choose a plan to get started.'}
           </p>
