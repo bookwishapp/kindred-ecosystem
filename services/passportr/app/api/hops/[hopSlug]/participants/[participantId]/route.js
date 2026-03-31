@@ -19,7 +19,7 @@ async function verifyOwnership(user, hopSlug, participantId) {
 
 export async function DELETE(req, { params }) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { hopSlug, participantId } = params;
 
     const check = await verifyOwnership(user, hopSlug, participantId);

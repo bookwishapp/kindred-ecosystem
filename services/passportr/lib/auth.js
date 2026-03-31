@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const db = require('./db');
 
 function verifyToken(token) {
   try {
@@ -31,19 +32,31 @@ function requireAuth(req) {
   return user;
 }
 
-function isOrganizer(user) {
-  if (!user || !user.email) return false;
-  const organizerEmails = process.env.ORGANIZER_EMAILS || '';
-  const allowedEmails = organizerEmails.split(',').map(e => e.trim().toLowerCase()).filter(e => e);
-  return allowedEmails.includes(user.email.toLowerCase());
+async function getOrganizerProfile(userId) {
+  const result = await db.query(
+    `SELECT * FROM organizer_profiles
+     WHERE user_id = $1
+     AND (
+       subscription_status = 'active'
+       OR subscription_status = 'past_due'
+       OR (
+         subscription_status = 'single'
+         AND single_hop_expires_at > NOW()
+       )
+       OR nonprofit_verified = true
+     )`,
+    [userId]
+  );
+  return result.rows[0] || null;
 }
 
-function requireOrganizer(req) {
+async function requireOrganizer(req) {
   const user = requireAuth(req);
-  if (!isOrganizer(user)) {
+  const profile = await getOrganizerProfile(user.sub);
+  if (!profile) {
     throw new Error('Forbidden');
   }
-  return user;
+  return { user, profile };
 }
 
-module.exports = { verifyToken, getAuthUser, requireAuth, isOrganizer, requireOrganizer };
+module.exports = { verifyToken, getAuthUser, requireAuth, getOrganizerProfile, requireOrganizer };

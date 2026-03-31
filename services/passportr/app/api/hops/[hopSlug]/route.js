@@ -25,7 +25,7 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { hopSlug } = params;
     const { name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, status, coupon_expiry_minutes, banner_url, logo_url } = await req.json();
 
@@ -78,7 +78,7 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { hopSlug } = params;
 
     const hopResult = await db.query('SELECT * FROM hops WHERE slug = $1', [hopSlug]);

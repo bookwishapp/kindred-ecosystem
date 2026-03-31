@@ -35,7 +35,7 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { hopSlug } = params;
     const { name, address, description, reward_description, hours, required, sort_order } = await req.json();
 

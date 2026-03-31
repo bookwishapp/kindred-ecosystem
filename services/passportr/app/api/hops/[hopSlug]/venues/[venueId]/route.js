@@ -6,7 +6,7 @@ const { requireOrganizer } = require('../../../../../../lib/auth');
 async function verifyVenueAccess(req, hopSlug, venueId) {
   // Try organizer auth first
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const hopResult = await db.query('SELECT * FROM hops WHERE slug = $1', [hopSlug]);
     if (hopResult.rows.length === 0) return { error: 'Hop not found', status: 404 };
     if (hopResult.rows[0].organizer_user_id !== user.sub) return { error: 'Forbidden', status: 403 };

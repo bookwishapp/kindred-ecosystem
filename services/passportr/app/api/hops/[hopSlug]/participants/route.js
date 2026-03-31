@@ -5,7 +5,7 @@ const { requireOrganizer } = require('../../../../../lib/auth');
 
 export async function GET(req, { params }) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { hopSlug } = params;
 
     const hopResult = await db.query('SELECT * FROM hops WHERE slug = $1', [hopSlug]);

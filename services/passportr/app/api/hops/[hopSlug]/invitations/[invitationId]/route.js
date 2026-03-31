@@ -19,7 +19,7 @@ async function verifyOwnership(user, hopSlug, invitationId) {
 
 export async function DELETE(req, { params }) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { hopSlug, invitationId } = params;
 
     const check = await verifyOwnership(user, hopSlug, invitationId);
@@ -37,7 +37,7 @@ export async function DELETE(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { hopSlug, invitationId } = params;
 
     const check = await verifyOwnership(user, hopSlug, invitationId);

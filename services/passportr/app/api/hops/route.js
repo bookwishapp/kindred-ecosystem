@@ -5,7 +5,7 @@ const { requireOrganizer } = require('../../../lib/auth');
 
 export async function GET(req) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
 
     const result = await db.query(
       `SELECT h.*,
@@ -33,7 +33,7 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { slug, name, description, start_date, end_date, stamp_cutoff_date, redeem_cutoff_date, completion_rule, coupon_expiry_minutes } = await req.json();
 
     if (!slug || !name || !start_date || !end_date || !stamp_cutoff_date || !redeem_cutoff_date) {

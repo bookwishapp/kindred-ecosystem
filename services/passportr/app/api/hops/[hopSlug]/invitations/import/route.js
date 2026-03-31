@@ -26,7 +26,7 @@ function getCompletionText(rule) {
 
 export async function POST(req, { params }) {
   try {
-    const user = requireOrganizer(req);
+    const { user, profile } = await requireOrganizer(req);
     const { hopSlug } = params;
     const { source_hop_slug } = await req.json();
 
