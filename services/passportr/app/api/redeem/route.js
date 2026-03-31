@@ -82,6 +82,7 @@ export async function POST(req) {
     );
 
     let redemption;
+    let justGenerated = false;
     if (redemptionResult.rows.length === 0) {
       // Generate new coupon
       const couponCode = generateToken();
@@ -92,6 +93,7 @@ export async function POST(req) {
         [participant.id, venue.id, couponCode, expiresAt]
       );
       redemption = insertResult.rows[0];
+      justGenerated = true;
     } else {
       redemption = redemptionResult.rows[0];
       if (redemption.redeemed_at) {
@@ -110,7 +112,8 @@ export async function POST(req) {
       expires_at: redemption.expires_at,
       reward_description: venue.reward_description,
       venue_name: venue.name,
-      redeemed_at: redemption.redeemed_at
+      redeemed_at: redemption.redeemed_at,
+      just_generated: justGenerated
     });
 
   } catch (error) {

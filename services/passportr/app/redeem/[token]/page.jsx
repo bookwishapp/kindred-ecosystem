@@ -82,12 +82,12 @@ export default function RedeemPage({ params }) {
   if (status === 'success') {
     return (
       <div className="container" style={{ paddingTop: '60px', maxWidth: '500px', textAlign: 'center' }}>
-        {coupon.redeemed_at ? (
+        {!coupon.just_generated ? (
           <>
-            <div style={{ fontSize: '48px', marginBottom: '24px' }}>✅</div>
+            <div style={{ fontSize: '48px', marginBottom: '24px' }}>⛔</div>
             <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Already Redeemed</h1>
             <p style={{ color: 'var(--text-secondary)' }}>
-              This coupon was already used on {new Date(coupon.redeemed_at).toLocaleDateString()}.
+              This reward was already redeemed on {new Date(coupon.redeemed_at).toLocaleDateString()}.
             </p>
           </>
         ) : (
