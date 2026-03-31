@@ -1,14 +1,14 @@
-export const runtime = 'nodejs';
+import passportrAdmin from '../../../../../../lib/passportr-admin';
+import adminAuth from '../../../../../../lib/admin-auth';
 
-const { passportrAdminRequest } = require('../../../../../../../lib/passportr-admin');
-const { requireAdminAuth } = require('../../../../../../../lib/admin-auth');
+export const runtime = 'nodejs';
 
 export async function PUT(req, { params }) {
   try {
-    requireAdminAuth(req);
+    adminAuth.requireAdminAuth(req);
     const { userId } = params;
     const body = await req.json();
-    const res = await passportrAdminRequest(`/api/admin/organizers/${userId}`, {
+    const res = await passportrAdmin.passportrAdminRequest(`/api/admin/organizers/${userId}`, {
       method: 'PUT',
       body: JSON.stringify(body),
     });

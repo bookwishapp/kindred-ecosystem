@@ -1,12 +1,12 @@
-export const runtime = 'nodejs';
+import passportrAdmin from '../../../../../lib/passportr-admin';
+import adminAuth from '../../../../../lib/admin-auth';
 
-const { passportrAdminRequest } = require('../../../../../../lib/passportr-admin');
-const { requireAdminAuth } = require('../../../../../../lib/admin-auth');
+export const runtime = 'nodejs';
 
 export async function GET(req) {
   try {
-    requireAdminAuth(req);
-    const res = await passportrAdminRequest('/api/admin/organizers');
+    adminAuth.requireAdminAuth(req);
+    const res = await passportrAdmin.passportrAdminRequest('/api/admin/organizers');
     const data = await res.json();
     return Response.json(data);
   } catch (error) {
