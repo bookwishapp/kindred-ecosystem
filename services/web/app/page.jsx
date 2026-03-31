@@ -22,6 +22,7 @@ export default async function HomePage() {
       <header className="site-header">
         <h1 className="site-title">Small Things</h1>
         <p className="site-author">Terry Heath</p>
+        <p className="site-tagline">Letters from the bookstore, the workshop, and everywhere in between.</p>
         <nav className="site-nav">
           <Link href="/">Letters</Link>
           <Link href="/about">About</Link>
