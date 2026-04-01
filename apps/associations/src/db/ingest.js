@@ -66,7 +66,9 @@ export async function ingestFile({ projectId, filePath, content, onProgress }) {
 }
 
 export async function ingestFolder({ projectId, folderId, folderPath, onProgress, onFile }) {
+  console.log('ingestFolder called', { projectId, folderId, folderPath });
   const files = await window.electron.folders.scan({ folderId, folderPath });
+  console.log('Files to ingest:', files.length, files);
 
   if (files.length === 0) return { filesProcessed: 0, passagesIngested: 0 };
 
