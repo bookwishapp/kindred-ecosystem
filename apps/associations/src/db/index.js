@@ -1,23 +1,13 @@
-// SQLite database connection pool
-// Note: In a real implementation, this would use better-sqlite3
-// For now, this is a placeholder to demonstrate structure
+import Database from 'better-sqlite3';
+import path from 'path';
+import { app } from 'electron';
 
-class Database {
-  constructor() {
-    // In production, this would initialize better-sqlite3
-    this.db = null;
-  }
+const dbPath = app
+  ? path.join(app.getPath('userData'), 'associations.db')
+  : path.join(process.cwd(), 'associations.db');
 
-  exec(sql) {
-    // Execute SQL
-    console.log('Executing SQL:', sql);
-  }
+const db = new Database(dbPath);
 
-  query(sql, params) {
-    // Query with parameters
-    console.log('Query:', sql, params);
-    return { rows: [] };
-  }
-}
+db.pragma('journal_mode = WAL');
 
-module.exports = new Database();
+export default db;
