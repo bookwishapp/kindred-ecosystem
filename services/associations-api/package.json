@@ -4,7 +4,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "migrate": "node migrate.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
