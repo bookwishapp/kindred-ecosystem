@@ -1,21 +1,42 @@
-// Embeddings generation using Transformers.js
-// This is a placeholder - in production would use @xenova/transformers
+import { pipeline } from '@xenova/transformers';
 
-async function generateEmbedding(text) {
-  // In production, this would use Transformers.js to generate embeddings locally
-  console.log('Generating embedding for text:', text.substring(0, 50) + '...');
+let embedder = null;
 
-  // Return mock embedding
-  return new Float32Array(384).fill(0);
+async function getEmbedder() {
+  if (!embedder) {
+    embedder = await pipeline(
+      'feature-extraction',
+      'Xenova/all-MiniLM-L6-v2'
+    );
+  }
+  return embedder;
 }
 
-async function findSimilar(embedding, pool, threshold = 0.8) {
-  // In production, this would calculate cosine similarity
-  // between the given embedding and pool entries
-  return [];
+export async function generateEmbedding(text) {
+  const embed = await getEmbedder();
+  const output = await embed(text, {
+    pooling: 'mean',
+    normalize: true,
+  });
+  return Array.from(output.data);
 }
 
-module.exports = {
-  generateEmbedding,
-  findSimilar
-};
+export function cosineSimilarity(a, b) {
+  if (a.length !== b.length) return 0;
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+export function embeddingToBuffer(embedding) {
+  return Buffer.from(new Float32Array(embedding).buffer);
+}
+
+export function bufferToEmbedding(buffer) {
+  return Array.from(new Float32Array(buffer.buffer));
+}

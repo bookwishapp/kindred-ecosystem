@@ -60,3 +60,21 @@ class ApiClient {
 }
 
 export default new ApiClient();
+
+export async function reportWords(count) {
+  const token = await window.electron.getToken();
+  if (!token) return;
+
+  try {
+    await fetch(`${API_BASE_URL}/users/words`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ count }),
+    });
+  } catch {
+    // Silent fail — trial counting is best effort
+  }
+}
