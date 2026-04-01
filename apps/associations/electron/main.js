@@ -13,6 +13,14 @@ if (process.defaultApp) {
 
 let mainWindow;
 
+function loadDevURL(win, retries = 10) {
+  win.loadURL('http://localhost:5173').catch(() => {
+    if (retries > 0) {
+      setTimeout(() => loadDevURL(win, retries - 1), 500);
+    }
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -29,7 +37,7 @@ function createWindow() {
   });
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    loadDevURL(mainWindow);
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
