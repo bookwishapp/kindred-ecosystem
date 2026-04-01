@@ -1,5 +1,6 @@
 const { app, BrowserWindow, protocol, shell, ipcMain, safeStorage } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const Database = require('better-sqlite3');
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -63,31 +64,36 @@ app.on('open-url', (event, url) => {
 });
 
 // IPC handlers for secure token storage
+const tokenPath = path.join(app.getPath('userData'), '.assoc_token');
+
 ipcMain.handle('save-token', async (event, token) => {
-  if (!safeStorage.isEncryptionAvailable()) {
-    return false;
-  }
-  const encrypted = safeStorage.encryptString(token);
-  // In production, you'd save this to a file or keychain
-  // For now, we'll keep it in memory (not ideal for production)
-  global.encryptedToken = encrypted;
-  return true;
+  try {
+    if (safeStorage.isEncryptionAvailable()) {
+      const encrypted = safeStorage.encryptString(token);
+      fs.writeFileSync(tokenPath, encrypted);
+    } else {
+      fs.writeFileSync(tokenPath, token);
+    }
+    return true;
+  } catch { return false; }
 });
 
 ipcMain.handle('get-token', async () => {
-  if (!global.encryptedToken || !safeStorage.isEncryptionAvailable()) {
-    return null;
-  }
   try {
-    return safeStorage.decryptString(global.encryptedToken);
-  } catch {
-    return null;
-  }
+    if (!fs.existsSync(tokenPath)) return null;
+    const data = fs.readFileSync(tokenPath);
+    if (safeStorage.isEncryptionAvailable()) {
+      return safeStorage.decryptString(data);
+    }
+    return data.toString();
+  } catch { return null; }
 });
 
 ipcMain.handle('clear-token', async () => {
-  global.encryptedToken = null;
-  return true;
+  try {
+    if (fs.existsSync(tokenPath)) fs.unlinkSync(tokenPath);
+    return true;
+  } catch { return false; }
 });
 
 ipcMain.handle('open-external', async (event, url) => {
