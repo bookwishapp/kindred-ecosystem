@@ -269,6 +269,7 @@ ipcMain.handle('folder-mark-ingested', (event, { folderId, filePath, lastModifie
 
 // Embedding generation
 ipcMain.handle('generate-embedding', async (event, { text }) => {
+  console.log('generate-embedding called, text length:', text?.length);
   return new Promise((resolve, reject) => {
     const id = ++embeddingIdCounter;
     pendingEmbeddings.set(id, { resolve, reject });
