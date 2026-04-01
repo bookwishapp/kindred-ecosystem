@@ -19,6 +19,17 @@ contextBridge.exposeInMainWorld('electron', {
     addKeptGhost: (data) => ipcRenderer.invoke('db-add-kept-ghost', data),
   },
 
+  // Folder watch operations
+  folders: {
+    pick: () => ipcRenderer.invoke('folder-pick'),
+    add: (data) => ipcRenderer.invoke('folder-add', data),
+    list: (data) => ipcRenderer.invoke('folder-list', data),
+    remove: (data) => ipcRenderer.invoke('folder-remove', data),
+    scan: (data) => ipcRenderer.invoke('folder-scan', data),
+    readFile: (data) => ipcRenderer.invoke('folder-read-file', data),
+    markIngested: (data) => ipcRenderer.invoke('folder-mark-ingested', data),
+  },
+
   // Platform info
   platform: process.platform,
 });

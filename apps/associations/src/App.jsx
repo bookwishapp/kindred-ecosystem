@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './styles/globals.css';
 import Compose from './components/Compose';
+import FolderWatch from './components/FolderWatch';
 import apiClient from './api/client';
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showFolderWatch, setShowFolderWatch] = useState(false);
 
   async function handleSignIn(e) {
     e.preventDefault();
@@ -194,5 +196,34 @@ export default function App() {
     );
   }
 
-  return <Compose />;
+  return (
+    <div style={{ position: 'relative', height: '100vh' }}>
+      <Compose />
+
+      {showFolderWatch && (
+        <FolderWatch
+          projectId="default"
+          onClose={() => setShowFolderWatch(false)}
+        />
+      )}
+
+      <span
+        onClick={() => setShowFolderWatch(true)}
+        style={{
+          position: 'fixed',
+          bottom: 14,
+          left: 20,
+          fontFamily: "'Poppins', sans-serif",
+          fontSize: '10px',
+          color: 'var(--text-faint)',
+          letterSpacing: '0.08em',
+          zIndex: 10,
+          cursor: 'pointer',
+          userSelect: 'none',
+        }}
+      >
+        folders
+      </span>
+    </div>
+  );
 }
