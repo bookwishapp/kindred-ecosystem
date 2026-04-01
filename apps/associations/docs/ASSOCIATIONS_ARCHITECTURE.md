@@ -106,6 +106,8 @@ The writing beneath the ghost is always there. The ghost sits on top of it. When
 
 When watching, additional ghosts can arrive above the current one, stacking downward. The more you allow in, the more of your writing disappears beneath them. You control how far the past comes in.
 
+- **User-configurable settings** — indent style (indent vs. blank line), font size, line width, paragraph spacing; V1 uses sensible defaults with no UI to change them
+
 ---
 
 ## The AI Layer
