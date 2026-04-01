@@ -124,7 +124,12 @@ function getEmbeddingWorker() {
       else resolve(embedding);
     });
     embeddingWorker.on('error', (err) => {
-      console.error('Embedding worker error:', err);
+      console.error('Embedding worker error:', err.message, err.stack);
+      embeddingWorker = null;
+    });
+
+    embeddingWorker.on('exit', (code) => {
+      console.error('Embedding worker exited with code:', code);
       embeddingWorker = null;
     });
   }
