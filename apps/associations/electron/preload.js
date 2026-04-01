@@ -12,6 +12,13 @@ contextBridge.exposeInMainWorld('electron', {
   // Open external URLs
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
+  // Database operations
+  db: {
+    addPoolEntry: (data) => ipcRenderer.invoke('db-add-pool-entry', data),
+    getPoolEntries: (data) => ipcRenderer.invoke('db-get-pool-entries', data),
+    addKeptGhost: (data) => ipcRenderer.invoke('db-add-kept-ghost', data),
+  },
+
   // Platform info
   platform: process.platform,
 });

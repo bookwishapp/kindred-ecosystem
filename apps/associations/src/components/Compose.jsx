@@ -3,7 +3,6 @@ import Ghost from './Ghost';
 import { findGhost } from '../db/ghosts';
 import { addToPool } from '../db/pool';
 import { reportWords } from '../api/client';
-import db from '../db/index';
 
 const GHOST_CHECK_INTERVAL = 4000; // check for ghost every 4s after pause
 const PASSAGE_SAVE_INTERVAL = 30000; // save passage to pool every 30s
@@ -80,17 +79,8 @@ export default function Compose({ projectId = 'default', documentId = 'default',
 
   function handleKeep() {
     if (!ghost) return;
-
-    // Save kept association to local db
-    const crypto = window.crypto || require('crypto');
-    const id = crypto.randomUUID();
-    db.prepare(`
-      INSERT INTO kept_ghosts (id, document_id, pool_entry_id)
-      VALUES (?, ?, ?)
-    `).run(id, documentId, ghost.id);
-
-    // Mark the current position in the text with a tag dot
-    // This is handled visually by the editor — store offset
+    const id = window.crypto.randomUUID();
+    window.electron.db.addKeptGhost({ id, documentId, poolEntryId: ghost.id });
     setShownGhostIds(prev => [...prev, ghost.id]);
     setGhost(null);
     setWatching(false);

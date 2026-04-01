@@ -1,5 +1,6 @@
 const { app, BrowserWindow, protocol, shell, ipcMain, safeStorage } = require('electron');
 const path = require('path');
+const Database = require('better-sqlite3');
 const isDev = process.env.NODE_ENV === 'development';
 
 // Register deep link protocol
@@ -91,5 +92,30 @@ ipcMain.handle('clear-token', async () => {
 
 ipcMain.handle('open-external', async (event, url) => {
   await shell.openExternal(url);
+  return true;
+});
+
+// Database initialization
+const db = new Database(path.join(app.getPath('userData'), 'associations.db'));
+db.pragma('journal_mode = WAL');
+
+// Initialize schema inline
+db.exec(`
+  CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, use_global_pool INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));
+  CREATE TABLE IF NOT EXISTS pool_entries (id TEXT PRIMARY KEY, project_id TEXT, source TEXT NOT NULL, content TEXT NOT NULL, embedding BLOB, word_count INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));
+  CREATE TABLE IF NOT EXISTS kept_ghosts (id TEXT PRIMARY KEY, document_id TEXT NOT NULL, pool_entry_id TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')));
+`);
+
+ipcMain.handle('db-add-pool-entry', (event, { id, projectId, source, content, embeddingBuffer, wordCount }) => {
+  db.prepare(`INSERT OR IGNORE INTO pool_entries (id, project_id, source, content, embedding, word_count) VALUES (?, ?, ?, ?, ?, ?)`).run(id, projectId, source, content, embeddingBuffer, wordCount);
+  return true;
+});
+
+ipcMain.handle('db-get-pool-entries', (event, { projectId }) => {
+  return db.prepare(`SELECT id, content, embedding FROM pool_entries WHERE project_id = ? AND embedding IS NOT NULL`).all(projectId);
+});
+
+ipcMain.handle('db-add-kept-ghost', (event, { id, documentId, poolEntryId }) => {
+  db.prepare(`INSERT INTO kept_ghosts (id, document_id, pool_entry_id) VALUES (?, ?, ?)`).run(id, documentId, poolEntryId);
   return true;
 });
