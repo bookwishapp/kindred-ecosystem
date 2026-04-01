@@ -105,6 +105,17 @@ ipcMain.handle('open-external', async (event, url) => {
 const db = new Database(path.join(app.getPath('userData'), 'associations.db'));
 db.pragma('journal_mode = WAL');
 
+// Embedding model initialization
+let embedder = null;
+
+async function getEmbedder() {
+  if (!embedder) {
+    const { pipeline } = await import('@xenova/transformers');
+    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
+  return embedder;
+}
+
 // Initialize schema inline
 db.exec(`
   CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, use_global_pool INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));
@@ -234,4 +245,16 @@ ipcMain.handle('folder-mark-ingested', (event, { folderId, filePath, lastModifie
       ingested_at = datetime('now')
   `).run(id, folderId, filePath, lastModified);
   return true;
+});
+
+// Embedding generation
+ipcMain.handle('generate-embedding', async (event, { text }) => {
+  try {
+    const embed = await getEmbedder();
+    const output = await embed(text, { pooling: 'mean', normalize: true });
+    return Array.from(output.data);
+  } catch (err) {
+    console.error('Embedding error:', err.message);
+    return null;
+  }
 });

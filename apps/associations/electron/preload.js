@@ -12,6 +12,9 @@ contextBridge.exposeInMainWorld('electron', {
   // Open external URLs
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
+  // Embedding generation
+  generateEmbedding: (data) => ipcRenderer.invoke('generate-embedding', data),
+
   // Database operations
   db: {
     addPoolEntry: (data) => ipcRenderer.invoke('db-add-pool-entry', data),

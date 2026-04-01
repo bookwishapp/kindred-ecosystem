@@ -1,31 +1,10 @@
-import { pipeline, env } from '@xenova/transformers';
-
-env.remoteHost = 'https://huggingface.co';
-env.remotePathTemplate = '{model}/resolve/{revision}/';
-
-let embedder = null;
-
-async function getEmbedder() {
-  if (!embedder) {
-    embedder = await pipeline(
-      'feature-extraction',
-      'Xenova/all-MiniLM-L6-v2'
-    );
-  }
-  return embedder;
-}
-
 export async function generateEmbedding(text) {
-  const embed = await getEmbedder();
-  const output = await embed(text, {
-    pooling: 'mean',
-    normalize: true,
-  });
-  return Array.from(output.data);
+  const embedding = await window.electron.generateEmbedding({ text });
+  return embedding;
 }
 
 export function cosineSimilarity(a, b) {
-  if (a.length !== b.length) return 0;
+  if (!a || !b || a.length !== b.length) return 0;
   let dot = 0, normA = 0, normB = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
