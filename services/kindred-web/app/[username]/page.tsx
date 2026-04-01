@@ -121,14 +121,25 @@ export default async function ProfilePage({ params }: PageProps) {
         )}
 
         {/* Mobile: deep link opens app */}
-        <a href={deepLink} className="keep-button mobile-only">
-          Keep {profile.name} in Kindred
-        </a>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }} className="mobile-only">
+          <a href={deepLink} className="keep-button">
+            Keep {profile.name} in Kindred
+          </a>
+          <div className="keep-button" style={{ opacity: 0.4, cursor: 'not-allowed' }}>
+            Get it on Google Play (Coming Soon)
+          </div>
+        </div>
 
         {/* Desktop: prompt to get the app */}
-        <div className="keep-button desktop-only">
-          <p className="keep-desktop-text">Keep {profile.name} in Kindred</p>
-          <a href="https://apps.apple.com" className="app-store-link">Get Kindred on iPhone</a>
+        <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+          <div className="keep-button">
+            <p className="keep-desktop-text">Keep {profile.name} in Kindred</p>
+            <a href="https://apps.apple.com/app/kindred-stay-close/id6761225471" className="app-store-link">Get Kindred on iPhone</a>
+          </div>
+          <div className="keep-button" style={{ opacity: 0.4, cursor: 'not-allowed' }}>
+            <p className="keep-desktop-text">Keep {profile.name} in Kindred</p>
+            <span className="app-store-link" style={{ opacity: 1 }}>Get it on Google Play (Coming Soon)</span>
+          </div>
         </div>
       </div>
 

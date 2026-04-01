@@ -6,13 +6,21 @@ export default function Home() {
         <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
           Stay close to the people who matter
         </p>
-        <a
-          href="https://apps.apple.com/app/kindred"
-          className="keep-button"
-          style={{ textDecoration: 'none' }}
-        >
-          Download on App Store
-        </a>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+          <a
+            href="https://apps.apple.com/app/kindred-stay-close/id6761225471"
+            className="keep-button"
+            style={{ textDecoration: 'none' }}
+          >
+            Download on App Store
+          </a>
+          <div
+            className="keep-button"
+            style={{ opacity: 0.4, cursor: 'not-allowed' }}
+          >
+            Get it on Google Play (Coming Soon)
+          </div>
+        </div>
       </div>
       <footer className="main-footer">
         <div className="footer-links">
