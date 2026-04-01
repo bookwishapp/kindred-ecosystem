@@ -107,6 +107,8 @@ The writing beneath the ghost is always there. The ghost sits on top of it. When
 When watching, additional ghosts can arrive above the current one, stacking downward. The more you allow in, the more of your writing disappears beneath them. You control how far the past comes in.
 
 - **User-configurable settings** — indent style (indent vs. blank line), font size, line width, paragraph spacing; V1 uses sensible defaults with no UI to change them
+- **Auto-save** — documents save automatically as you write; requires document management (create, name, open, list) to be built first
+- **Document management** — new document, open existing, document list; V1 Compose always opens to a single unnamed document
 
 ---
 
