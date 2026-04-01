@@ -8,6 +8,28 @@ export default function App() {
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  async function handleSignIn(e) {
+    e.preventDefault();
+    setSending(true);
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          redirect_uri: 'associations://auth/verify',
+        }),
+      });
+      setSent(true);
+    } catch (err) {
+      console.error('Sign in error:', err);
+    }
+    setSending(false);
+  }
 
   useEffect(() => {
     async function checkAuth() {
@@ -44,38 +66,70 @@ export default function App() {
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'column',
-        gap: '24px'
+        gap: '24px',
+        padding: '48px',
       }}>
         <p style={{
           fontFamily: "'Poppins', sans-serif",
           fontSize: '11px',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
-          color: 'var(--text-faint)'
+          color: 'var(--text-faint)',
         }}>
           Associations
         </p>
-        <button
-          onClick={() => {
-            const url = `${import.meta.env.VITE_API_BASE_URL}/auth/request`;
-            window.electron.openExternal(
-              `https://auth.terryheath.com/auth/request?redirect_uri=associations://auth/verify&app_name=Associations`
-            );
-          }}
-          style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontSize: '13px',
-            background: 'none',
-            border: '0.5px solid var(--text-faint)',
+
+        {sent ? (
+          <p style={{
+            fontFamily: "'Lora', serif",
+            fontStyle: 'italic',
+            fontSize: '16px',
             color: 'var(--text-muted)',
-            padding: '10px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            letterSpacing: '0.06em'
-          }}
-        >
-          Sign in
-        </button>
+            textAlign: 'center',
+            maxWidth: '320px',
+            lineHeight: '1.7',
+          }}>
+            Check your email for a sign-in link.
+          </p>
+        ) : (
+          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '280px' }}>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              style={{
+                fontFamily: "'Lora', serif",
+                fontSize: '15px',
+                padding: '10px 14px',
+                border: '0.5px solid var(--text-faint)',
+                borderRadius: '6px',
+                background: 'transparent',
+                color: 'var(--text)',
+                outline: 'none',
+                textAlign: 'center',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={sending}
+              style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '12px',
+                letterSpacing: '0.08em',
+                background: 'none',
+                border: '0.5px solid var(--text-faint)',
+                color: 'var(--text-muted)',
+                padding: '10px 24px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+            >
+              {sending ? 'Sending...' : 'Send sign-in link'}
+            </button>
+          </form>
+        )}
       </div>
     );
   }
