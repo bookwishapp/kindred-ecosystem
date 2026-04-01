@@ -38,7 +38,3 @@ body::before {
   position: relative;
   z-index: 1;
 }
-
-[contenteditable] div + div {
-  text-indent: 2em;
-}

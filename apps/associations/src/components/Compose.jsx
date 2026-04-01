@@ -139,6 +139,28 @@ export default function Compose({ projectId = 'default', documentId = 'default',
         contentEditable
         suppressContentEditableWarning
         onInput={(e) => setContent(e.currentTarget.innerText)}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+
+          const sel = window.getSelection();
+          if (!sel.rangeCount) return;
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+
+          // Create new paragraph div with indent
+          const newDiv = document.createElement('div');
+          newDiv.style.textIndent = '2em';
+          newDiv.appendChild(document.createElement('br'));
+
+          range.insertNode(newDiv);
+          range.setStart(newDiv, 0);
+          range.setEnd(newDiv, 0);
+          sel.removeAllRanges();
+          sel.addRange(range);
+
+          e.currentTarget.dispatchEvent(new Event('input', { bubbles: true }));
+        }}
         style={{
           position: 'absolute',
           inset: 0,
