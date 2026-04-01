@@ -1,4 +1,5 @@
 const { app, BrowserWindow, protocol, shell, ipcMain, safeStorage, dialog } = require('electron');
+const { Worker } = require('worker_threads');
 const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
@@ -105,15 +106,29 @@ ipcMain.handle('open-external', async (event, url) => {
 const db = new Database(path.join(app.getPath('userData'), 'associations.db'));
 db.pragma('journal_mode = WAL');
 
-// Embedding model initialization
-let embedder = null;
+// Embedding worker initialization
+let embeddingWorker = null;
+let pendingEmbeddings = new Map();
+let embeddingIdCounter = 0;
 
-async function getEmbedder() {
-  if (!embedder) {
-    const { pipeline } = await import('@xenova/transformers');
-    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+function getEmbeddingWorker() {
+  if (!embeddingWorker) {
+    embeddingWorker = new Worker(
+      path.join(__dirname, 'embeddings-worker.js'),
+      { type: 'module' }
+    );
+    embeddingWorker.on('message', ({ id, embedding, error }) => {
+      const { resolve, reject } = pendingEmbeddings.get(id);
+      pendingEmbeddings.delete(id);
+      if (error) reject(new Error(error));
+      else resolve(embedding);
+    });
+    embeddingWorker.on('error', (err) => {
+      console.error('Embedding worker error:', err);
+      embeddingWorker = null;
+    });
   }
-  return embedder;
+  return embeddingWorker;
 }
 
 // Initialize schema inline
@@ -249,12 +264,14 @@ ipcMain.handle('folder-mark-ingested', (event, { folderId, filePath, lastModifie
 
 // Embedding generation
 ipcMain.handle('generate-embedding', async (event, { text }) => {
-  try {
-    const embed = await getEmbedder();
-    const output = await embed(text, { pooling: 'mean', normalize: true });
-    return Array.from(output.data);
-  } catch (err) {
-    console.error('Embedding error:', err.message);
-    return null;
-  }
+  return new Promise((resolve, reject) => {
+    const id = ++embeddingIdCounter;
+    pendingEmbeddings.set(id, { resolve, reject });
+    try {
+      getEmbeddingWorker().postMessage({ id, text });
+    } catch (err) {
+      pendingEmbeddings.delete(id);
+      reject(err);
+    }
+  });
 });
