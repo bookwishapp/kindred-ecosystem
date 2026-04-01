@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "main": "electron/main.js",
   "scripts": {
-    "dev": "concurrently \"vite\" \"NODE_ENV=development electron .\"",
+    "dev": "concurrently \"vite\" \"sleep 3 && NODE_ENV=development electron .\"",
     "build": "vite build && electron-builder",
     "preview": "vite preview"
   },
