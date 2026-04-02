@@ -253,6 +253,22 @@ export default function ManageHop({ params }) {
     } catch { alert('Network error'); }
   }
 
+  async function resendInvitation(invitationId) {
+    try {
+      const res = await fetch(`/api/hops/${hopSlug}/invitations/${invitationId}/resend`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        alert('Invitation resent.');
+      } else {
+        alert('Failed to resend invitation.');
+      }
+    } catch {
+      alert('Network error');
+    }
+  }
+
   async function importVenues(e) {
     e.preventDefault();
     if (!importSourceSlug) return;
@@ -729,6 +745,12 @@ export default function ManageHop({ params }) {
                 }}>
                   {inv.status}
                 </span>
+                <button
+                  onClick={() => resendInvitation(inv.id)}
+                  style={{ fontSize: '13px', padding: '6px 12px' }}
+                >
+                  Resend
+                </button>
                 {inv.status === 'pending' && (
                   <button
                     onClick={() => cancelInvitation(inv.id)}
