@@ -29,8 +29,17 @@ export async function POST(req, { params }) {
     if (invResult.rows.length === 0) return Response.json({ error: 'Invitation not found' }, { status: 404 });
     const invitation = invResult.rows[0];
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://passportr.io';
-    const setupUrl = `${baseUrl}/venue/setup/${invitation.token}`;
+    const venueResult = await db.query(
+      `SELECT v.stamp_token FROM venues v
+       JOIN venue_invitations vi ON vi.id = v.invitation_id
+       WHERE vi.id = $1`,
+      [invitation.id]
+    );
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://passportr.dampconcrete.com';
+    const setupUrl = venueResult.rows.length > 0
+      ? `${baseUrl}/venue/${venueResult.rows[0].stamp_token}`
+      : `${baseUrl}/venue/setup/${invitation.token}`;
 
     const mailRes = await fetch(`${process.env.MAIL_SERVICE_URL}/send`, {
       method: 'POST',
@@ -42,7 +51,7 @@ export async function POST(req, { params }) {
         product: 'passportr',
         template: 'passportr-venue-invitation',
         to: invitation.email,
-        senderName: `${profile.organization || profile.name || 'Passportr'}`,
+        senderName: hop.name,
         data: {
           venueName: invitation.venue_name,
           hopName: hop.name,

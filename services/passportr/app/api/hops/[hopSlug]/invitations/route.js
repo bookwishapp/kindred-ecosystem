@@ -88,7 +88,7 @@ export async function POST(req, { params }) {
         product: 'passportr',
         template: 'passportr-venue-invitation',
         to: email,
-        senderName: `${profile.organization ? `${profile.organization}` : profile.name || 'Passportr'}`,
+        senderName: hop.name,
         data: {
           venueName: venue_name,
           hopName: hop.name,
