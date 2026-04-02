@@ -34,6 +34,7 @@ export default function ManageHop({ params }) {
   const [drawing, setDrawing] = useState(null);
   const [drawingLoading, setDrawingLoading] = useState(false);
   const [notifying, setNotifying] = useState(false);
+  const [resending, setResending] = useState({});
   const bannerInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
@@ -254,6 +255,7 @@ export default function ManageHop({ params }) {
   }
 
   async function resendInvitation(invitationId) {
+    setResending(r => ({ ...r, [invitationId]: true }));
     try {
       const res = await fetch(`/api/hops/${hopSlug}/invitations/${invitationId}/resend`, {
         method: 'POST',
@@ -262,6 +264,7 @@ export default function ManageHop({ params }) {
       if (res.ok) alert('Invitation resent.');
       else alert('Failed to resend invitation.');
     } catch { alert('Network error'); }
+    setResending(r => ({ ...r, [invitationId]: false }));
   }
 
   async function importVenues(e) {
@@ -742,9 +745,15 @@ export default function ManageHop({ params }) {
                 </span>
                 <button
                   onClick={() => resendInvitation(inv.id)}
-                  style={{ fontSize: '13px', padding: '6px 12px' }}
+                  disabled={resending[inv.id]}
+                  style={{
+                    fontSize: '13px',
+                    padding: '6px 12px',
+                    opacity: resending[inv.id] ? 0.6 : 1,
+                    cursor: resending[inv.id] ? 'not-allowed' : 'pointer',
+                  }}
                 >
-                  Resend
+                  {resending[inv.id] ? 'Sending...' : 'Resend'}
                 </button>
                 {inv.status === 'pending' && (
                   <button
