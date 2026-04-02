@@ -188,7 +188,7 @@ export default function DocsPage() {
 
         <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: '24px' }}>Questions and feedback</h2>
         <p style={{ fontFamily: "'Lora', serif", fontSize: '18px', lineHeight: '1.9', color: 'var(--text)', marginBottom: '24px' }}><a href="mailto:terry@terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>terry@terryheath.com</a></p>
-        <p style={{ fontFamily: "'Lora', serif", fontSize: '18px', lineHeight: '1.9', color: 'var(--text-muted)', marginBottom: '24px' }}>Associations is part of the Small Things ecosystem at terryheath.com, built by Terry Heath, owner of Sinclair Inlet Book Co. in Port Orchard, WA.</p>
+        <p style={{ fontFamily: "'Lora', serif", fontSize: '18px', lineHeight: '1.9', color: 'var(--text-muted)', marginBottom: '24px' }}>Associations is part of <a href="https://dampconcrete.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Damp Concrete</a>. Built by <a href="https://terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terry Heath</a>.</p>
 
       </article>
 
