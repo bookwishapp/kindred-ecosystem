@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '../../../../lib/db';
+import { sendNewsletterToSubscribers } from '../../../../lib/email';
 
 export const runtime = 'nodejs';
 
@@ -61,9 +62,7 @@ export async function POST(request) {
               [post.id, post.title, subscriberCount]
             );
 
-            // Trigger newsletter send asynchronously
-            // In production, this would be a separate job/queue
-            // For now, we'll just mark it as ready to send
+            // Mark as queued and started
             await client.query(
               `UPDATE sends
                SET status = 'queued', started_at = NOW()
@@ -71,13 +70,32 @@ export async function POST(request) {
               [sendResult.rows[0].id]
             );
 
+            await client.query('COMMIT');
+            client.release();
+
+            // Send the newsletter after committing the transaction
+            const emailContent = `<h1>${post.title}</h1>\n${post.content}`;
+            const { sentCount, errors } = await sendNewsletterToSubscribers(
+              post.id, post.title, emailContent
+            );
+
+            await db.query(
+              `UPDATE sends
+               SET status = $1, sent_count = $2, completed_at = NOW()
+               WHERE id = $3`,
+              [errors.length > 0 ? 'complete_with_errors' : 'complete', sentCount, sendResult.rows[0].id]
+            );
+
             results.push({
               post_id: post.id,
               title: post.title,
-              status: 'published_and_queued',
+              status: 'published_and_sent',
               send_id: sendResult.rows[0].id,
-              subscribers: subscriberCount
+              subscribers: subscriberCount,
+              sent_count: sentCount
             });
+
+            continue; // Skip the normal commit/release since we already did it
           } else {
             results.push({
               post_id: post.id,

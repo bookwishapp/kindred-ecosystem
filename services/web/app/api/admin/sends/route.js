@@ -96,31 +96,23 @@ export async function POST(request) {
     // Format content with title as H1
     const emailContent = `<h1>${post.title}</h1>\n${post.content}`;
 
-    // Send newsletter asynchronously (in production, this would be a background job)
-    sendNewsletterToSubscribers(post_id, subject, emailContent)
-      .then(async ({ sentCount, errors }) => {
-        // Update send record with completion info
-        await db.query(
-          `UPDATE sends
-           SET status = $1, sent_count = $2, completed_at = NOW()
-           WHERE id = $3`,
-          [errors.length > 0 ? 'complete_with_errors' : 'complete', sentCount, sendId]
-        );
-      })
-      .catch(async (error) => {
-        console.error('Newsletter send failed:', error);
-        await db.query(
-          `UPDATE sends
-           SET status = 'failed', completed_at = NOW()
-           WHERE id = $1`,
-          [sendId]
-        );
-      });
+    // Send newsletter
+    const { sentCount, errors } = await sendNewsletterToSubscribers(
+      post_id, subject, emailContent
+    );
+
+    await db.query(
+      `UPDATE sends
+       SET status = $1, sent_count = $2, completed_at = NOW()
+       WHERE id = $3`,
+      [errors.length > 0 ? 'complete_with_errors' : 'complete', sentCount, sendId]
+    );
 
     return NextResponse.json({
       success: true,
       send_id: sendId,
-      message: `Newsletter send started for ${subscriberCount} recipients`
+      sent_count: sentCount,
+      message: `Newsletter sent to ${sentCount} recipients`
     });
   } catch (error) {
     console.error('Error creating send:', error);
