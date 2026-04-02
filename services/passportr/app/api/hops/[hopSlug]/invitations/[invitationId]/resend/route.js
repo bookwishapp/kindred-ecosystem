@@ -58,11 +58,6 @@ export async function POST(req, { params }) {
     });
     if (!mailRes.ok) throw new Error('Mail service error');
 
-    await db.query(
-      'UPDATE venue_invitations SET sent_at = NOW() WHERE id = $1',
-      [invitationId]
-    );
-
     return Response.json({ status: 'resent' });
   } catch (error) {
     if (error.message === 'Unauthorized') return Response.json({ error: 'Unauthorized' }, { status: 401 });
