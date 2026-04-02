@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dampconcrete.com/sitemap.xml
+Sitemap: https://associations.dampconcrete.com/sitemap.xml

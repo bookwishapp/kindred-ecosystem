@@ -1,6 +1,15 @@
 export const metadata = {
   title: 'Associations — Documentation',
-  description: 'A notebook that isn\'t linear. Documentation and getting started guide.',
+  description: 'How to use Associations, the writing notebook that connects the dots.',
+  metadataBase: new URL('https://associations.dampconcrete.com'),
+  alternates: { canonical: 'https://associations.dampconcrete.com/docs' },
+  openGraph: {
+    title: 'Associations — Documentation',
+    description: 'How to use Associations, the writing notebook that connects the dots.',
+    url: 'https://associations.dampconcrete.com/docs',
+    siteName: 'Associations',
+    type: 'article',
+  },
 };
 
 const DOWNLOAD_URL = 'https://associations-releases.s3.amazonaws.com/Associations-1.0.0-universal.dmg';
@@ -8,6 +17,36 @@ const DOWNLOAD_URL = 'https://associations-releases.s3.amazonaws.com/Association
 export default function DocsPage() {
   return (
     <main style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Damp Concrete",
+                "item": "https://dampconcrete.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Associations",
+                "item": "https://associations.dampconcrete.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Documentation",
+                "item": "https://associations.dampconcrete.com/docs"
+              }
+            ]
+          })
+        }}
+      />
+
 
       {/* Nav */}
       <nav style={{

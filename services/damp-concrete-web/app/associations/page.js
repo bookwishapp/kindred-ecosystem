@@ -3,12 +3,19 @@ import Image from 'next/image';
 export const metadata = {
   title: 'Associations — See what connects.',
   description: 'A writing notebook that isn\'t linear. It connects the dots. Not organizes them.',
+  metadataBase: new URL('https://associations.dampconcrete.com'),
+  alternates: { canonical: 'https://associations.dampconcrete.com' },
   openGraph: {
     title: 'Associations — See what connects.',
     description: 'A writing notebook that isn\'t linear. It connects the dots. Not organizes them.',
     url: 'https://associations.dampconcrete.com',
     siteName: 'Associations',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Associations — See what connects.',
+    description: 'A writing notebook that isn\'t linear. It connects the dots. Not organizes them.',
   },
 };
 
@@ -17,6 +24,54 @@ const DOWNLOAD_URL = 'https://associations-releases.s3.amazonaws.com/Association
 export default function AssociationsPage() {
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Associations",
+            "applicationCategory": "WritingApplication",
+            "operatingSystem": "macOS 13+",
+            "url": "https://associations.dampconcrete.com",
+            "downloadUrl": "https://associations-releases.s3.amazonaws.com/Associations-1.0.0-universal.dmg",
+            "description": "A writing notebook that isn't linear. It connects the dots in your writing — without organizing them, sorting them, or asking you to manage anything.",
+            "offers": {
+              "@type": "Offer",
+              "price": "9.00",
+              "priceCurrency": "USD",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "price": "9.00",
+                "priceCurrency": "USD",
+                "unitText": "MONTH"
+              }
+            },
+            "author": {
+              "@type": "Organization",
+              "name": "Damp Concrete",
+              "url": "https://dampconcrete.com"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Damp Concrete",
+              "url": "https://dampconcrete.com"
+            },
+            "featureList": [
+              "Semantic ghost connections from your own writing",
+              "Local embeddings — your writing never leaves your device",
+              "Q&A questions generated from your existing content",
+              "Folder watch — import existing writing into the pool",
+              "Project and document management",
+              "Export to RTF and plain text",
+              "Outline mode with kept connections",
+              "Auto-save"
+            ],
+            "screenshot": "https://associations.dampconcrete.com/og-image.png"
+          })
+        }}
+      />
+
 
       {/* Nav */}
       <nav style={{
@@ -216,7 +271,16 @@ export default function AssociationsPage() {
             <a href="https://dampconcrete.com" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '13px' }}>Damp Concrete</a>
           </div>
           <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: '13px', color: 'var(--text-faint)', lineHeight: '1.9' }}>
-            Built by <a href="https://terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terry Heath</a>.<br/>
+            Associations is part of{' '}
+            <a href="https://dampconcrete.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+              Damp Concrete
+            </a>
+            {' '}— software for writers, collectors, and the people who show up.<br/>
+            Built by{' '}
+            <a href="https://terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+              Terry Heath
+            </a>
+            .<br/>
             terry@terryheath.com
           </div>
         </div>
