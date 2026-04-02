@@ -48,6 +48,7 @@ export default function AssociationsPage() {
         <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
           <a href="#how" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>How it works</a>
           <a href="#pricing" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>Pricing</a>
+          <a href="/associations/docs" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>Docs</a>
           <a href={DOWNLOAD_URL} style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: '14px',
@@ -209,10 +210,15 @@ export default function AssociationsPage() {
         flexWrap: 'wrap',
         gap: '16px',
       }}>
-        <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: '13px', color: 'var(--text-faint)', lineHeight: '1.9' }}>
-          Associations is part of <a href="https://dampconcrete.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Damp Concrete</a>.<br/>
-          Built by <a href="https://terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terry Heath</a>.<br/>
-          terry@terryheath.com
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <Image src="/damp-concrete-logo.png" alt="Damp Concrete" width={32} height={32} />
+            <a href="https://dampconcrete.com" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '13px' }}>Damp Concrete</a>
+          </div>
+          <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: '13px', color: 'var(--text-faint)', lineHeight: '1.9' }}>
+            Built by <a href="https://terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terry Heath</a>.<br/>
+            terry@terryheath.com
+          </div>
         </div>
         <p style={{ fontFamily: "'Lora', serif", fontStyle: 'italic', fontSize: '15px', color: 'var(--text-faint)' }}>
           A notebook where the dots connect.
