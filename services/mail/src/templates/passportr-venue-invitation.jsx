@@ -27,7 +27,7 @@ function PassportrVenueInvitation({ subject, body, hopUrl, venueName }) {
 
 module.exports.render = function(data) {
   return {
-    subject: data.subject || 'You've been invited to participate',
+    subject: data.subject || "You've been invited to participate",
     html: renderEmail(<PassportrVenueInvitation {...data} />),
   };
 };

@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
   // Load and render template
   let rendered;
   try {
-    const tmpl = require(`../templates/${template}`);
+    const tmpl = require(`../../dist/templates/${template}`);
     rendered = tmpl.render(data);
   } catch (err) {
     return res.status(400).json({ error: `Template not found: ${template}` });

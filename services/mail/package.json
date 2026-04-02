@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
+    "build:templates": "esbuild src/templates/*.jsx --bundle=false --outdir=dist/templates --platform=node --jsx=automatic",
+    "start": "npm run build:templates && node src/index.js",
+    "dev": "npm run build:templates && nodemon src/index.js",
     "migrate": "node migrate.js"
   },
   "keywords": [],
@@ -25,6 +26,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "esbuild": "^0.21.5",
     "nodemon": "^3.1.14"
   }
 }
