@@ -5,6 +5,7 @@ const { sendEmail } = require('../ses');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const FROM_ADDRESSES = {
+  'terryheath': { email: 'newsletter@terryheath.com', name: 'Terry @ Sinclair Inlet Book Co.' },
   'associations': { email: 'hello@dampconcrete.com', name: 'Associations' },
   'passportr': { email: 'hello@dampconcrete.com', name: 'Passportr' },
   'kindred': { email: 'hello@dampconcrete.com', name: 'Kindred' },
@@ -77,6 +78,84 @@ router.post('/', async (req, res) => {
       [err.message, logId]
     );
     return res.status(500).json({ error: 'Send failed', message: err.message });
+  }
+});
+
+// POST /send/bulk
+// Body: { product, template, recipients: [{ email, data }], commonData }
+router.post('/bulk', async (req, res) => {
+  const { product, template, recipients, commonData = {} } = req.body;
+
+  if (!product || !template || !recipients?.length) {
+    return res.status(400).json({ error: 'product, template, and recipients are required' });
+  }
+
+  const from = FROM_ADDRESSES[product];
+  if (!from) {
+    return res.status(400).json({ error: `Unknown product: ${product}` });
+  }
+
+  // Load template once
+  let tmpl;
+  try {
+    tmpl = require(`../../dist/templates/${template}`);
+  } catch (err) {
+    return res.status(400).json({ error: `Template not found: ${template}` });
+  }
+
+  // Return immediately — process in background
+  res.json({ status: 'queued', count: recipients.length });
+
+  // Process sends
+  let sentCount = 0;
+  const errors = [];
+
+  for (const recipient of recipients) {
+    const { email, data: recipientData = {} } = recipient;
+
+    try {
+      // Check unsubscribe
+      const unsub = await pool.query(
+        'SELECT id FROM unsubscribes WHERE product = $1 AND email = $2',
+        [product, email.toLowerCase()]
+      );
+      if (unsub.rows.length > 0) continue;
+
+      const mergedData = { ...commonData, ...recipientData, email };
+      const rendered = await tmpl.render(mergedData);
+
+      const logResult = await pool.query(
+        `INSERT INTO email_log (product, template, to_email, from_email, sender_name, subject, status)
+         VALUES ($1, $2, $3, $4, $5, $6, 'pending') RETURNING id`,
+        [product, template, email, from.email, from.name, rendered.subject]
+      );
+      const logId = logResult.rows[0].id;
+
+      const messageId = await sendEmail({
+        to: email,
+        from: from.email,
+        senderName: from.name,
+        subject: rendered.subject,
+        html: rendered.html,
+      });
+
+      await pool.query(
+        `UPDATE email_log SET status = 'sent', ses_message_id = $1, sent_at = NOW() WHERE id = $2`,
+        [messageId, logId]
+      );
+
+      sentCount++;
+    } catch (err) {
+      errors.push({ email, error: err.message });
+      await pool.query(
+        `INSERT INTO email_log (product, template, to_email, from_email, sender_name, subject, status, error)
+         VALUES ($1, $2, $3, $4, $5, $6, 'failed', $7)`,
+        [product, template, email, from.email, from.name, 'unknown', err.message]
+      );
+    }
+
+    // Rate limit
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
 });
 

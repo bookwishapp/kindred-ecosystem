@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import db from '../../../../lib/db';
-import { sendNewsletterToSubscribers } from '../../../../lib/email';
 
 export const runtime = 'nodejs';
 
@@ -96,23 +95,38 @@ export async function POST(request) {
     // Format content with title as H1
     const emailContent = `<h1>${post.title}</h1>\n${post.content}`;
 
-    // Send newsletter
-    const { sentCount, errors } = await sendNewsletterToSubscribers(
-      post_id, subject, emailContent
+    // Get all active subscribers
+    const subscribersResult = await db.query(
+      `SELECT email FROM subscribers
+       WHERE status = 'active'
+         AND email NOT IN (SELECT email FROM suppressions)`
     );
 
-    await db.query(
-      `UPDATE sends
-       SET status = $1, sent_count = $2, completed_at = NOW()
-       WHERE id = $3`,
-      [errors.length > 0 ? 'complete_with_errors' : 'complete', sentCount, sendId]
-    );
+    const recipients = subscribersResult.rows.map(s => ({ email: s.email }));
+
+    const mailRes = await fetch(`${process.env.MAIL_SERVICE_URL}/send/bulk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-mail-secret': process.env.MAIL_SERVICE_SECRET,
+      },
+      body: JSON.stringify({
+        product: 'terryheath',
+        template: 'terryheath-newsletter',
+        recipients,
+        commonData: {
+          subject,
+          content: emailContent,
+        },
+      }),
+    });
+
+    if (!mailRes.ok) throw new Error('Mail service error');
 
     return NextResponse.json({
       success: true,
       send_id: sendId,
-      sent_count: sentCount,
-      message: `Newsletter sent to ${sentCount} recipients`
+      message: `Newsletter queued for ${recipients.length} recipients`,
     });
   } catch (error) {
     console.error('Error creating send:', error);

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import db from '../../../../lib/db';
-import { sendNewsletterToSubscribers } from '../../../../lib/email';
 
 export const runtime = 'nodejs';
 
@@ -75,24 +74,41 @@ export async function POST(request) {
 
             // Send the newsletter after committing the transaction
             const emailContent = `<h1>${post.title}</h1>\n${post.content}`;
-            const { sentCount, errors } = await sendNewsletterToSubscribers(
-              post.id, post.title, emailContent
+
+            // Get all active subscribers
+            const subscribersResult = await db.query(
+              `SELECT email FROM subscribers
+               WHERE status = 'active'
+                 AND email NOT IN (SELECT email FROM suppressions)`
             );
 
-            await db.query(
-              `UPDATE sends
-               SET status = $1, sent_count = $2, completed_at = NOW()
-               WHERE id = $3`,
-              [errors.length > 0 ? 'complete_with_errors' : 'complete', sentCount, sendResult.rows[0].id]
-            );
+            const recipients = subscribersResult.rows.map(s => ({ email: s.email }));
+
+            const mailRes = await fetch(`${process.env.MAIL_SERVICE_URL}/send/bulk`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-mail-secret': process.env.MAIL_SERVICE_SECRET,
+              },
+              body: JSON.stringify({
+                product: 'terryheath',
+                template: 'terryheath-newsletter',
+                recipients,
+                commonData: {
+                  subject: post.title,
+                  content: emailContent,
+                },
+              }),
+            });
+
+            if (!mailRes.ok) throw new Error('Mail service error');
 
             results.push({
               post_id: post.id,
               title: post.title,
-              status: 'published_and_sent',
+              status: 'published_and_queued',
               send_id: sendResult.rows[0].id,
-              subscribers: subscriberCount,
-              sent_count: sentCount
+              subscribers: subscriberCount
             });
 
             continue; // Skip the normal commit/release since we already did it

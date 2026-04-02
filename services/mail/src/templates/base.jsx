@@ -5,6 +5,7 @@ const React = require('react');
 
 function BaseLayout({ product, children, unsubscribeUrl, footerText }) {
   const colors = {
+    'terryheath': { accent: '#2A2825', bg: '#F5F3EF' },
     'passportr': { accent: '#2A2825', bg: '#FFFFFF' },
     'associations': { accent: '#2A2825', bg: '#F5F3EF' },
     'analoglist': { accent: '#2AB8A0', bg: '#FFFFFF' },
