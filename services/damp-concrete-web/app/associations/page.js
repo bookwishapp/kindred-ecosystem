@@ -19,9 +19,24 @@ export const metadata = {
   },
 };
 
-const DOWNLOAD_URL = 'https://associations-releases.s3.amazonaws.com/Associations-1.0.0-universal.dmg';
+export default async function AssociationsPage() {
+  // Fetch current version from S3
+  let downloadUrl = 'https://associations-releases.s3.amazonaws.com/Associations-1.0.0-universal.dmg';
+  try {
+    const res = await fetch('https://associations-releases.s3.amazonaws.com/latest-mac.yml', {
+      next: { revalidate: 3600 } // cache for 1 hour
+    });
+    if (res.ok) {
+      const yaml = await res.text();
+      const match = yaml.match(/url:\s+(.+\.dmg)/);
+      if (match) {
+        downloadUrl = `https://associations-releases.s3.amazonaws.com/${match[1].trim()}`;
+      }
+    }
+  } catch (e) {
+    // fall back to hardcoded URL
+  }
 
-export default function AssociationsPage() {
   return (
     <main>
       <script
@@ -34,7 +49,7 @@ export default function AssociationsPage() {
             "applicationCategory": "WritingApplication",
             "operatingSystem": "macOS 13+",
             "url": "https://associations.dampconcrete.com",
-            "downloadUrl": "https://associations-releases.s3.amazonaws.com/Associations-1.0.0-universal.dmg",
+            "downloadUrl": downloadUrl,
             "description": "A writing notebook that isn't linear. It connects the dots in your writing — without organizing them, sorting them, or asking you to manage anything.",
             "offers": {
               "@type": "Offer",
@@ -104,7 +119,7 @@ export default function AssociationsPage() {
           <a href="#how" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>How it works</a>
           <a href="#pricing" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>Pricing</a>
           <a href="/docs" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>Docs</a>
-          <a href={DOWNLOAD_URL} style={{
+          <a href={downloadUrl} style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: '14px',
             color: 'var(--bg)',
@@ -128,7 +143,7 @@ export default function AssociationsPage() {
           Your own words — returning when they matter.
         </p>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <a href={DOWNLOAD_URL} style={{
+          <a href={downloadUrl} style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: '15px',
             color: 'var(--bg)',
