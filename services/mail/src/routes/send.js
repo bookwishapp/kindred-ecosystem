@@ -42,7 +42,8 @@ router.post('/', async (req, res) => {
     const tmpl = require(`../../dist/templates/${template}`);
     rendered = await tmpl.render(data);
   } catch (err) {
-    return res.status(400).json({ error: `Template not found: ${template}` });
+    console.error('Template render error:', err.message, err.stack);
+    return res.status(400).json({ error: `Template error: ${err.message}` });
   }
 
   // Log pending
@@ -70,11 +71,11 @@ router.post('/', async (req, res) => {
 
     return res.json({ status: 'sent', messageId, logId });
   } catch (err) {
+    console.error('SES send error:', err.message, err.stack);
     await pool.query(
       `UPDATE email_log SET status = 'failed', error = $1 WHERE id = $2`,
       [err.message, logId]
     );
-    console.error('Send failed:', err.message);
     return res.status(500).json({ error: 'Send failed', message: err.message });
   }
 });
