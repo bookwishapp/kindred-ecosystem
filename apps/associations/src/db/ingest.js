@@ -1,38 +1,37 @@
-import { generateEmbedding, embeddingToBuffer } from './embeddings';
+import { generateEmbedding } from './embeddings';
 import { v4 as uuidv4 } from 'uuid';
 
-const PASSAGE_MIN_WORDS = 30;
-const PASSAGE_MAX_WORDS = 200;
+const MIN_SENTENCE_WORDS = 8;
+const MIN_PASSAGE_WORDS = 10;
 
-// Split text into overlapping passages for richer pool coverage
 function splitIntoPassages(text) {
-  const paragraphs = text
-    .split(/\n\n+/)
-    .map(p => p.trim())
-    .filter(p => p.length > 0);
+  const sentenceRegex = /[^.!?]+[.!?]+(?:\s|$)/g;
+  const rawSentences = text.match(sentenceRegex) || [];
+
+  const sentences = rawSentences
+    .map(s => s.trim())
+    .filter(s => s.split(/\s+/).filter(w => w.length > 0).length >= MIN_SENTENCE_WORDS);
+
+  if (sentences.length === 0) {
+    const words = text.trim().split(/\s+/).length;
+    return words >= MIN_PASSAGE_WORDS ? [text.trim()] : [];
+  }
 
   const passages = [];
 
-  for (const para of paragraphs) {
-    const words = para.split(/\s+/);
-    if (words.length < PASSAGE_MIN_WORDS) {
-      // Short paragraph — use as-is if not too short
-      if (words.length >= 10) passages.push(para);
-      continue;
+  for (let i = 0; i < sentences.length; i++) {
+    if (sentences[i].split(/\s+/).length >= MIN_PASSAGE_WORDS) {
+      passages.push(sentences[i]);
     }
-
-    // Long paragraph — split into overlapping chunks
-    let start = 0;
-    while (start < words.length) {
-      const chunk = words.slice(start, start + PASSAGE_MAX_WORDS).join(' ');
-      if (chunk.split(/\s+/).length >= PASSAGE_MIN_WORDS) {
-        passages.push(chunk);
-      }
-      start += Math.floor(PASSAGE_MAX_WORDS * 0.6); // 60% overlap
+    if (i + 1 < sentences.length) {
+      passages.push(`${sentences[i]} ${sentences[i + 1]}`);
+    }
+    if (i + 2 < sentences.length) {
+      passages.push(`${sentences[i]} ${sentences[i + 1]} ${sentences[i + 2]}`);
     }
   }
 
-  return passages;
+  return [...new Set(passages)];
 }
 
 export async function ingestFile({ projectId, filePath, content, onProgress }) {
@@ -42,7 +41,6 @@ export async function ingestFile({ projectId, filePath, content, onProgress }) {
   for (const passage of passages) {
     try {
       const embedding = await generateEmbedding(passage);
-      const embeddingBuffer = embeddingToBuffer(embedding);
       const id = uuidv4();
       const wordCount = passage.split(/\s+/).length;
 
@@ -51,7 +49,7 @@ export async function ingestFile({ projectId, filePath, content, onProgress }) {
         projectId,
         source: 'folder',
         content: passage,
-        embeddingBuffer,
+        embedding, // pass raw array, not buffer
         wordCount,
       });
 
@@ -92,6 +90,7 @@ export async function ingestFolder({ projectId, folderId, folderPath, onProgress
       folderId,
       filePath: file.filePath,
       lastModified: file.lastModified,
+      passagesIngested: count,
     });
 
     passagesIngested += count;

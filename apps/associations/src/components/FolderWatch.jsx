@@ -4,8 +4,8 @@ import { ingestFolder } from '../db/ingest';
 export default function FolderWatch({ projectId, onClose }) {
   const [folders, setFolders] = useState([]);
   const [ingesting, setIngesting] = useState(false);
-  const [progress, setProgress] = useState(null);
-  const [currentFile, setCurrentFile] = useState(null);
+  const [folderStatus, setFolderStatus] = useState({});
+  const [folderProgress, setFolderProgress] = useState({});
 
   useEffect(() => {
     loadFolders();
@@ -27,21 +27,29 @@ export default function FolderWatch({ projectId, onClose }) {
 
   async function handleIngest(folderId, folderPath) {
     setIngesting(true);
-    setProgress({ ingested: 0, total: 0 });
+    setFolderStatus(s => ({ ...s, [folderId]: 'syncing' }));
+    setFolderProgress(s => ({ ...s, [folderId]: { ingested: 0, total: 0, currentFile: null } }));
 
     try {
       const result = await ingestFolder({
         projectId,
         folderId,
         folderPath,
-        onProgress: (p) => setProgress(p),
-        onFile: (filePath) => setCurrentFile(filePath.split('/').pop()),
+        onProgress: (p) => setFolderProgress(s => ({ ...s, [folderId]: { ...s[folderId], ...p } })),
+        onFile: (filePath) => setFolderProgress(s => ({ ...s, [folderId]: { ...s[folderId], currentFile: filePath.split('/').pop() } })),
       });
 
-      setProgress(null);
-      setCurrentFile(null);
+      setFolderStatus(s => ({ ...s, [folderId]: 'complete' }));
+      setFolderProgress(s => ({ ...s, [folderId]: { passagesIngested: result.passagesIngested } }));
+
+      // Return to idle after 3 seconds
+      setTimeout(() => {
+        setFolderStatus(s => ({ ...s, [folderId]: 'idle' }));
+      }, 3000);
+
     } catch (err) {
       console.error('Ingestion error:', err);
+      setFolderStatus(s => ({ ...s, [folderId]: 'idle' }));
     }
 
     setIngesting(false);
@@ -87,53 +95,79 @@ export default function FolderWatch({ projectId, onClose }) {
           </p>
         ) : (
           <div style={{ marginBottom: '24px' }}>
-            {folders.map(folder => (
-              <div key={folder.id} style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '0.5px solid var(--border)',
-              }}>
-                <div>
-                  <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '12px', color: 'var(--text)', marginBottom: '2px' }}>
-                    {folder.folder_path.split('/').pop()}
-                  </p>
-                  <p style={{ fontFamily: "'Lora', serif", fontSize: '11px', color: 'var(--text-faint)' }}>
-                    {folder.folder_path}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <button
-                    onClick={() => handleIngest(folder.id, folder.folder_path)}
-                    disabled={ingesting}
-                    style={{ fontFamily: "'Poppins', sans-serif", fontSize: '10px', letterSpacing: '0.08em', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    sync
-                  </button>
-                  <button
-                    onClick={() => handleRemove(folder.id)}
-                    disabled={ingesting}
-                    style={{ fontFamily: "'Poppins', sans-serif", fontSize: '10px', letterSpacing: '0.08em', color: 'var(--text-faint)', background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    remove
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+            {folders.map(folder => {
+              const status = folderStatus[folder.id] || 'idle';
+              const prog = folderProgress[folder.id];
 
-        {ingesting && (
-          <div style={{ marginBottom: '24px' }}>
-            <p style={{ fontFamily: "'Lora', serif", fontStyle: 'italic', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>
-              {currentFile ? `Reading ${currentFile}…` : 'Preparing…'}
-            </p>
-            {progress && progress.total > 0 && (
-              <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '11px', color: 'var(--text-faint)' }}>
-                {progress.ingested} of {progress.total} passages
-              </p>
-            )}
+              return (
+                <div key={folder.id} style={{
+                  padding: '16px 0',
+                  borderBottom: '0.5px solid var(--border)',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '13px', color: 'var(--text)', marginBottom: '2px' }}>
+                        {folder.folder_path.split('/').pop()}
+                      </p>
+                      <p style={{ fontFamily: "'Lora', serif", fontSize: '11px', color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {status === 'syncing' && prog?.currentFile
+                          ? `reading ${prog.currentFile}…`
+                          : folder.folder_path}
+                      </p>
+                      {status === 'syncing' && prog?.total > 0 && (
+                        <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '10px', color: 'var(--text-faint)', marginTop: '4px', letterSpacing: '0.06em' }}>
+                          {prog.ingested} of {prog.total} passages
+                        </p>
+                      )}
+                      {status === 'complete' && (
+                        <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.06em' }}>
+                          ✓ {prog?.passagesIngested || 0} passages in pool
+                        </p>
+                      )}
+                      {status === 'syncing' && prog?.total > 0 && (
+                        <div style={{
+                          height: '1px',
+                          background: 'var(--border)',
+                          borderRadius: '1px',
+                          marginTop: '8px',
+                          overflow: 'hidden',
+                        }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${Math.round((prog.ingested / prog.total) * 100)}%`,
+                            background: 'var(--text-faint)',
+                            borderRadius: '1px',
+                            transition: 'width 0.3s ease',
+                          }} />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px', marginLeft: '16px', flexShrink: 0 }}>
+                      {status === 'syncing' ? (
+                        <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: '10px', letterSpacing: '0.08em', color: 'var(--text-faint)', animation: 'pulse 1.5s ease-in-out infinite' }}>
+                          syncing…
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleIngest(folder.id, folder.folder_path)}
+                          disabled={ingesting}
+                          style={{ fontFamily: "'Poppins', sans-serif", fontSize: '10px', letterSpacing: '0.08em', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          sync
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRemove(folder.id)}
+                        disabled={ingesting}
+                        style={{ fontFamily: "'Poppins', sans-serif", fontSize: '10px', letterSpacing: '0.08em', color: 'var(--text-faint)', background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

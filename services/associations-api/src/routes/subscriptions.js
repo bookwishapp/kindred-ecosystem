@@ -92,6 +92,59 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   }
 });
 
+// POST /stripe/checkout
+router.post('/checkout', requireAuth, async (req, res) => {
+  try {
+    const { priceId } = req.body;
+
+    if (!priceId) {
+      return res.status(400).json({ error: 'priceId required' });
+    }
+
+    // Get or create Stripe customer
+    let stripeCustomerId;
+    const userResult = await db.query(
+      'SELECT stripe_customer_id, email FROM users WHERE user_id = $1',
+      [req.user.sub]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+
+    if (user.stripe_customer_id) {
+      stripeCustomerId = user.stripe_customer_id;
+    } else {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { user_id: req.user.sub },
+      });
+      stripeCustomerId = customer.id;
+      await db.query(
+        'UPDATE users SET stripe_customer_id = $1 WHERE user_id = $2',
+        [stripeCustomerId, req.user.sub]
+      );
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: 'subscription',
+      success_url: 'associations://billing/return?status=success',
+      cancel_url: 'associations://billing/return?status=cancelled',
+      metadata: { user_id: req.user.sub },
+    });
+
+    return res.json({ url: session.url });
+  } catch (error) {
+    console.error('Checkout error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /stripe/portal
 router.post('/portal', requireAuth, async (req, res) => {
   try {

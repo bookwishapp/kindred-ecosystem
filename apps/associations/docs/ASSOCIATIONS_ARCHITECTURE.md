@@ -54,17 +54,38 @@ Ghost watching is the state of being open to what the system finds. You never kn
 A single keystroke while writing marks a passage for future attention. Visible only as a small dot at the margin. You don't name it or categorize it. You just mark it and keep writing. Tagged passages are available in Outline mode.
 
 ### Q&A Mode
-The AI reads the pool and asks a single question at a time. Not writing advice. Not prompts. Questions that come from specific gaps or tensions in what you've written.
+The AI reads the pool and asks a single question at a time. Questions come from specific ambiguities, tensions, or unresolved threads already present in the writing. They are never prompts. They never invite new content.
 
-*Why does Max keep the photograph face down?*
+The distinction is absolute:
 
-You answer however you want. The answer goes into the pool. Later, that answer may surface as a ghost while you're composing. You told the AI something in Q&A that comes back when you need it.
+**A prompt disguised as a question** points to something absent — it invites the writer to imagine or create. *What does Damien smell when he thinks of her?* opens a door to new content. This is never allowed.
+
+**A real question from the material** points to something already present that is unresolved or unclear. *Does Damien know he's been here before?* asks the writer to clarify something the writing has already implied. The answer already exists — the question just makes the writer conscious of it.
+
+The best questions are ones where the answer is already in the writing but hasn't been made conscious yet:
+
+*The bus appears twice. Is that intentional?*
+
+The writer knows the answer. The question just surfaces it.
+
+### Q&A as Ghost
+Questions can arrive as ghosts while composing — fading in the same way a passage ghost does, with the same three responses: let it go, watch, keep. A kept question attaches to the passage that prompted it. The writer answers when ready — or never. If answered, the answer goes into the pool and becomes eligible to surface as a ghost.
+
+Question ghosts appear less frequently than passage ghosts — approximately one question for every three or four passage ghosts. Only when the system has found something genuinely unresolved.
+
+### Q&A Session
+A dedicated session where the writer invites questions from the material. The system may have one question, three, or none. **None is a valid and honest response.** The session is an invitation, not an obligation. Forcing questions when there are none would poison the mechanic.
+
+The writer opens a Q&A session. Questions arrive one at a time. The writer answers in whatever way they want — a sentence, a paragraph, stream of consciousness, or nothing. Answers feed the pool. Unanswered questions may return in a future session or as a ghost.
 
 Rules:
 - One question at a time, always
 - The AI waits — it never pushes
-- If you don't answer, it may ask something different later, or the same question again weeks later when more writing has accumulated
-- Questions are specific to your work, never generic
+- No questions is an acceptable session outcome
+- Questions must point to something already in the writing — never to something absent
+- Questions are never writing prompts
+- Questions are never observations about the writing's quality or themes
+- If you don't answer, the system moves on — the question may return later or never
 
 ---
 
@@ -105,10 +126,6 @@ The ghost appears as an overlay over the top portion of the writing surface. It 
 The writing beneath the ghost is always there. The ghost sits on top of it. When the ghost is dismissed or kept, it recedes. The writing never moves.
 
 When watching, additional ghosts can arrive above the current one, stacking downward. The more you allow in, the more of your writing disappears beneath them. You control how far the past comes in.
-
-- **User-configurable settings** — indent style (indent vs. blank line), font size, line width, paragraph spacing; V1 uses sensible defaults with no UI to change them
-- **Auto-save** — documents save automatically as you write; requires document management (create, name, open, list) to be built first
-- **Document management** — new document, open existing, document list; V1 Compose always opens to a single unnamed document
 
 ---
 

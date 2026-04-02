@@ -20,5 +20,6 @@ export function embeddingToBuffer(embedding) {
 }
 
 export function bufferToEmbedding(buffer) {
-  return Array.from(new Float32Array(buffer.buffer));
+  // buffer comes from SQLite as a Uint8Array in the renderer
+  return Array.from(new Float32Array(buffer.buffer || buffer));
 }

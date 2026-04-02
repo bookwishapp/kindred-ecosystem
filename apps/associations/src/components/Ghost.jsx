@@ -45,36 +45,41 @@ export default function Ghost({ ghost, onLetItGo, onWatch, onKeep, watching }) {
       position: 'absolute',
       top: 0, left: 0, right: 0,
       padding: '40px 10vw 28px',
-      background: `linear-gradient(to bottom,
-        rgba(245,243,239,${opacity}) 0%,
-        rgba(245,243,239,${opacity}) 65%,
-        rgba(245,243,239,0) 100%
-      )`,
+      background: 'rgba(245, 243, 239, 0.85)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderBottom: '0.5px solid rgba(42, 40, 37, 0.08)',
+      opacity,
       zIndex: 8,
       pointerEvents: opacity > 0.1 ? 'auto' : 'none',
       transition: watching ? 'none' : undefined,
     }}>
       <p style={{
         fontFamily: "'Lora', serif",
-        fontStyle: 'italic',
+        fontStyle: ghost.isQuestion ? 'normal' : 'italic',
         fontSize: '15px',
         lineHeight: '1.75',
-        color: `rgba(42, 40, 37, ${opacity})`,
+        color: ghost.isQuestion ? 'var(--text-muted)' : `rgba(42, 40, 37, ${opacity})`,
         marginBottom: '12px',
         maxWidth: '600px',
       }}>
         {ghost.content}
       </p>
 
-      <div style={{ display: 'flex', gap: '24px', opacity }}>
+      <div style={{
+        display: 'flex',
+        gap: '28px',
+        paddingTop: '12px',
+        borderTop: '0.5px solid rgba(42, 40, 37, 0.08)',
+      }}>
         <button
           onClick={onLetItGo}
           style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: '10px',
-            letterSpacing: '0.1em',
+            fontSize: '11px',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            color: 'var(--text-faint)',
+            color: 'var(--text-muted)',
             background: 'none',
             border: 'none',
             padding: 0,
@@ -88,10 +93,10 @@ export default function Ghost({ ghost, onLetItGo, onWatch, onKeep, watching }) {
           onClick={onWatch}
           style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: '10px',
-            letterSpacing: '0.1em',
+            fontSize: '11px',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            color: watching ? 'var(--text-muted)' : 'var(--text-faint)',
+            color: 'var(--text-muted)',
             background: 'none',
             border: 'none',
             padding: 0,
@@ -105,10 +110,10 @@ export default function Ghost({ ghost, onLetItGo, onWatch, onKeep, watching }) {
           onClick={onKeep}
           style={{
             fontFamily: "'Poppins', sans-serif",
-            fontSize: '10px',
-            letterSpacing: '0.1em',
+            fontSize: '11px',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            color: 'var(--text-faint)',
+            color: 'var(--text-muted)',
             background: 'none',
             border: 'none',
             padding: 0,
