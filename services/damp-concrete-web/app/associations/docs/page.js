@@ -21,7 +21,7 @@ export default function DocsPage() {
         zIndex: 100,
         borderBottom: '0.5px solid var(--border)',
       }}>
-        <a href="/associations" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
           <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
             <polygon points="14,0 28,14 24,14 14,4 4,14 0,14" fill="#C8A96E" opacity="0.4"/>
             <polygon points="14,3 26,15 22,15 14,7 6,15 2,15" fill="#C8A96E" opacity="0.55"/>

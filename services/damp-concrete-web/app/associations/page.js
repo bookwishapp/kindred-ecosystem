@@ -48,7 +48,7 @@ export default function AssociationsPage() {
         <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
           <a href="#how" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>How it works</a>
           <a href="#pricing" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>Pricing</a>
-          <a href="/associations/docs" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>Docs</a>
+          <a href="/docs" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'none' }}>Docs</a>
           <a href={DOWNLOAD_URL} style={{
             fontFamily: "'Poppins', sans-serif",
             fontSize: '14px',
