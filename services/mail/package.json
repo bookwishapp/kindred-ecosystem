@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:templates": "esbuild src/templates/*.jsx --bundle=false --outdir=dist/templates --platform=node --jsx=automatic",
+    "build:templates": "esbuild src/templates/*.jsx --bundle=false --outdir=dist/templates --platform=node --jsx=automatic --format=cjs",
     "start": "npm run build:templates && node src/index.js",
     "dev": "npm run build:templates && nodemon src/index.js",
     "migrate": "node migrate.js"
