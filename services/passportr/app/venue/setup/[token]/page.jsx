@@ -19,6 +19,10 @@ export default function VenueSetupPage({ params }) {
         const res = await fetch(`/api/venue/setup/${token}`);
         if (!res.ok) { setInvalid(true); setLoading(false); return; }
         const data = await res.json();
+        if (data.redirect) {
+          router.push(data.redirect);
+          return;
+        }
         setInvitation(data.invitation);
         setForm(f => ({ ...f, name: data.invitation.venue_name }));
       } catch {
