@@ -1,13 +1,13 @@
-import { render as renderEmail } from '@react-email/render';
-import { Text, Link } from '@react-email/components';
-import { BaseLayout } from './base';
+const { render: renderEmail } = require('@react-email/render');
+const { Text, Link } = require('@react-email/components');
+const { BaseLayout } = require('./base');
 
-function AssociationsTrialEnding({ name }) {
+function AssociationsTrialEnding({ name, unsubscribeUrl }) {
   return (
     <BaseLayout
       product="associations"
       footerText="Associations by Damp Concrete"
-      unsubscribeUrl={`${process.env.MAIL_BASE_URL}/unsubscribe/associations/{email}`}
+      unsubscribeUrl={unsubscribeUrl}
     >
       <Text style={{ fontSize: '24px', color: '#2A2825', marginBottom: '24px', fontStyle: 'italic' }}>
         Your ghosts know you a little now.
@@ -28,9 +28,12 @@ function AssociationsTrialEnding({ name }) {
   );
 }
 
-module.exports.render = function(data) {
+module.exports.render = async function(data) {
+  const unsubscribeUrl = data.email
+    ? `${process.env.MAIL_BASE_URL}/unsubscribe/associations/${data.email}`
+    : null;
   return {
     subject: 'Your ghosts know you a little now',
-    html: renderEmail(<AssociationsTrialEnding {...data} />),
+    html: await renderEmail(<AssociationsTrialEnding {...data} unsubscribeUrl={unsubscribeUrl} />),
   };
 };

@@ -1,6 +1,6 @@
-import { render as renderEmail } from '@react-email/render';
-import { Text, Link } from '@react-email/components';
-import { BaseLayout } from './base';
+const { render: renderEmail } = require('@react-email/render');
+const { Text, Link } = require('@react-email/components');
+const { BaseLayout } = require('./base');
 
 function PassportrParticipantStamp({ venueName, hopName, hopUrl, stampsCollected, stampsTotal }) {
   return (
@@ -29,9 +29,9 @@ function PassportrParticipantStamp({ venueName, hopName, hopUrl, stampsCollected
   );
 }
 
-module.exports.render = function(data) {
+module.exports.render = async function(data) {
   return {
     subject: `You've been stamped at ${data.venueName}`,
-    html: renderEmail(<PassportrParticipantStamp {...data} />),
+    html: await renderEmail(<PassportrParticipantStamp {...data} />),
   };
 };

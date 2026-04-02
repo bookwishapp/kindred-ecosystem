@@ -1,6 +1,6 @@
-import { render as renderEmail } from '@react-email/render';
-import { Text, Link } from '@react-email/components';
-import { BaseLayout } from './base';
+const { render: renderEmail } = require('@react-email/render');
+const { Text, Link } = require('@react-email/components');
+const { BaseLayout } = require('./base');
 
 function PassportrParticipantComplete({ hopName, hopUrl, rewardInfo }) {
   return (
@@ -30,9 +30,9 @@ function PassportrParticipantComplete({ hopName, hopUrl, rewardInfo }) {
   );
 }
 
-module.exports.render = function(data) {
+module.exports.render = async function(data) {
   return {
     subject: `You've completed the ${data.hopName}!`,
-    html: renderEmail(<PassportrParticipantComplete {...data} />),
+    html: await renderEmail(<PassportrParticipantComplete {...data} />),
   };
 };

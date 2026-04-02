@@ -1,13 +1,13 @@
-import { render as renderEmail } from '@react-email/render';
-import { Text, Link } from '@react-email/components';
-import { BaseLayout } from './base';
+const { render: renderEmail } = require('@react-email/render');
+const { Text, Link } = require('@react-email/components');
+const { BaseLayout } = require('./base');
 
-function AnalogListDiscovery({ discoveries, email }) {
+function AnalogListDiscovery({ discoveries, unsubscribeUrl }) {
   return (
     <BaseLayout
       product="analoglist"
       footerText="AnalogList — your collection lists"
-      unsubscribeUrl={`${process.env.MAIL_BASE_URL}/unsubscribe/analoglist/${email}`}
+      unsubscribeUrl={unsubscribeUrl}
     >
       <Text style={{ fontSize: '24px', color: '#2AB8A0', marginBottom: '24px', fontStyle: 'italic' }}>
         Your weekly discoveries
@@ -38,9 +38,12 @@ function AnalogListDiscovery({ discoveries, email }) {
   );
 }
 
-module.exports.render = function(data) {
+module.exports.render = async function(data) {
+  const unsubscribeUrl = data.email
+    ? `${process.env.MAIL_BASE_URL}/unsubscribe/analoglist/${data.email}`
+    : null;
   return {
     subject: 'Your weekly discoveries',
-    html: renderEmail(<AnalogListDiscovery {...data} />),
+    html: await renderEmail(<AnalogListDiscovery {...data} unsubscribeUrl={unsubscribeUrl} />),
   };
 };

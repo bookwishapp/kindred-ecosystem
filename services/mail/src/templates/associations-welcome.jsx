@@ -1,13 +1,13 @@
-import { render as renderEmail } from '@react-email/render';
-import { Text, Link } from '@react-email/components';
-import { BaseLayout } from './base';
+const { render: renderEmail } = require('@react-email/render');
+const { Text, Link } = require('@react-email/components');
+const { BaseLayout } = require('./base');
 
-function AssociationsWelcome({ name }) {
+function AssociationsWelcome({ name, unsubscribeUrl }) {
   return (
     <BaseLayout
       product="associations"
       footerText="Associations by Damp Concrete"
-      unsubscribeUrl={`${process.env.MAIL_BASE_URL}/unsubscribe/associations/{email}`}
+      unsubscribeUrl={unsubscribeUrl}
     >
       <Text style={{ fontSize: '24px', color: '#2A2825', marginBottom: '24px', fontStyle: 'italic' }}>
         Welcome to Associations.
@@ -28,9 +28,12 @@ function AssociationsWelcome({ name }) {
   );
 }
 
-module.exports.render = function(data) {
+module.exports.render = async function(data) {
+  const unsubscribeUrl = data.email
+    ? `${process.env.MAIL_BASE_URL}/unsubscribe/associations/${data.email}`
+    : null;
   return {
     subject: 'Welcome to Associations',
-    html: renderEmail(<AssociationsWelcome {...data} />),
+    html: await renderEmail(<AssociationsWelcome {...data} unsubscribeUrl={unsubscribeUrl} />),
   };
 };

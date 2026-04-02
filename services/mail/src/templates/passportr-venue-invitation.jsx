@@ -1,6 +1,6 @@
-import { render as renderEmail } from '@react-email/render';
-import { Text, Link, Hr } from '@react-email/components';
-import { BaseLayout } from './base';
+const { render: renderEmail } = require('@react-email/render');
+const { Text, Link, Hr } = require('@react-email/components');
+const { BaseLayout } = require('./base');
 
 function PassportrVenueInvitation({ venueName, hopName, startDate, endDate, stampCutoff, redeemCutoff, completionText, couponExpiry, setupUrl, senderName }) {
   return (
@@ -71,9 +71,9 @@ function PassportrVenueInvitation({ venueName, hopName, startDate, endDate, stam
   );
 }
 
-module.exports.render = function(data) {
+module.exports.render = async function(data) {
   return {
     subject: `You're invited to join ${data.hopName} on Passportr`,
-    html: renderEmail(<PassportrVenueInvitation {...data} />),
+    html: await renderEmail(<PassportrVenueInvitation {...data} />),
   };
 };

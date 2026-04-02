@@ -1,13 +1,13 @@
-import { render as renderEmail } from '@react-email/render';
-import { Text } from '@react-email/components';
-import { BaseLayout } from './base';
+const { render: renderEmail } = require('@react-email/render');
+const { Text } = require('@react-email/components');
+const { BaseLayout } = require('./base');
 
-function AssociationsTrialEnded({ name }) {
+function AssociationsTrialEnded({ name, unsubscribeUrl }) {
   return (
     <BaseLayout
       product="associations"
       footerText="Associations by Damp Concrete"
-      unsubscribeUrl={`${process.env.MAIL_BASE_URL}/unsubscribe/associations/{email}`}
+      unsubscribeUrl={unsubscribeUrl}
     >
       <Text style={{ fontSize: '24px', color: '#2A2825', marginBottom: '24px', fontStyle: 'italic' }}>
         Your trial has ended.
@@ -28,9 +28,12 @@ function AssociationsTrialEnded({ name }) {
   );
 }
 
-module.exports.render = function(data) {
+module.exports.render = async function(data) {
+  const unsubscribeUrl = data.email
+    ? `${process.env.MAIL_BASE_URL}/unsubscribe/associations/${data.email}`
+    : null;
   return {
     subject: 'Your trial has ended',
-    html: renderEmail(<AssociationsTrialEnded {...data} />),
+    html: await renderEmail(<AssociationsTrialEnded {...data} unsubscribeUrl={unsubscribeUrl} />),
   };
 };

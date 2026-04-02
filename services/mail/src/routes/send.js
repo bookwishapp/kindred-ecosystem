@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
   let rendered;
   try {
     const tmpl = require(`../../dist/templates/${template}`);
-    rendered = await tmpl.render(data);
+    rendered = await tmpl.render({ ...data, email: to });
   } catch (err) {
     console.error('Template render error:', err.message, err.stack);
     return res.status(400).json({ error: `Template error: ${err.message}` });
