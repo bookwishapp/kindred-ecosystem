@@ -57,6 +57,13 @@ export async function POST(request) {
       );
 
       await client.query('COMMIT');
+
+      // Also update mail service subscription
+      const encodedEmail = encodeURIComponent(normalizedEmail);
+      await fetch(
+        `${process.env.MAIL_SERVICE_URL}/unsubscribe/terryheath/${encodedEmail}`
+      ).catch(() => {}); // non-blocking, best effort
+
       return NextResponse.json({ success: true });
     } catch (error) {
       await client.query('ROLLBACK');

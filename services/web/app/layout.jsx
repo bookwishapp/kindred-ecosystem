@@ -1,4 +1,5 @@
 import './globals.css';
+import PublicFooter from './components/PublicFooter';
 
 export const metadata = {
   title: 'Small Things',
@@ -20,7 +21,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <PublicFooter />
+      </body>
     </html>
   );
 }
