@@ -14,10 +14,7 @@ export async function middleware(request) {
   // Check auth for all admin routes
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
     const cookieHeader = request.headers.get('cookie');
-    const hasSession = cookieHeader && (
-      cookieHeader.includes('th_session=') ||
-      cookieHeader.includes('admin_session=') // keep old cookie working during transition
-    );
+    const hasSession = cookieHeader && cookieHeader.includes('th_session=');
 
     if (!hasSession) {
       if (!pathname.startsWith('/api')) {

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 export const runtime = 'nodejs';
 export default function AdminPage() {
-  redirect('/admin/overview');
+  redirect('/admin/small-things/posts');
 }

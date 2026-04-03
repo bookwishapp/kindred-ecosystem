@@ -16,19 +16,16 @@ export default function AdminLayout({ children }) {
     <>
       <div className="admin-header">
         <div className="admin-header-content">
-          <h1>Admin</h1>
+          <h1>Small Things</h1>
           <nav className="admin-nav">
-            <Link href="/admin/overview" className={isActive('/admin/overview') ? 'active' : ''}>
-              Overview
+            <Link href="/admin/small-things/posts" className={isActive('/admin/small-things/posts') ? 'active' : ''}>
+              Posts
             </Link>
-            <Link href="/admin/small-things/posts" className={isActive('/admin/small-things') ? 'active' : ''}>
-              Small Things
+            <Link href="/admin/small-things/subscribers" className={isActive('/admin/small-things/subscribers') ? 'active' : ''}>
+              Subscribers
             </Link>
-            <Link href="/admin/passportr/organizers" className={isActive('/admin/passportr') ? 'active' : ''}>
-              Passportr
-            </Link>
-            <Link href="/admin/kindred" className={isActive('/admin/kindred') ? 'active' : ''}>
-              Kindred
+            <Link href="/admin/small-things/sends" className={isActive('/admin/small-things/sends') ? 'active' : ''}>
+              Sends
             </Link>
             <form action="/api/admin/logout" method="POST" style={{ display: 'inline' }}>
               <button type="submit" className="logout-btn">Logout</button>
