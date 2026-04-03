@@ -1,5 +1,7 @@
 import AdminLayout from './layout-admin';
 
+export const dynamic = 'force-dynamic';
+
 async function getStats() {
   const headers = { 'x-mail-secret': process.env.MAIL_SERVICE_SECRET };
   const passportHeaders = { 'Authorization': `Bearer ${process.env.PASSPORTR_ADMIN_SECRET}` };

@@ -1,5 +1,7 @@
 import AdminLayout from '../layout-admin';
 
+export const dynamic = 'force-dynamic';
+
 async function getSmallThingsData() {
   const headers = { 'x-mail-secret': process.env.MAIL_SERVICE_SECRET };
 

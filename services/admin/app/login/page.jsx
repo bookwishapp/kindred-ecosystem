@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get('error');
   const [email, setEmail] = useState('');
@@ -62,5 +62,13 @@ export default function LoginPage() {
         </form>
       )}
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ maxWidth: '400px', margin: '80px auto', padding: '0 24px' }}><h1>Loading...</h1></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
