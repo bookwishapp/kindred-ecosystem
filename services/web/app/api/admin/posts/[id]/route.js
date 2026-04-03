@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export async function GET(request, { params }) {
   // Verify auth
   const cookieHeader = request.headers.get('cookie');
-  if (!cookieHeader || !cookieHeader.includes('admin_session=')) {
+  if (!cookieHeader || !cookieHeader.includes('th_session=')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -38,7 +38,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   // Verify auth
   const cookieHeader = request.headers.get('cookie');
-  if (!cookieHeader || !cookieHeader.includes('admin_session=')) {
+  if (!cookieHeader || !cookieHeader.includes('th_session=')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -112,7 +112,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   // Verify auth
   const cookieHeader = request.headers.get('cookie');
-  if (!cookieHeader || !cookieHeader.includes('admin_session=')) {
+  if (!cookieHeader || !cookieHeader.includes('th_session=')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

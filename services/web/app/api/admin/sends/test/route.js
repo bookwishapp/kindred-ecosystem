@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function POST(request) {
   // Verify auth
   const cookieHeader = request.headers.get('cookie');
-  if (!cookieHeader || !cookieHeader.includes('admin_session=')) {
+  if (!cookieHeader || !cookieHeader.includes('th_session=')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

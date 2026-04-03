@@ -21,9 +21,6 @@ export default function AdminLayout({ children }) {
             <Link href="/admin/small-things/posts" className={isActive('/admin/small-things/posts') ? 'active' : ''}>
               Posts
             </Link>
-            <Link href="/admin/small-things/subscribers" className={isActive('/admin/small-things/subscribers') ? 'active' : ''}>
-              Subscribers
-            </Link>
             <Link href="/admin/small-things/sends" className={isActive('/admin/small-things/sends') ? 'active' : ''}>
               Sends
             </Link>
