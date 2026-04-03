@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 export const metadata = {
   title: 'Damp Concrete — Software from Port Orchard, WA.',
-  description: 'Damp Concrete builds software for writers, collectors, and the people who show up. Built by Terry Heath.',
+  description: 'Tools for small things, made carefully in Port Orchard, WA. Built by Terry Heath.',
   metadataBase: new URL('https://dampconcrete.com'),
   alternates: { canonical: 'https://dampconcrete.com' },
   openGraph: {
@@ -40,7 +40,7 @@ export default function Home() {
             "name": "Damp Concrete",
             "url": "https://dampconcrete.com",
             "logo": "https://dampconcrete.com/damp-concrete-logo.png",
-            "description": "Software from Port Orchard, WA.",
+            "description": "Tools for small things, made carefully in Port Orchard, WA.",
             "founder": {
               "@type": "Person",
               "name": "Terry Heath",
@@ -119,7 +119,7 @@ export default function Home() {
           color: 'var(--text-muted)',
           lineHeight: '1.6',
         }}>
-          Software from Port Orchard, WA.
+          Tools for small things, made carefully in Port Orchard, WA.
         </p>
       </div>
 
@@ -131,6 +131,7 @@ export default function Home() {
           { label: 'AnalogList', url: 'https://analoglist.io' },
           { label: 'BookWish', url: 'https://bookwish.io' },
           { label: 'North Star Postal', url: 'https://northstarpostal.com' },
+          { label: 'Gone Goat', url: 'https://kickstarter.com/projects/terryheath/gone-goat' },
         ].map(link => (
           <a key={link.label} href={link.url} style={{
             fontFamily: "'Poppins', sans-serif",

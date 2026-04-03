@@ -28,7 +28,7 @@ export default function PublicFooter() {
       >
         Damp Concrete
       </a>
-      {' '}— software built by Terry Heath in Port Orchard, WA.
+      {' '}— tools for small things, made carefully in Port Orchard, WA.
     </footer>
   );
 }

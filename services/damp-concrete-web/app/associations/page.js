@@ -290,7 +290,7 @@ export default async function AssociationsPage() {
             <a href="https://dampconcrete.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
               Damp Concrete
             </a>
-            {' '}— software for writers, collectors, and the people who show up.<br/>
+            {' '}— tools for small things, made carefully in Port Orchard, WA.<br/>
             Built by{' '}
             <a href="https://terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
               Terry Heath
