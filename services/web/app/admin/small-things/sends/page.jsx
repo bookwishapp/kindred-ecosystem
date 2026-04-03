@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 export default function SendsPage() {
   const [sends, setSends] = useState([]);
+  const [subscriberCount, setSubscriberCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,7 +15,8 @@ export default function SendsPage() {
     try {
       const response = await fetch('/api/admin/sends');
       const data = await response.json();
-      setSends(data);
+      setSends(data.sends);
+      setSubscriberCount(data.subscriber_count);
     } catch (error) {
       console.error('Failed to fetch sends:', error);
     } finally {
@@ -26,6 +28,10 @@ export default function SendsPage() {
     return <div className="loading">Loading...</div>;
   }
 
+  const totalSent = sends.reduce((sum, send) => sum + (send.sent_count || 0), 0);
+  const completedSends = sends.filter(s => s.status === 'complete').length;
+  const completionRate = sends.length > 0 ? Math.round((completedSends / sends.length) * 100) : 0;
+
   return (
     <div>
       <h1>Newsletter Sends</h1>
@@ -34,6 +40,21 @@ export default function SendsPage() {
         <p>No newsletter sends yet.</p>
       ) : (
         <>
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', minWidth: '140px' }}>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Subscribers</div>
+              <div style={{ fontSize: '24px', fontWeight: '600' }}>{subscriberCount}</div>
+            </div>
+            <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', minWidth: '140px' }}>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Sent</div>
+              <div style={{ fontSize: '24px', fontWeight: '600' }}>{totalSent}</div>
+            </div>
+            <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', minWidth: '140px' }}>
+              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Completion Rate</div>
+              <div style={{ fontSize: '24px', fontWeight: '600' }}>{completionRate}%</div>
+            </div>
+          </div>
+
           <table>
             <thead>
               <tr>

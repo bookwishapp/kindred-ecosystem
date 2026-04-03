@@ -16,7 +16,13 @@ export async function GET(request) {
        LEFT JOIN posts p ON s.post_id = p.id
        ORDER BY s.created_at DESC`
     );
-    return NextResponse.json(result.rows);
+    const countResult = await db.query(
+      `SELECT COUNT(*) as count FROM subscribers WHERE status = 'active'`
+    );
+    return NextResponse.json({
+      sends: result.rows,
+      subscriber_count: parseInt(countResult.rows[0].count)
+    });
   } catch (error) {
     console.error('Error fetching sends:', error);
     return NextResponse.json(
