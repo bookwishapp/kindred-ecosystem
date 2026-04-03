@@ -33,6 +33,8 @@ const {
   checkUsername
 } = require('./profiles');
 const { getUploadUrl } = require('./upload');
+const { requireInternal } = require('./middleware/internal');
+const internalRouter = require('./routes/internal');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -97,6 +99,9 @@ app.delete('/profile/dates/:dateId', corsMiddleware, authenticate, deleteSharedD
 
 // Upload
 app.post('/upload-url', corsMiddleware, authenticate, getUploadUrl);
+
+// Internal routes (secured with shared secret)
+app.use('/internal', requireInternal, internalRouter);
 
 // Admin routes (no CORS - same-origin requests only)
 app.get('/admin/login', showLoginForm);
