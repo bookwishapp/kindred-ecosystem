@@ -13,7 +13,6 @@ export default function SmallThingsLayout({ children }) {
         <nav style={{ display: 'flex', gap: '0' }}>
           {[
             { href: '/admin/small-things/posts', label: 'Posts' },
-            { href: '/admin/small-things/subscribers', label: 'Subscribers' },
             { href: '/admin/small-things/sends', label: 'Sends' },
           ].map(tab => (
             <Link

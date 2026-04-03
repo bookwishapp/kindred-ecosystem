@@ -22,17 +22,6 @@ export default function SendsPage() {
     }
   }
 
-  const getStatusBadge = (status) => {
-    const statusClasses = {
-      'pending': 'badge-gray',
-      'queued': 'badge-blue',
-      'sending': 'badge-yellow',
-      'complete': 'badge-green',
-      'failed': 'badge-red',
-    };
-    return statusClasses[status] || 'badge-gray';
-  };
-
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -63,7 +52,22 @@ export default function SendsPage() {
                   <td>{send.post_title || '-'}</td>
                   <td>{send.subject}</td>
                   <td>
-                    <span className={`badge ${getStatusBadge(send.status)}`}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      background: send.status === 'complete' ? '#d1fae5' :
+                                  send.status === 'failed' ? '#fee2e2' :
+                                  send.status === 'sending' ? '#fef3c7' :
+                                  send.status === 'queued' ? '#dbeafe' : '#e5e7eb',
+                      color: send.status === 'complete' ? '#065f46' :
+                             send.status === 'failed' ? '#991b1b' :
+                             send.status === 'sending' ? '#92400e' :
+                             send.status === 'queued' ? '#1e40af' : '#374151',
+                    }}>
                       {send.status}
                     </span>
                   </td>
@@ -83,37 +87,6 @@ export default function SendsPage() {
               ))}
             </tbody>
           </table>
-
-          <style jsx>{`
-            .badge {
-              display: inline-block;
-              padding: 0.25rem 0.5rem;
-              border-radius: 4px;
-              font-size: 0.75rem;
-              font-weight: 600;
-              text-transform: uppercase;
-            }
-            .badge-gray {
-              background: #e5e7eb;
-              color: #374151;
-            }
-            .badge-blue {
-              background: #dbeafe;
-              color: #1e40af;
-            }
-            .badge-yellow {
-              background: #fef3c7;
-              color: #92400e;
-            }
-            .badge-green {
-              background: #d1fae5;
-              color: #065f46;
-            }
-            .badge-red {
-              background: #fee2e2;
-              color: #991b1b;
-            }
-          `}</style>
         </>
       )}
     </div>
