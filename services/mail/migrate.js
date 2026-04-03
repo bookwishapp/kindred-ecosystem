@@ -75,6 +75,22 @@ async function migrate() {
 
     CREATE INDEX IF NOT EXISTS idx_unsubscribes_lookup
       ON unsubscribes(product, email);
+
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_sub TEXT NOT NULL,
+      product TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      opted_in_at TIMESTAMPTZ DEFAULT NOW(),
+      opted_out_at TIMESTAMPTZ,
+      UNIQUE(user_sub, product)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_subscriptions_product_status
+      ON subscriptions(product, status);
+
+    CREATE INDEX IF NOT EXISTS idx_subscriptions_user_sub
+      ON subscriptions(user_sub);
   `);
 
   console.log('Migrations complete');

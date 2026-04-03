@@ -24,6 +24,7 @@ function requireSecret(req, res, next) {
 app.use('/send', requireSecret, require('./routes/send'));
 app.use('/schedule', requireSecret, require('./routes/schedule'));
 app.use('/sequences', requireSecret, require('./routes/sequences'));
+app.use('/subscriptions', requireSecret, require('./routes/subscriptions'));
 app.use('/unsubscribe', require('./routes/unsubscribe')); // public — no secret
 app.use('/admin', requireSecret, require('./routes/admin'));
 
