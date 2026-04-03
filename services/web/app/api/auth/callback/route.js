@@ -4,12 +4,13 @@ import { serialize } from 'cookie';
 export const runtime = 'nodejs';
 
 export async function GET(request) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://terryheath.com';
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('access_token');
   const returnTo = searchParams.get('return_to') || '/admin/posts';
 
   if (!token) {
-    return NextResponse.redirect(new URL('/admin/login?error=no_token', request.url));
+    return NextResponse.redirect(new URL('/admin/login?error=no_token', baseUrl));
   }
 
   // Verify the token is for an authorized admin
@@ -20,7 +21,7 @@ export async function GET(request) {
 
     const authorizedSub = process.env.ADMIN_USER_SUB;
     if (!authorizedSub || payload.sub !== authorizedSub) {
-      return NextResponse.redirect(new URL('/admin/login?error=unauthorized', request.url));
+      return NextResponse.redirect(new URL('/admin/login?error=unauthorized', baseUrl));
     }
 
     // Set JWT as httpOnly cookie
@@ -32,10 +33,10 @@ export async function GET(request) {
       path: '/',
     });
 
-    const response = NextResponse.redirect(new URL(returnTo, request.url));
+    const response = NextResponse.redirect(new URL(returnTo, baseUrl));
     response.headers.set('Set-Cookie', cookie);
     return response;
   } catch (error) {
-    return NextResponse.redirect(new URL('/admin/login?error=invalid_token', request.url));
+    return NextResponse.redirect(new URL('/admin/login?error=invalid_token', baseUrl));
   }
 }
