@@ -10,6 +10,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
+    const allowedEmail = process.env.ADMIN_EMAIL;
+    if (!allowedEmail || email.toLowerCase() !== allowedEmail.toLowerCase()) {
+      // Return success anyway — don't reveal whether the email is valid
+      return NextResponse.json({ success: true });
+    }
+
     const response = await fetch(`${process.env.AUTH_BASE_URL}/auth/request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
