@@ -1,58 +1,79 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState(
+    error === 'unauthorized' ? 'This account is not authorized for admin access.' :
+    error === 'no_token' ? 'Invalid sign-in link.' :
+    error === 'invalid_token' ? 'Sign-in link expired. Please try again.' :
+    ''
+  );
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
+    setErr('');
     setLoading(true);
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const res = await fetch('/api/auth/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email }),
       });
 
-      if (response.ok) {
-        router.push('/admin/posts');
+      if (res.ok) {
+        setSent(true);
       } else {
-        const data = await response.json();
-        setError(data.error || 'Invalid password');
+        const data = await res.json();
+        setErr(data.error || 'Failed to send sign-in link.');
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
+    } catch {
+      setErr('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  if (sent) {
+    return (
+      <div className="container">
+        <div style={{ maxWidth: '400px', margin: '4rem auto', textAlign: 'center' }}>
+          <h1>Check your email</h1>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '16px' }}>
+            A sign-in link has been sent to {email}.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
       <div style={{ maxWidth: '400px', margin: '4rem auto' }}>
-        <h1>Admin Login</h1>
-        <form onSubmit={handleSubmit}>
+        <h1>Admin</h1>
+        <form onSubmit={handleSubmit} style={{ marginTop: '24px' }}>
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="email">Email</label>
             <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="email"
+              id="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               required
               autoFocus
+              placeholder="your@email.com"
             />
           </div>
-          {error && <div className="message message-error">{error}</div>}
+          {err && <div className="message message-error" style={{ marginBottom: '16px' }}>{err}</div>}
           <button type="submit" className="btn" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Sending...' : 'Send sign-in link'}
           </button>
         </form>
       </div>

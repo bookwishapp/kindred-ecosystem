@@ -3,22 +3,26 @@ import { NextResponse } from 'next/server';
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
 
-  // Skip auth check for login page and API login route
-  if (pathname === '/admin/login' || pathname === '/api/admin/login') {
+  // Skip auth check for login page and auth routes
+  if (
+    pathname === '/admin/login' ||
+    pathname.startsWith('/api/auth/')
+  ) {
     return NextResponse.next();
   }
 
   // Check auth for all admin routes
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
     const cookieHeader = request.headers.get('cookie');
-    const hasSession = cookieHeader && cookieHeader.includes('admin_session=');
+    const hasSession = cookieHeader && (
+      cookieHeader.includes('th_session=') ||
+      cookieHeader.includes('admin_session=') // keep old cookie working during transition
+    );
 
     if (!hasSession) {
-      // Redirect to login for page requests
       if (!pathname.startsWith('/api')) {
         return NextResponse.redirect(new URL('/admin/login', request.url));
       }
-      // Return 401 for API requests
       return new NextResponse(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
