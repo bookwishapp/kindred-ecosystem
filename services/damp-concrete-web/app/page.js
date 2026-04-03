@@ -146,8 +146,8 @@ export default function Home() {
       </nav>
 
       <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '13px', color: 'var(--text-faint)', lineHeight: '1.9' }}>
-        Damp Concrete builds software for writers, collectors, and the people who show up.<br/>
-        Built by <a href="https://terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terry Heath</a> in Port Orchard, WA.
+        Damp Concrete builds tools for small things, made carefully in Port Orchard, WA.<br/>
+        Built by <a href="https://terryheath.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terry Heath</a>.
       </p>
     </main>
   );
